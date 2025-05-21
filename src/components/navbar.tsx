@@ -7,6 +7,7 @@ import { Leaf, Menu, BarChart3, Users, Sprout } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { OnlineStatusIndicator } from "@/components/OnlineStatusIndicator";
 import Image from "next/image";
 
 export function Navbar() {
@@ -60,6 +61,9 @@ export function Navbar() {
                             </Link>
                         ))}
                     </nav>
+                    <div className="ml-4">
+                        <OnlineStatusIndicator />
+                    </div>
                 </div>
                 <div className="md:hidden flex flex-1 items-center justify-end">
                     <Sheet open={open} onOpenChange={setOpen}>
@@ -82,7 +86,7 @@ export function Navbar() {
                             <div className="flex items-center gap-2 mb-8 mt-4">
                                 <Leaf className="h-6 w-6 text-[#2c5e1a]" />
                                 <span className="text-lg font-bold text-[#2c5e1a]">
-                                    AgroGestión
+                                    NASE
                                 </span>
                             </div>
                             <nav className="flex flex-col gap-4">
@@ -102,6 +106,9 @@ export function Navbar() {
                                     </Link>
                                 ))}
                             </nav>
+                            <div className="mt-6">
+                                <OnlineStatusIndicator />
+                            </div>
                         </SheetContent>
                     </Sheet>
                 </div>
