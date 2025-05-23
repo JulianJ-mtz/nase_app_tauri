@@ -38,7 +38,7 @@
   "plugins": {
     "sql": {
       "preload": [
-        "sqlite:mydatabase.db"
+        "sqlite:test_nase.db"
       ]
     }
   }
