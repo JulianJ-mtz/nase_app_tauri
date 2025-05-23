@@ -107,6 +107,7 @@ name = "app"
 version = "0.1.0"
 dependencies = [
  "log",
+ "once_cell",
  "sea-orm",
  "serde",
  "serde_json",

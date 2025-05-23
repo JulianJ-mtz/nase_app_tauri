@@ -1,17 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Database from "@tauri-apps/plugin-sql";
-
-type Employee = {
-    id: number;
-    nombre: string;
-    apellido: string;
-    cargo: string;
-    fecha_contratacion: string;
-    salario: number;
-    activo: number;
-};
+// import { getEmpleados, deleteEmpleado, executeQuery } from "@/lib/api";
+// import type { Employee } from "@/lib/api";
 
 export default function Record() {
     const [loading, setLoading] = useState(true);
