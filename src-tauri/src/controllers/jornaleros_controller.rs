@@ -131,7 +131,7 @@ pub async fn get_jornaleros(app_handle: AppHandle) -> Result<Vec<JornaleroRespon
 }
 
 #[tauri::command]
-pub async fn get_jornalero_id(
+pub async fn get_jornalero_by_id(
     app_handle: AppHandle,
     id: i32,
 ) -> Result<Option<JornaleroResponse>, String> {
