@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { obtenerJornaleros, insertarJornalero, actualizarJornalero, obtenerJornaleroPorId } from './api';
+import { obtenerJornaleros, insertarJornalero, actualizarJornalero, obtenerJornaleroPorId, eliminarJornalero } from './api';
 import type { Jornalero, JornaleroData } from './api';
 
 interface JornaleroStore {
@@ -13,6 +13,7 @@ interface JornaleroStore {
     addJornalero: (data: JornaleroData) => Promise<string>;
     updateJornalero: (id: number, data: JornaleroData) => Promise<string>;
     getJornaleroById: (id: number) => Promise<Jornalero | null>;
+    deleteJornalero: (id: number) => Promise<string>;
 }
 
 export const useJornaleroStore = create<JornaleroStore>((set, get) => ({
@@ -66,6 +67,29 @@ export const useJornaleroStore = create<JornaleroStore>((set, get) => ({
             console.error('Error getting jornalero by id:', error);
             set({ error: 'Error al obtener jornalero por ID' });
             return null;
+        }
+    },
+
+    deleteJornalero: async (id: number) => {
+        try {
+            // No activamos el indicador de carga para evitar el parpadeo
+            // set({ loading: true, error: null });
+            
+            // Actualizamos primero la UI para una experiencia más fluida
+            set((state) => ({
+                jornaleros: state.jornaleros.filter(j => j.id !== id),
+                error: null
+            }));
+            
+            // Luego hacemos la petición a la API
+            const result = await eliminarJornalero(id);
+            return result;
+        } catch (error) {
+            console.error('Error deleting jornalero:', error);
+            // Si hay error, volvemos a cargar los datos para asegurar consistencia
+            await get().fetchJornaleros();
+            set({ error: 'Error al eliminar jornalero' });
+            throw error;
         }
     }
 })); 

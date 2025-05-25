@@ -20,7 +20,7 @@ export interface JornaleroData {
 
 export async function obtenerJornaleros(): Promise<Jornalero[]> {
     try {
-        return await invoke<Jornalero[]>('obtener_jornaleros');
+        return await invoke<Jornalero[]>('get_jornaleros');
     } catch (error) {
         console.error('Error al obtener jornaleros:', error);
         throw error;
@@ -29,7 +29,7 @@ export async function obtenerJornaleros(): Promise<Jornalero[]> {
 
 export async function obtenerJornaleroPorId(id: number): Promise<Jornalero | null> {
     try {
-        return await invoke<Jornalero | null>('obtener_jornalero_por_id', { id });
+        return await invoke<Jornalero | null>('get_jornalero_by_id', { id });
     } catch (error) {
         console.error('Error al obtener jornalero por ID:', error);
         throw error;
@@ -39,7 +39,7 @@ export async function obtenerJornaleroPorId(id: number): Promise<Jornalero | nul
 // Función para insertar un nuevo jornalero
 export async function insertarJornalero(datos: JornaleroData): Promise<string> {
     try {
-        return await invoke<string>('insertar_jornalero', {
+        return await invoke<string>('post_jornalero', {
             nombre: datos.nombre,
             edad: datos.edad,
             produccion: datos.produccion,
@@ -55,7 +55,7 @@ export async function insertarJornalero(datos: JornaleroData): Promise<string> {
 // Función para actualizar un jornalero existente
 export async function actualizarJornalero(id: number, datos: JornaleroData): Promise<string> {
     try {
-        return await invoke<string>('actualizar_jornalero', {
+        return await invoke<string>('put_jornalero', {
             id,
             nombre: datos.nombre,
             edad: datos.edad,
@@ -65,6 +65,15 @@ export async function actualizarJornalero(id: number, datos: JornaleroData): Pro
         });
     } catch (error) {
         console.error('Error al actualizar jornalero:', error);
+        throw error;
+    }
+}
+
+export async function eliminarJornalero(id: number): Promise<string> {
+    try {
+        return await invoke<string>('delete_jornalero', { id });
+    } catch (error) {
+        console.error('Error al eliminar jornalero:', error);
         throw error;
     }
 }

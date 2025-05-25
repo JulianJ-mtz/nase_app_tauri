@@ -1,17 +1,24 @@
 "use client";
 
-import { JornaleroList } from "@/components/JornaleroList";
 import { JornaleroForm } from "@/components/JornaleroForm";
+
 import { Separator } from "@/components/ui/separator";
 import { useJornaleroStore } from "@/lib/store";
 import { useEffect } from "react";
+import { DataTableJornalero } from "../record/dataTableJonalero";
+import { createColumns } from "../record/columsTableJornalero";
 
 export default function JornalerosPage() {
-    const { fetchJornaleros } = useJornaleroStore();
+    const { fetchJornaleros, jornaleros } = useJornaleroStore();
 
     useEffect(() => {
         fetchJornaleros();
     }, [fetchJornaleros]);
+
+    const columns = createColumns({
+        handleEdit: () => {},
+        handleDelete: () => {},
+    });
 
     return (
         <div className="container mx-auto py-10">
@@ -30,7 +37,7 @@ export default function JornalerosPage() {
                         Lista de Jornaleros
                     </h2>
                     <Separator className="my-4" />
-                    <JornaleroList />
+                    <DataTableJornalero columns={columns} data={jornaleros} />
                 </div>
             </div>
         </div>
