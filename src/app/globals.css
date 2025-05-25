@@ -41,89 +41,117 @@
     --radius-md: calc(var(--radius) - 2px);
     --radius-lg: var(--radius);
     --radius-xl: calc(var(--radius) + 4px);
+    
+    /* Colores NASE integrados con Tailwind */
+    --color-nase-50: var(--nase-50);
+    --color-nase-100: var(--nase-100);
+    --color-nase-200: var(--nase-200);
+    --color-nase-300: var(--nase-300);
+    --color-nase-400: var(--nase-400);
+    --color-nase-500: var(--nase-500);
+    --color-nase-600: var(--nase-600);
+    --color-nase-700: var(--nase-700);
+    --color-nase-800: var(--nase-800);
+    --color-nase-900: var(--nase-900);
+    --color-nase-950: var(--nase-950);
 }
 
 :root {
     --radius: 0.625rem;
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
+    
+    /* Tema claro usando colores NASE */
+    --background: oklch(0.985 0.008 145); /* Verde muy claro casi blanco */
+    --foreground: oklch(0.2 0.05 145); /* Verde muy oscuro */
     --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
+    --card-foreground: oklch(0.2 0.05 145);
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.2 0.05 145);
+    --primary: oklch(0.35 0.12 145); /* Verde medio-oscuro NASE */
+    --primary-foreground: oklch(0.985 0.008 145);
+    --secondary: oklch(0.96 0.01 145); /* Verde muy claro */
+    --secondary-foreground: oklch(0.35 0.12 145);
+    --muted: oklch(0.96 0.01 145);
+    --muted-foreground: oklch(0.5 0.08 145); /* Verde grisáceo */
+    --accent: oklch(0.94 0.02 145); /* Verde claro para acentos */
+    --accent-foreground: oklch(0.35 0.12 145);
     --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
+    --border: oklch(0.88 0.02 145); /* Verde muy claro para bordes */
+    --input: oklch(0.88 0.02 145);
+    --ring: oklch(0.5 0.08 145);
     --chart-1: oklch(0.646 0.222 41.116);
     --chart-2: oklch(0.6 0.118 184.704);
     --chart-3: oklch(0.398 0.07 227.392);
     --chart-4: oklch(0.828 0.189 84.429);
     --chart-5: oklch(0.769 0.188 70.08);
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+    --sidebar: oklch(0.98 0.005 145);
+    --sidebar-foreground: oklch(0.2 0.05 145);
+    --sidebar-primary: oklch(0.35 0.12 145);
+    --sidebar-primary-foreground: oklch(0.985 0.008 145);
+    --sidebar-accent: oklch(0.94 0.02 145);
+    --sidebar-accent-foreground: oklch(0.35 0.12 145);
+    --sidebar-border: oklch(0.88 0.02 145);
+    --sidebar-ring: oklch(0.5 0.08 145);
 
-    /* NASE LIGHT COLORS */
-    --nase-green-dark: #2c5e1a;
-    --nase-green-medium: #5a7852;
-    --nase-green-light: #f0f4eb;
-    --nase_light_background: #f8f9f4;
-    --nase-border-alpha: #5a7852/20;
+    /* Paleta NASE completa para uso con Tailwind */
+    --nase-50: oklch(0.985 0.008 145); /* #f8faf6 */
+    --nase-100: oklch(0.96 0.015 145); /* #f0f4eb */
+    --nase-200: oklch(0.92 0.025 145); /* #e1e8d6 */
+    --nase-300: oklch(0.85 0.04 145); /* #c8d4b8 */
+    --nase-400: oklch(0.7 0.06 145); /* #92b589 */
+    --nase-500: oklch(0.55 0.08 145); /* #5a7852 */
+    --nase-600: oklch(0.35 0.12 145); /* #2c5e1a */
+    --nase-700: oklch(0.25 0.15 145); /* #1f4413 */
+    --nase-800: oklch(0.2 0.12 145); /* #1a3610 */
+    --nase-900: oklch(0.15 0.08 145); /* #162a0e */
+    --nase-950: oklch(0.1 0.05 145); /* #0f1c0a */
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+    /* Tema oscuro suave y agradable usando colores NASE */
+    --background: oklch(0.12 0.015 145); /* Fondo muy oscuro pero suave */
+    --foreground: oklch(0.85 0.02 145); /* Texto claro pero no blanco puro */
+    --card: oklch(0.16 0.02 145); /* Cards ligeramente más claras que el fondo */
+    --card-foreground: oklch(0.85 0.02 145);
+    --popover: oklch(0.16 0.02 145);
+    --popover-foreground: oklch(0.85 0.02 145);
+    --primary: oklch(0.65 0.08 145); /* Verde suave y no muy saturado */
+    --primary-foreground: oklch(0.12 0.015 145);
+    --secondary: oklch(0.18 0.025 145); /* Gris verdoso muy sutil */
+    --secondary-foreground: oklch(0.8 0.025 145);
+    --muted: oklch(0.18 0.025 145);
+    --muted-foreground: oklch(0.6 0.035 145); /* Texto secundario suave */
+    --accent: oklch(0.22 0.03 145); /* Acento sutil */
+    --accent-foreground: oklch(0.8 0.025 145);
+    --destructive: oklch(0.65 0.15 25); /* Rojo más suave */
+    --border: oklch(0.25 0.02 145); /* Bordes muy sutiles */
+    --input: oklch(0.2 0.025 145);
+    --ring: oklch(0.6 0.05 145);
+    --chart-1: oklch(0.6 0.12 145);
+    --chart-2: oklch(0.65 0.08 180);
+    --chart-3: oklch(0.55 0.06 220);
+    --chart-4: oklch(0.7 0.1 80);
+    --chart-5: oklch(0.68 0.09 60);
+    --sidebar: oklch(0.14 0.02 145); /* Sidebar ligeramente diferente */
+    --sidebar-foreground: oklch(0.85 0.02 145);
+    --sidebar-primary: oklch(0.65 0.08 145);
+    --sidebar-primary-foreground: oklch(0.12 0.015 145);
+    --sidebar-accent: oklch(0.22 0.03 145);
+    --sidebar-accent-foreground: oklch(0.8 0.025 145);
+    --sidebar-border: oklch(0.25 0.02 145);
+    --sidebar-ring: oklch(0.6 0.05 145);
 
-    /* NASE DARK COLORS */
-    --nase-green-dark: #4abb29;
-    --nase-green-medium: #92b589;
-    --nase-green-light: #253320;
-    --nase-dark-background: #1a1f18;
-    --nase-border-alpha: #92b589/20;
+    /* Paleta NASE suave para dark mode */
+    --nase-50: oklch(0.1 0.01 145);   /* Casi negro verdoso */
+    --nase-100: oklch(0.12 0.015 145); /* Fondo principal */
+    --nase-200: oklch(0.16 0.02 145);  /* Cards y elementos */
+    --nase-300: oklch(0.22 0.03 145);  /* Bordes y acentos */
+    --nase-400: oklch(0.35 0.04 145);  /* Elementos interactivos */
+    --nase-500: oklch(0.5 0.05 145);   /* Texto secundario */
+    --nase-600: oklch(0.65 0.08 145);  /* Primary color */
+    --nase-700: oklch(0.75 0.04 145);  /* Texto menos importante */
+    --nase-800: oklch(0.85 0.02 145);  /* Texto principal */
+    --nase-900: oklch(0.92 0.015 145); /* Texto muy claro */
+    --nase-950: oklch(0.96 0.01 145);  /* Blanco verdoso */
 }
 
 @layer base {
