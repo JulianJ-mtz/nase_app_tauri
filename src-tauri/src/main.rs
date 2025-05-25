@@ -23,10 +23,11 @@ fn main() {
         // Establecer el manejador de invocación
         .plugin(tauri_plugin_sql::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
-            insertar_jornalero,
-            obtener_jornaleros,
-            obtener_jornalero_por_id,
-            actualizar_jornalero
+            post_jornalero,
+            get_jornaleros,
+            get_jornalero_by_id,
+            put_jornalero,
+            delete_jornalero,
         ])
         // Iniciar la aplicación
         .run(tauri::generate_context!())

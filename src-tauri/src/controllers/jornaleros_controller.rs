@@ -40,7 +40,7 @@ impl From<jornalero::Model> for JornaleroResponse {
 }
 
 #[tauri::command]
-pub async fn insertar_jornalero(
+pub async fn post_jornalero(
     app_handle: AppHandle,
     nombre: String,
     edad: i32,
@@ -92,7 +92,7 @@ pub async fn insertar_jornalero(
 }
 
 #[tauri::command]
-pub async fn obtener_jornaleros(app_handle: AppHandle) -> Result<Vec<JornaleroResponse>, String> {
+pub async fn get_jornaleros(app_handle: AppHandle) -> Result<Vec<JornaleroResponse>, String> {
     // Incrementar contador para debug
     {
         let mut state = APP_STATE.lock().unwrap();
@@ -131,7 +131,10 @@ pub async fn obtener_jornaleros(app_handle: AppHandle) -> Result<Vec<JornaleroRe
 }
 
 #[tauri::command]
-pub async fn obtener_jornalero_por_id(app_handle: AppHandle, id: i32) -> Result<Option<JornaleroResponse>, String> {
+pub async fn get_jornalero_id(
+    app_handle: AppHandle,
+    id: i32,
+) -> Result<Option<JornaleroResponse>, String> {
     // Incrementar contador para debug
     {
         let mut state = APP_STATE.lock().unwrap();
@@ -167,7 +170,7 @@ pub async fn obtener_jornalero_por_id(app_handle: AppHandle, id: i32) -> Result<
 }
 
 #[tauri::command]
-pub async fn actualizar_jornalero(
+pub async fn put_jornalero(
     app_handle: AppHandle,
     id: i32,
     nombre: String,
@@ -227,4 +230,36 @@ pub async fn actualizar_jornalero(
     drop(connection);
 
     Ok(format!("Jornalero ID: {} actualizado con éxito", res.id))
+}
+
+#[tauri::command]
+pub async fn delete_jornalero(app_handle: AppHandle, id: i32) -> Result<String, String> {
+    {
+        let mut state = APP_STATE.lock().unwrap();
+        state.operation_count += 1;
+        println!("Operación de eliminación #{}", state.operation_count);
+    }
+
+    let connection = match obt_connection(&app_handle).await {
+        Ok(conn) => conn,
+        Err(e) => {
+            println!("Error al conectar a la base de datos: {}", e);
+            return Err(format!("Error de conexión: {}", e));
+        }
+    };
+
+    let res = match Jornalero::delete_by_id(id).exec(&connection).await {
+        Ok(result) => result,
+        Err(e) => {
+            println!("Error al eliminar jornalero: {}", e);
+            return Err(format!("Error de eliminación: {}", e));
+        }
+    };
+
+    drop(connection);
+
+    Ok(format!(
+        "Jornalero ID: {} eliminado con éxito",
+        res.rows_affected
+    ))
 }
