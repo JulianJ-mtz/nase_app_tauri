@@ -1,4 +1,4 @@
-use sea_orm_migration::{prelude::*};
+use sea_orm_migration::prelude::*;
 
 #[derive(Iden)]
 enum Jornalero {
@@ -11,7 +11,7 @@ enum Jornalero {
     Activo,
 }
 
-#[derive(DeriveMigrationName)] 
+#[derive(DeriveMigrationName)]
 pub struct Migration;
 
 #[async_trait::async_trait]

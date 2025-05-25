@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Leaf, Menu, BarChart3, Users, Sprout } from "lucide-react";
+import { Leaf, Menu, BarChart3, Users, Sprout, UserRound } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -32,6 +32,12 @@ export function Navbar() {
             label: "Métricas",
             icon: <BarChart3 className="mr-2 h-5 w-5" />,
             active: pathname === "/metrics",
+        },
+        {
+            href: "/jornaleros",
+            label: "Jornaleros",
+            icon: <UserRound className="mr-2 h-5 w-5" />,
+            active: pathname === "/jornaleros",
         },
     ];
 
