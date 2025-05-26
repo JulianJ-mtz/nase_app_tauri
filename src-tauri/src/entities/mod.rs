@@ -2,5 +2,7 @@
 
 pub mod prelude;
 
+pub mod cuadrilla;
 pub mod jornalero;
-//pub mod post;
+pub mod produccion;
+pub mod temporada;

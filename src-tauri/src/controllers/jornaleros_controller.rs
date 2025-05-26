@@ -5,15 +5,18 @@ use app_lib::obt_connection;
 use sea_orm::prelude::*;
 use sea_orm::*;
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 use tauri::AppHandle;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct JornaleroData {
     pub nombre: String,
     pub edad: i32,
-    pub produccion: Option<i32>,
-    pub errores: i32,
-    pub activo: Option<bool>,
+    pub estado: String,
+    pub fecha_contratacion: String, // Formato YYYY-MM-DD
+    pub produccion_jornalero: Option<Decimal>,
+    pub errores: Option<i32>,
+    pub cuadrilla_id: Option<i32>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -21,9 +24,13 @@ pub struct JornaleroResponse {
     pub id: i32,
     pub nombre: String,
     pub edad: i32,
-    pub produccion: Option<i32>,
-    pub errores: i32,
-    pub activo: Option<bool>,
+    pub estado: String,
+    pub fecha_contratacion: String,
+    pub produccion_jornalero: Option<Decimal>,
+    pub errores: Option<i32>,
+    pub cuadrilla_id: Option<i32>,
+    pub created_at: Option<String>,
+    pub updated_at: Option<String>,
 }
 
 impl From<jornalero::Model> for JornaleroResponse {
@@ -32,22 +39,19 @@ impl From<jornalero::Model> for JornaleroResponse {
             id: model.id,
             nombre: model.nombre,
             edad: model.edad,
-            produccion: model.produccion,
+            estado: model.estado,
+            fecha_contratacion: model.fecha_contratacion.to_string(),
+            produccion_jornalero: model.produccion_jornalero,
             errores: model.errores,
-            activo: model.activo,
+            cuadrilla_id: model.cuadrilla_id,
+            created_at: model.created_at.map(|dt| dt.to_string()),
+            updated_at: model.updated_at.map(|dt| dt.to_string()),
         }
     }
 }
 
 #[tauri::command]
-pub async fn post_jornalero(
-    app_handle: AppHandle,
-    nombre: String,
-    edad: i32,
-    produccion: Option<i32>,
-    errores: i32,
-    activo: Option<bool>,
-) -> Result<String, String> {
+pub async fn post_jornalero(app_handle: AppHandle, data: JornaleroData) -> Result<String, String> {
     // Incrementar contador para debug
     {
         let mut state = APP_STATE.lock().unwrap();
@@ -64,13 +68,23 @@ pub async fn post_jornalero(
         }
     };
 
+    // Parsear la fecha
+    let fecha_contratacion = match Date::from_str(&data.fecha_contratacion) {
+        Ok(date) => date,
+        Err(e) => return Err(format!("Fecha inválida: {}", e)),
+    };
+
     let jornalero = jornalero::ActiveModel {
         id: ActiveValue::NotSet,
-        nombre: ActiveValue::Set(nombre),
-        edad: ActiveValue::Set(edad),
-        produccion: ActiveValue::Set(produccion),
-        errores: ActiveValue::Set(errores),
-        activo: ActiveValue::Set(activo),
+        nombre: ActiveValue::Set(data.nombre),
+        edad: ActiveValue::Set(data.edad),
+        estado: ActiveValue::Set(data.estado),
+        fecha_contratacion: ActiveValue::Set(fecha_contratacion),
+        produccion_jornalero: ActiveValue::Set(data.produccion_jornalero),
+        errores: ActiveValue::Set(data.errores),
+        cuadrilla_id: ActiveValue::Set(data.cuadrilla_id),
+        created_at: ActiveValue::NotSet,
+        updated_at: ActiveValue::NotSet,
     };
 
     // Ejecutar inserción
@@ -173,11 +187,7 @@ pub async fn get_jornalero_by_id(
 pub async fn put_jornalero(
     app_handle: AppHandle,
     id: i32,
-    nombre: String,
-    edad: i32,
-    produccion: Option<i32>,
-    errores: i32,
-    activo: Option<bool>,
+    data: JornaleroData,
 ) -> Result<String, String> {
     // Incrementar contador para debug
     {
@@ -207,15 +217,23 @@ pub async fn put_jornalero(
         }
     };
 
+    // Parsear la fecha
+    let fecha_contratacion = match Date::from_str(&data.fecha_contratacion) {
+        Ok(date) => date,
+        Err(e) => return Err(format!("Fecha inválida: {}", e)),
+    };
+
     // Crear el modelo activo para actualizar
     let mut jornalero_actualizado: jornalero::ActiveModel = jornalero_existente.into();
 
     // Actualizar los campos
-    jornalero_actualizado.nombre = ActiveValue::Set(nombre);
-    jornalero_actualizado.edad = ActiveValue::Set(edad);
-    jornalero_actualizado.produccion = ActiveValue::Set(produccion);
-    jornalero_actualizado.errores = ActiveValue::Set(errores);
-    jornalero_actualizado.activo = ActiveValue::Set(activo);
+    jornalero_actualizado.nombre = ActiveValue::Set(data.nombre);
+    jornalero_actualizado.edad = ActiveValue::Set(data.edad);
+    jornalero_actualizado.estado = ActiveValue::Set(data.estado);
+    jornalero_actualizado.fecha_contratacion = ActiveValue::Set(fecha_contratacion);
+    jornalero_actualizado.produccion_jornalero = ActiveValue::Set(data.produccion_jornalero);
+    jornalero_actualizado.errores = ActiveValue::Set(data.errores);
+    jornalero_actualizado.cuadrilla_id = ActiveValue::Set(data.cuadrilla_id);
 
     // Ejecutar actualización
     let res = match jornalero_actualizado.update(&connection).await {

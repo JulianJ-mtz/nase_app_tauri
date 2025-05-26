@@ -1,21 +1,26 @@
 import { invoke } from '@tauri-apps/api/core';
 
-
 export interface Jornalero {
     id: number;
     nombre: string;
     edad: number;
-    produccion: number | null;
-    errores: number;
-    activo: boolean | null;
+    estado: string;
+    fecha_contratacion: string;
+    produccion_jornalero: number | null;
+    errores: number | null;
+    cuadrilla_id: number | null;
+    created_at: string | null;
+    updated_at: string | null;
 }
 
 export interface JornaleroData {
     nombre: string;
     edad: number;
-    produccion?: number | null;
-    errores: number;
-    activo?: boolean | null;
+    estado: string;
+    fecha_contratacion: string;
+    produccion_jornalero?: number | null;
+    errores?: number | null;
+    cuadrilla_id?: number | null;
 }
 
 export async function obtenerJornaleros(): Promise<Jornalero[]> {
@@ -39,13 +44,7 @@ export async function obtenerJornaleroPorId(id: number): Promise<Jornalero | nul
 // Función para insertar un nuevo jornalero
 export async function insertarJornalero(datos: JornaleroData): Promise<string> {
     try {
-        return await invoke<string>('post_jornalero', {
-            nombre: datos.nombre,
-            edad: datos.edad,
-            produccion: datos.produccion,
-            errores: datos.errores,
-            activo: datos.activo
-        });
+        return await invoke<string>('post_jornalero', { data: datos });
     } catch (error) {
         console.error('Error al insertar jornalero:', error);
         throw error;
@@ -55,14 +54,7 @@ export async function insertarJornalero(datos: JornaleroData): Promise<string> {
 // Función para actualizar un jornalero existente
 export async function actualizarJornalero(id: number, datos: JornaleroData): Promise<string> {
     try {
-        return await invoke<string>('put_jornalero', {
-            id,
-            nombre: datos.nombre,
-            edad: datos.edad,
-            produccion: datos.produccion,
-            errores: datos.errores,
-            activo: datos.activo
-        });
+        return await invoke<string>('put_jornalero', { id, data: datos });
     } catch (error) {
         console.error('Error al actualizar jornalero:', error);
         throw error;

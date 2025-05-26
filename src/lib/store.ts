@@ -74,13 +74,13 @@ export const useJornaleroStore = create<JornaleroStore>((set, get) => ({
         try {
             // No activamos el indicador de carga para evitar el parpadeo
             // set({ loading: true, error: null });
-            
+
             // Actualizamos primero la UI para una experiencia más fluida
             set((state) => ({
                 jornaleros: state.jornaleros.filter(j => j.id !== id),
                 error: null
             }));
-            
+
             // Luego hacemos la petición a la API
             const result = await eliminarJornalero(id);
             return result;
@@ -92,4 +92,4 @@ export const useJornaleroStore = create<JornaleroStore>((set, get) => ({
             throw error;
         }
     }
-})); 
+}));

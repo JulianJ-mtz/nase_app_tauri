@@ -1,7 +1,10 @@
-pub use sea_orm_migration::prelude::*;
+mod m20250526_000230_create_table_temporada;
+mod m20250526_001159_create_table_cuadrilla;
+mod m20250526_001923_create_table_jornalero;
+mod m20250526_002315_create_table_produccion;
+mod m20250526_002615_create_table_lider_cuadrilla;
 
-mod m20220101_000001_create_table;
-mod m20250523_021119_create_table_jornalero;
+pub use sea_orm_migration::prelude::*;
 
 pub struct Migrator;
 
@@ -9,8 +12,11 @@ pub struct Migrator;
 impl MigratorTrait for Migrator {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
         vec![
-            Box::new(m20220101_000001_create_table::Migration),
-            Box::new(m20250523_021119_create_table_jornalero::Migration),
+            Box::new(m20250526_000230_create_table_temporada::CreateTemporada),
+            Box::new(m20250526_001159_create_table_cuadrilla::CreateCuadrilla),
+            Box::new(m20250526_001923_create_table_jornalero::CreateJornalero),
+            Box::new(m20250526_002315_create_table_produccion::CreateProduccion),
+            Box::new(m20250526_002615_create_table_lider_cuadrilla::CreateLiderCuadrilla),
         ]
     }
 }

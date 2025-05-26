@@ -4,12 +4,14 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Jornalero } from "@/lib/api";
 
 interface ColumnHandlers {
-  handleEdit: (id: number) => void;
-  handleDelete: (id: number) => void;
-  
+    handleEdit: (id: number) => void;
+    handleDelete: (id: number) => void;
 }
 
-export const createColumns = ({ handleEdit, handleDelete }: ColumnHandlers): ColumnDef<Jornalero>[] => [
+export const createColumns = ({
+    handleEdit,
+    handleDelete,
+}: ColumnHandlers): ColumnDef<Jornalero>[] => [
     {
         accessorKey: "id",
         header: "ID",
@@ -28,16 +30,16 @@ export const createColumns = ({ handleEdit, handleDelete }: ColumnHandlers): Col
     {
         accessorKey: "produccion",
         header: "Producción",
-        cell: ({ row }) => row.original.produccion ?? "N/A",
+        cell: ({ row }) => row.original.produccion_jornalero ?? "N/A",
     },
     {
         accessorKey: "errores",
         header: "Errores",
     },
     {
-        accessorKey: "activo",
+        accessorKey: "estado",
         header: "Estado",
-        cell: ({ row }) => (row.original.activo ? "Activo" : "Inactivo"),
+        cell: ({ row }) => (row.original.estado ? "Activo" : "Inactivo"),
     },
     {
         id: "acciones",

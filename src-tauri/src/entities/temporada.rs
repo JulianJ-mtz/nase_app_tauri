@@ -3,31 +3,22 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "jornalero")]
+#[sea_orm(table_name = "temporada")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub nombre: String,
-    pub edad: i32,
-    pub estado: String,
-    pub fecha_contratacion: Date,
+    pub fecha_inicial: Date,
+    pub fecha_final: Date,
+    pub meses: i32,
     #[sea_orm(column_type = "Decimal(Some((15, 3)))", nullable)]
-    pub produccion_jornalero: Option<Decimal>,
-    pub errores: Option<i32>,
-    pub cuadrilla_id: Option<i32>,
+    pub produccion_total: Option<Decimal>,
     pub created_at: Option<DateTimeUtc>,
     pub updated_at: Option<DateTimeUtc>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(
-        belongs_to = "super::cuadrilla::Entity",
-        from = "Column::CuadrillaId",
-        to = "super::cuadrilla::Column::Id",
-        on_update = "Cascade",
-        on_delete = "SetNull"
-    )]
+    #[sea_orm(has_many = "super::cuadrilla::Entity")]
     Cuadrilla,
     #[sea_orm(has_many = "super::produccion::Entity")]
     Produccion,
