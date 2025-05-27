@@ -28,6 +28,8 @@ fn main() {
             get_jornalero_by_id,
             put_jornalero,
             delete_jornalero,
+            get_cuadrillas,
+            post_cuadrilla,
         ])
         // Iniciar la aplicación
         .run(tauri::generate_context!())

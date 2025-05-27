@@ -13,7 +13,7 @@ pub struct Model {
     pub lote: String,
     pub variedad: String,
     pub integrantes: Option<i32>,
-    pub temporada_id: i32,
+    pub temporada_id: Option<i32>,
     pub created_at: Option<DateTimeUtc>,
     pub updated_at: Option<DateTimeUtc>,
 }

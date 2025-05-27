@@ -55,7 +55,7 @@ impl MigrationTrait for CreateCuadrilla {
                             .not_null(),
                     )
                     .col(ColumnDef::new(Cuadrilla::Integrantes).integer().default(0))
-                    .col(ColumnDef::new(Cuadrilla::TemporadaId).integer().not_null())
+                    .col(ColumnDef::new(Cuadrilla::TemporadaId).integer().null())
                     .col(
                         ColumnDef::new(Cuadrilla::CreatedAt)
                             .timestamp()
