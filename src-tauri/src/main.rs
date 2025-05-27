@@ -33,7 +33,12 @@ fn main() {
             get_cuadrillas,
             get_cuadrilla_by_id,
             put_cuadrilla,
-            delete_cuadrilla
+            delete_cuadrilla,
+            post_produccion,
+            get_produccion,
+            get_produccion_by_id,
+            put_produccion,
+            delete_produccion
         ])
         // Iniciar la aplicación
         .run(tauri::generate_context!())

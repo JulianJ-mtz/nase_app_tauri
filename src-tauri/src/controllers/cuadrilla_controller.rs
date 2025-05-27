@@ -157,6 +157,7 @@ pub async fn get_cuadrilla_by_id(
     Ok(res)
 }
 
+
 #[tauri::command]
 pub async fn put_cuadrilla(
     app_handle: AppHandle,
