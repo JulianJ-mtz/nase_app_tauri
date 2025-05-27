@@ -4,3 +4,5 @@ pub mod jornaleros_controller;
 pub use jornaleros_controller::*;
 pub mod produccion_controller;
 pub use produccion_controller::*;
+pub mod temporada_controller;
+pub use temporada_controller::*;

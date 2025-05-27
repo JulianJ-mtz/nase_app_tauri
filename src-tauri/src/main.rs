@@ -38,7 +38,12 @@ fn main() {
             get_produccion,
             get_produccion_by_id,
             put_produccion,
-            delete_produccion
+            delete_produccion,
+            post_temporada,
+            get_temporadas,
+            get_temporada_by_id,
+            put_temporada,
+            delete_temporada
         ])
         // Iniciar la aplicación
         .run(tauri::generate_context!())
