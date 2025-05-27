@@ -31,8 +31,8 @@ impl MigrationTrait for CreateTemporada {
                             .primary_key(),
                     )
                     .col(ColumnDef::new(Temporada::FechaInicial).date().not_null())
-                    .col(ColumnDef::new(Temporada::FechaFinal).date().not_null())
-                    .col(ColumnDef::new(Temporada::Meses).integer().not_null())
+                    .col(ColumnDef::new(Temporada::FechaFinal).date().null())
+                    .col(ColumnDef::new(Temporada::Meses).integer().null())
                     .col(
                         ColumnDef::new(Temporada::ProduccionTotal)
                             .decimal_len(15, 3)

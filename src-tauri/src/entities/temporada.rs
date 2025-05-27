@@ -8,8 +8,8 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub fecha_inicial: Date,
-    pub fecha_final: Date,
-    pub meses: i32,
+    pub fecha_final: Option<Date>,
+    pub meses: Option<i32>,
     #[sea_orm(column_type = "Decimal(Some((15, 3)))", nullable)]
     pub produccion_total: Option<Decimal>,
     pub created_at: Option<DateTimeUtc>,

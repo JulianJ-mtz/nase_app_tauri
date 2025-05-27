@@ -17,6 +17,7 @@ pub struct CuadrillaData {
     pub produccion_cuadrilla: Option<Decimal>,
     pub lote: String,
     pub variedad: String,
+    pub empaque: Option<String>,
     pub integrantes: Option<i32>,
     pub temporada_id: Option<i32>,
 }
@@ -28,6 +29,7 @@ pub struct CuadrillaResponse {
     pub produccion_cuadrilla: Option<Decimal>,
     pub lote: String,
     pub variedad: String,
+    pub empaque: Option<String>,
     pub integrantes: Option<i32>,
     pub temporada_id: Option<i32>,
     pub created_at: Option<String>,
@@ -42,6 +44,7 @@ impl From<cuadrilla::Model> for CuadrillaResponse {
             produccion_cuadrilla: model.produccion_cuadrilla,
             lote: model.lote,
             variedad: model.variedad,
+            empaque: model.empaque,
             integrantes: model.integrantes,
             temporada_id: model.temporada_id,
             created_at: model.created_at.map(|dt| dt.to_string()),
@@ -66,6 +69,7 @@ pub async fn post_cuadrilla(app_handle: AppHandle, data: CuadrillaData) -> Resul
         produccion_cuadrilla: ActiveValue::Set(data.produccion_cuadrilla),
         lote: ActiveValue::Set(data.lote),
         variedad: ActiveValue::Set(data.variedad),
+        empaque: ActiveValue::Set(data.empaque),
         integrantes: ActiveValue::Set(data.integrantes),
         temporada_id: ActiveValue::Set(data.temporada_id),
         created_at: ActiveValue::NotSet,
@@ -198,6 +202,7 @@ pub async fn put_cuadrilla(
     cuadrilla_actulizada.produccion_cuadrilla = ActiveValue::Set(data.produccion_cuadrilla);
     cuadrilla_actulizada.lote = ActiveValue::Set(data.lote);
     cuadrilla_actulizada.integrantes = ActiveValue::Set(data.integrantes);
+    cuadrilla_actulizada.empaque = ActiveValue::Set(data.empaque);
     cuadrilla_actulizada.variedad = ActiveValue::Set(data.variedad);
     cuadrilla_actulizada.temporada_id = ActiveValue::Set(data.temporada_id);
 

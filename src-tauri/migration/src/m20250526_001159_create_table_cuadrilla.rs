@@ -13,6 +13,7 @@ pub enum Cuadrilla {
     ProduccionCuadrilla,
     Lote,
     Variedad,
+    Empaque,
     Integrantes,
     TemporadaId,
     CreatedAt,
@@ -53,6 +54,12 @@ impl MigrationTrait for CreateCuadrilla {
                             .string()
                             .string_len(100)
                             .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(Cuadrilla::Empaque)
+                            .string()
+                            .string_len(100)
+                            .null(),
                     )
                     .col(ColumnDef::new(Cuadrilla::Integrantes).integer().default(0))
                     .col(ColumnDef::new(Cuadrilla::TemporadaId).integer().null())

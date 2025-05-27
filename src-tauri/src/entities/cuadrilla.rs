@@ -12,6 +12,7 @@ pub struct Model {
     pub produccion_cuadrilla: Option<Decimal>,
     pub lote: String,
     pub variedad: String,
+    pub empaque: Option<String>,
     pub integrantes: Option<i32>,
     pub temporada_id: Option<i32>,
     pub created_at: Option<DateTimeUtc>,

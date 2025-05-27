@@ -7,6 +7,7 @@ export interface Cuadrilla {
     Lote: string;
     Variedad: string;
     Integrantes: string;
+    Empaque: string | null;
     TemporadaId: number;
     CreatedAt: string;
     UpdatedAt: string;
@@ -19,6 +20,7 @@ export interface CuadrillaData {
     Lote: string;
     Variedad: string;
     Integrantes: string;
+    Empaque: string | null;
     TemporadaId: number | null;
 }
 

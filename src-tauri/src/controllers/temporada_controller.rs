@@ -13,8 +13,8 @@ use tauri::AppHandle;
 pub struct TemporadaData {
     pub id: i32,
     pub fecha_inicial: String, // Se recibe como string para facilitar la serialización
-    pub fecha_final: String,   // Se recibe como string para facilitar la serialización
-    pub meses: i32,
+    pub fecha_final: Option<String>, // Se recibe como string para facilitar la serialización
+    pub meses: Option<i32>,
     pub produccion_total: Option<Decimal>,
 }
 
@@ -22,8 +22,8 @@ pub struct TemporadaData {
 pub struct TemporadaResponse {
     pub id: i32,
     pub fecha_inicial: String,
-    pub fecha_final: String,
-    pub meses: i32,
+    pub fecha_final: Option<String>,
+    pub meses: Option<i32>,
     pub produccion_total: Option<Decimal>,
     pub created_at: Option<String>,
     pub updated_at: Option<String>,
@@ -34,7 +34,7 @@ impl From<temporada::Model> for TemporadaResponse {
         TemporadaResponse {
             id: model.id,
             fecha_inicial: model.fecha_inicial.to_string(),
-            fecha_final: model.fecha_final.to_string(),
+            fecha_final: model.fecha_final.map(|date| date.to_string()),
             meses: model.meses,
             produccion_total: model.produccion_total,
             created_at: model.created_at.map(|dt| dt.to_string()),
@@ -54,26 +54,24 @@ pub async fn post_temporada(app_handle: AppHandle, data: TemporadaData) -> Resul
     };
 
     // Parsear las fechas desde string a Date
-    let fecha_inicial = match Date::parse_from_str(&data.fecha_inicial, "%Y-%m-%d") {
-        Ok(date) => date,
-        Err(e) => {
-            println!("Error al parsear fecha inicial: {}", e);
-            return Err(format!("Error en formato de fecha inicial: {}", e));
-        }
-    };
+    let fecha_inicial = Date::parse_from_str(&data.fecha_inicial, "%Y-%m-%d")
+        .map_err(|e| format!("Error en formato de fecha inicial: {}", e))?;
 
-    let fecha_final = match Date::parse_from_str(&data.fecha_final, "%Y-%m-%d") {
-        Ok(date) => date,
-        Err(e) => {
-            println!("Error al parsear fecha final: {}", e);
-            return Err(format!("Error en formato de fecha final: {}", e));
-        }
+    let fecha_final = match data.fecha_final.as_ref() {
+        Some(fecha) => match Date::parse_from_str(fecha, "%Y-%m-%d") {
+            Ok(date) => date,
+            Err(e) => {
+                println!("Error al parsear fecha final: {}", e);
+                return Err(format!("Error en formato de fecha final: {}", e));
+            }
+        },
+        None => return Err("Fecha final no proporcionada".to_string()),
     };
 
     let temporada = temporada::ActiveModel {
         id: ActiveValue::NotSet,
         fecha_inicial: ActiveValue::Set(fecha_inicial),
-        fecha_final: ActiveValue::Set(fecha_final),
+        fecha_final: ActiveValue::Set(Some(fecha_final)),
         meses: ActiveValue::Set(data.meses),
         produccion_total: ActiveValue::Set(data.produccion_total),
         created_at: ActiveValue::NotSet,
@@ -199,26 +197,24 @@ pub async fn put_temporada(
     };
 
     // Parsear las fechas desde string a Date
-    let fecha_inicial = match Date::parse_from_str(&data.fecha_inicial, "%Y-%m-%d") {
-        Ok(date) => date,
-        Err(e) => {
-            println!("Error al parsear fecha inicial: {}", e);
-            return Err(format!("Error en formato de fecha inicial: {}", e));
-        }
-    };
+    let fecha_inicial = Date::parse_from_str(&data.fecha_inicial, "%Y-%m-%d")
+        .map_err(|e| format!("Error en formato de fecha inicial: {}", e))?;
 
-    let fecha_final = match Date::parse_from_str(&data.fecha_final, "%Y-%m-%d") {
-        Ok(date) => date,
-        Err(e) => {
-            println!("Error al parsear fecha final: {}", e);
-            return Err(format!("Error en formato de fecha final: {}", e));
-        }
+    let fecha_final = match data.fecha_final.as_ref() {
+        Some(fecha) => match Date::parse_from_str(fecha, "%Y-%m-%d") {
+            Ok(date) => date,
+            Err(e) => {
+                println!("Error al parsear fecha final: {}", e);
+                return Err(format!("Error en formato de fecha final: {}", e));
+            }
+        },
+        None => return Err("Fecha final no proporcionada".to_string()),
     };
 
     let mut temporada_actualizada: temporada::ActiveModel = temporada_existente.into();
 
     temporada_actualizada.fecha_inicial = ActiveValue::Set(fecha_inicial);
-    temporada_actualizada.fecha_final = ActiveValue::Set(fecha_final);
+    temporada_actualizada.fecha_final = ActiveValue::Set(Some(fecha_final));
     temporada_actualizada.meses = ActiveValue::Set(data.meses);
     temporada_actualizada.produccion_total = ActiveValue::Set(data.produccion_total);
 
