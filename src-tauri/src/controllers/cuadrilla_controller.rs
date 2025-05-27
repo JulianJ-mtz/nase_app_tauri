@@ -1,3 +1,4 @@
+use crate::entities::cuadrilla::Model;
 use crate::entities::prelude::*;
 use crate::entities::*;
 use crate::APP_STATE;
@@ -6,7 +7,7 @@ use rust_decimal::Decimal;
 use sea_orm::prelude::*;
 use sea_orm::*;
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
+// use std::str::FromStr;
 use tauri::AppHandle;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -112,12 +113,134 @@ pub async fn get_cuadrillas(app_handle: AppHandle) -> Result<Vec<CuadrillaRespon
         }
     };
 
-    drop(connection);
-
     let res = cuadrillas
         .into_iter()
         .map(CuadrillaResponse::from)
         .collect();
 
+    drop(connection);
+
     Ok(res)
+}
+
+#[tauri::command]
+pub async fn get_cuadrilla_by_id(
+    app_handle: AppHandle,
+    id: i32,
+) -> Result<Option<CuadrillaResponse>, String> {
+    {
+        let mut state = APP_STATE.lock().unwrap();
+        state.operation_count += 1;
+        println!("Operación de búsqueda por ID #{}", state.operation_count);
+    }
+
+    let connection = match obt_connection(&app_handle).await {
+        Ok(conn) => conn,
+        Err(e) => {
+            println!("Error al conectar a la base de datos: {}", e);
+            return Err(format!("Error de conexión: {}", e));
+        }
+    };
+
+    let cuadrilla = match Cuadrilla::find_by_id(id).one(&connection).await {
+        Ok(result) => result,
+        Err(e) => {
+            println!("Eror al buscar cuadrilla por ID {}", e);
+            return Err(format!("Error de busqueda: {}", e));
+        }
+    };
+
+    let res: Option<CuadrillaResponse> = cuadrilla.map(CuadrillaResponse::from);
+
+    drop(connection);
+
+    Ok(res)
+}
+
+#[tauri::command]
+pub async fn put_cuadrilla(
+    app_handle: AppHandle,
+    id: i32,
+    data: CuadrillaData,
+) -> Result<String, String> {
+    // Incrementar contador para debug
+    {
+        let mut state = APP_STATE.lock().unwrap();
+        state.operation_count += 1;
+        println!("Operación de actualización #{}", state.operation_count);
+    }
+
+    // Obtener conexión a la base de datos
+    let connection = match obt_connection(&app_handle).await {
+        Ok(conn) => conn,
+        Err(e) => {
+            println!("Error al conectar a la base de datos: {}", e);
+            return Err(format!("Error de conexión: {}", e));
+        }
+    };
+
+    let cuadrilla_existente: Model = match Cuadrilla::find_by_id(id).one(&connection).await {
+        Ok(Some(c)) => c,
+        Ok(None) => {
+            return Err(format!("No existe una cuadrilla con ID: {}", id));
+        }
+        Err(e) => {
+            println!("Error al buscar cuadrilla: {}", e);
+            return Err(format!("Error de busqueda: {}", e));
+        }
+    };
+
+    let mut cuadrilla_actulizada: cuadrilla::ActiveModel = cuadrilla_existente.into();
+
+    cuadrilla_actulizada.lider_cuadrilla = ActiveValue::Set(data.lider_cuadrilla);
+    cuadrilla_actulizada.integrantes = ActiveValue::Set(data.integrantes);
+    cuadrilla_actulizada.produccion_cuadrilla = ActiveValue::Set(data.produccion_cuadrilla);
+    cuadrilla_actulizada.lote = ActiveValue::Set(data.lote);
+    cuadrilla_actulizada.integrantes = ActiveValue::Set(data.integrantes);
+    cuadrilla_actulizada.variedad = ActiveValue::Set(data.variedad);
+    cuadrilla_actulizada.temporada_id = ActiveValue::Set(data.temporada_id);
+
+    let res = match cuadrilla_actulizada.update(&connection).await {
+        Ok(result) => result,
+        Err(e) => {
+            println!("Error al actualizar cuadrilla: {}", e);
+            return Err(format!("Error de actualización: {}", e));
+        }
+    };
+
+    drop(connection);
+
+    Ok(format!("Cuadrilla ID: {} actualizado con éxito", res.id))
+}
+
+#[tauri::command]
+pub async fn delete_cuadrilla(app_handle: AppHandle, id: i32) -> Result<String, String> {
+    {
+        let mut state = APP_STATE.lock().unwrap();
+        state.operation_count += 1;
+        println!("Operación de eliminación #{}", state.operation_count);
+    }
+
+    let connection = match obt_connection(&app_handle).await {
+        Ok(conn) => conn,
+        Err(e) => {
+            println!("Error al conectar a la base de datos: {}", e);
+            return Err(format!("Error de conexión: {}", e));
+        }
+    };
+
+    let res = match Cuadrilla::delete_by_id(id).exec(&connection).await {
+        Ok(result) => result,
+        Err(e) => {
+            println!("Error al eliminar cuadrilla: {}", e);
+            return Err(format!("Error de eliminación: {}", e));
+        }
+    };
+
+    drop(connection);
+
+    Ok(format!(
+        "Cuadrilla ID: {} eliminado con éxito",
+        res.rows_affected
+    ))
 }

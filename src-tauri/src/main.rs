@@ -30,6 +30,10 @@ fn main() {
             delete_jornalero,
             get_cuadrillas,
             post_cuadrilla,
+            get_cuadrillas,
+            get_cuadrilla_by_id,
+            put_cuadrilla,
+            delete_cuadrilla
         ])
         // Iniciar la aplicación
         .run(tauri::generate_context!())
