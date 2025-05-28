@@ -1,4 +1,3 @@
-
 import { invoke } from '@tauri-apps/api/core';
 
 export interface Jornalero {
@@ -38,6 +37,15 @@ export async function obtenerJornaleroPorId(id: number): Promise<Jornalero | nul
         return await invoke<Jornalero | null>('get_jornalero_by_id', { id });
     } catch (error) {
         console.error('Error al obtener jornalero por ID:', error);
+        throw error;
+    }
+}
+
+export async function obtenerJornalerosPorCuadrilla(cuadrillaId: number): Promise<Jornalero[]> {
+    try {
+        return await invoke<Jornalero[]>('get_jornaleros_by_cuadrilla', { cuadrillaId });
+    } catch (error) {
+        console.error('Error al obtener jornaleros por cuadrilla:', error);
         throw error;
     }
 }

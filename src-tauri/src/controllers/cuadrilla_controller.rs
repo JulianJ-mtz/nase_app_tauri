@@ -12,7 +12,7 @@ use tauri::AppHandle;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CuadrillaData {
-    pub id: i32,
+    pub id: Option<i32>,
     pub lider_cuadrilla: Option<i32>,
     pub produccion_cuadrilla: Option<Decimal>,
     pub lote: String,

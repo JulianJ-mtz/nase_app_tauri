@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { JornaleroForm } from "@/components/JornaleroForm";
 
-import { useJornaleroStore } from "@/lib/store";
+import { useJornaleroStore } from "@/lib/storeJornalero";
 import { DataTableJornalero } from "./dataTableJonalero";
 import { createColumns } from "./columsTableJornalero";
 import { Button } from "@/components/ui/button";

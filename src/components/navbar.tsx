@@ -37,6 +37,12 @@ export function Navbar() {
             icon: <UserRound className="mr-2 h-5 w-5" />,
             active: pathname === "/jornaleros",
         },
+        {
+            href: "/cuadrillas",
+            label: "Cuadrillas",
+            icon: <Users className="mr-2 h-5 w-5" />,
+            active: pathname === "/cuadrillas",
+        },
     ];
 
     return (

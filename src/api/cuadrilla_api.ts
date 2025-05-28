@@ -15,13 +15,14 @@ export interface Cuadrilla {
 
 
 export interface CuadrillaData {
-    LiderCuadrilla: string;
-    ProduccionCuadrilla: number | null;
-    Lote: string;
-    Variedad: string;
-    Integrantes: string;
-    Empaque: string | null;
-    TemporadaId: number | null;
+    id?: number;
+    lider_cuadrilla?: number | null;
+    produccion_cuadrilla?: number | null;
+    lote: string;
+    variedad: string;
+    integrantes?: number | null;
+    empaque?: string | null;
+    temporada_id?: number | null;
 }
 
 

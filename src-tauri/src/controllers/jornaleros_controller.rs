@@ -281,3 +281,49 @@ pub async fn delete_jornalero(app_handle: AppHandle, id: i32) -> Result<String, 
         res.rows_affected
     ))
 }
+
+#[tauri::command]
+pub async fn get_jornaleros_by_cuadrilla(
+    app_handle: AppHandle,
+    cuadrilla_id: i32,
+) -> Result<Vec<JornaleroResponse>, String> {
+    // Incrementar contador para debug
+    {
+        let mut state = APP_STATE.lock().unwrap();
+        state.operation_count += 1;
+        println!("Operación de consulta jornaleros por cuadrilla #{}", state.operation_count);
+    }
+
+    // Obtener conexión
+    let connection = match obt_connection(&app_handle).await {
+        Ok(conn) => conn,
+        Err(e) => {
+            println!("Error al conectar a la base de datos: {}", e);
+            return Err(format!("Error de conexión: {}", e));
+        }
+    };
+
+    // Ejecutar consulta filtrando por cuadrilla_id
+    let jornaleros = match Jornalero::find()
+        .filter(jornalero::Column::CuadrillaId.eq(cuadrilla_id))
+        .all(&connection)
+        .await
+    {
+        Ok(result) => result,
+        Err(e) => {
+            println!("Error al consultar jornaleros por cuadrilla: {}", e);
+            return Err(format!("Error de consulta: {}", e));
+        }
+    };
+
+    // Cerrar conexión
+    drop(connection);
+
+    // Convertir los modelos a la respuesta serializable
+    let response = jornaleros
+        .into_iter()
+        .map(JornaleroResponse::from)
+        .collect();
+
+    Ok(response)
+}

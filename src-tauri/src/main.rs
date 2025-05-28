@@ -28,6 +28,7 @@ fn main() {
             get_jornalero_by_id,
             put_jornalero,
             delete_jornalero,
+            get_jornaleros_by_cuadrilla,
             get_cuadrillas,
             post_cuadrilla,
             get_cuadrilla_by_id,

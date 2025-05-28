@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { JornaleroData } from "@/lib/api";
+import type { JornaleroData } from "@/api/jornalero_api";
 import {
     Card,
     CardContent,
@@ -21,11 +21,12 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { useJornaleroStore } from "@/lib/store";
+import { useJornaleroStore } from "@/lib/storeJornalero";
 import { UserIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { useCuadrillaStore } from "@/lib/storeCuadrilla";
 
 interface JornaleroFormProps {
     jornaleroId?: number;
@@ -35,6 +36,7 @@ interface JornaleroFormProps {
 export function JornaleroForm({ jornaleroId, onSuccess }: JornaleroFormProps) {
     const { addJornalero, updateJornalero, getJornaleroById } =
         useJornaleroStore();
+    const { cuadrillas, fetchCuadrillas } = useCuadrillaStore();
 
     const today = new Date();
     const formattedToday = format(today, "yyyy-MM-dd");
@@ -54,6 +56,8 @@ export function JornaleroForm({ jornaleroId, onSuccess }: JornaleroFormProps) {
     const [fetchLoading, setFetchLoading] = useState(false);
 
     useEffect(() => {
+        fetchCuadrillas();
+
         if (jornaleroId) {
             const fetchJornalero = async () => {
                 try {
@@ -84,7 +88,7 @@ export function JornaleroForm({ jornaleroId, onSuccess }: JornaleroFormProps) {
 
             fetchJornalero();
         }
-    }, [jornaleroId, getJornaleroById]);
+    }, [jornaleroId, getJornaleroById, fetchCuadrillas]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type } = e.target;
@@ -102,11 +106,19 @@ export function JornaleroForm({ jornaleroId, onSuccess }: JornaleroFormProps) {
         }
     };
 
-    const handleSelectChange = (value: string, field: string) => {
-        setFormData({
-            ...formData,
-            [field]: value,
-        });
+    const handleSelectChange = (value: string | null, field: string) => {
+        if (field === "cuadrilla_id") {
+            setFormData({
+                ...formData,
+                [field]:
+                    value === "null" ? null : value ? parseInt(value) : null,
+            });
+        } else {
+            setFormData({
+                ...formData,
+                [field]: value === "null" ? null : value,
+            });
+        }
     };
 
     const handleDateChange = (date: Date | undefined) => {
@@ -137,7 +149,21 @@ export function JornaleroForm({ jornaleroId, onSuccess }: JornaleroFormProps) {
 
             const dataToSend = {
                 ...formData,
-                cuadrilla_id: formData.cuadrilla_id || null,
+                edad: Number(formData.edad),
+                produccion_jornalero:
+                    formData.produccion_jornalero === null ||
+                    formData.produccion_jornalero === undefined
+                        ? null
+                        : Number(formData.produccion_jornalero),
+                errores:
+                    formData.errores === null || formData.errores === undefined
+                        ? null
+                        : Number(formData.errores),
+                cuadrilla_id:
+                    formData.cuadrilla_id === null ||
+                    formData.cuadrilla_id === undefined
+                        ? null
+                        : Number(formData.cuadrilla_id),
             };
 
             console.log("Enviando datos al servidor:", dataToSend);
@@ -342,34 +368,65 @@ export function JornaleroForm({ jornaleroId, onSuccess }: JornaleroFormProps) {
 
                     <Separator />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <Label
-                                htmlFor="produccion_jornalero"
-                                className="text-sm font-medium"
-                            >
-                                Producción (kg)
-                            </Label>
-                            <Input
-                                id="produccion_jornalero"
-                                name="produccion_jornalero"
-                                type="number"
-                                min={0}
-                                step="0.001"
-                                value={
-                                    formData.produccion_jornalero === null
-                                        ? ""
-                                        : formData.produccion_jornalero
-                                }
-                                onChange={handleChange}
-                                className="focus-visible:ring-primary"
-                                placeholder="0.000"
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Producción acumulada en kilogramos
-                            </p>
-                        </div>
+                    <div className="space-y-1">
+                        <Label
+                            htmlFor="cuadrilla_id"
+                            className="text-sm font-medium"
+                        >
+                            Cuadrilla
+                        </Label>
+                        <Select
+                            value={formData.cuadrilla_id?.toString() || "null"}
+                            onValueChange={(value) =>
+                                handleSelectChange(
+                                    value === "null" ? null : value,
+                                    "cuadrilla_id"
+                                )
+                            }
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Seleccionar cuadrilla" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="null">
+                                    Sin cuadrilla asignada
+                                </SelectItem>
+                                {cuadrillas.map((cuadrilla) => (
+                                    <SelectItem
+                                        key={cuadrilla.id}
+                                        value={cuadrilla.id.toString()}
+                                    >
+                                        Cuadrilla {cuadrilla.id} -{" "}
+                                        {cuadrilla.LiderCuadrilla ||
+                                            "Sin líder"}
+                                        ({cuadrilla.Lote})
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
 
+                    <div className="space-y-1">
+                        <Label
+                            htmlFor="produccion_jornalero"
+                            className="text-sm font-medium"
+                        >
+                            Producción (kg)
+                        </Label>
+                        <Input
+                            id="produccion_jornalero"
+                            name="produccion_jornalero"
+                            type="number"
+                            placeholder="Producción individual"
+                            value={formData.produccion_jornalero ?? ""}
+                            onChange={handleChange}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                            Producción individual del jornalero
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
                             <Label
                                 htmlFor="errores"

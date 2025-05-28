@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { obtenerJornaleros, insertarJornalero, actualizarJornalero, obtenerJornaleroPorId, eliminarJornalero } from './api';
-import type { Jornalero, JornaleroData } from './api';
+import { obtenerJornaleros, insertarJornalero, actualizarJornalero, obtenerJornaleroPorId, eliminarJornalero } from '@/api/jornalero_api';
+import type { Jornalero, JornaleroData } from '@/api/jornalero_api';
 
 interface JornaleroStore {
     // Estado
