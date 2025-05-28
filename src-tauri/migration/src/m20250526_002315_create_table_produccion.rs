@@ -12,10 +12,7 @@ pub enum Produccion {
     Fecha,
     JornaleroId,
     TemporadaId,
-    Variedad,
     Lote,
-    Empaque,
-    Tipo,
     Cantidad,
     CreatedAt,
     UpdatedAt,
@@ -40,25 +37,7 @@ impl MigrationTrait for CreateProduccion {
                     .col(ColumnDef::new(Produccion::JornaleroId).integer().not_null())
                     .col(ColumnDef::new(Produccion::TemporadaId).integer().not_null())
                     .col(
-                        ColumnDef::new(Produccion::Variedad)
-                            .string()
-                            .string_len(100)
-                            .not_null(),
-                    )
-                    .col(
                         ColumnDef::new(Produccion::Lote)
-                            .string()
-                            .string_len(100)
-                            .not_null(),
-                    )
-                    .col(
-                        ColumnDef::new(Produccion::Empaque)
-                            .string()
-                            .string_len(100)
-                            .not_null(),
-                    )
-                    .col(
-                        ColumnDef::new(Produccion::Tipo)
                             .string()
                             .string_len(100)
                             .not_null(),

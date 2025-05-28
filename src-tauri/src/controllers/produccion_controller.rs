@@ -11,12 +11,13 @@ use tauri::AppHandle;
 pub struct ProduccionData {
     pub jornalero_id: i32,
     pub temporada_id: i32,
-    pub variedad: String,
     pub lote: String,
-    pub empaque: String,
-    pub tipo: String,
     pub cantidad: Decimal, // Use Decimal as defined in the entity
     pub fecha: Date,
+    pub variedad_id: Option<i32>,
+    pub tipo_empaque_id: Option<i32>,
+    pub tipo_uva_id: Option<i32>,
+    pub cliente_id: Option<i32>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -24,11 +25,12 @@ pub struct ProduccionResponse {
     pub id: i32,
     pub jornalero_id: i32,
     pub temporada_id: i32,
-    pub variedad: String,
     pub lote: String,
-    pub empaque: String,
-    pub tipo: String,
     pub cantidad: Decimal,
+    pub variedad_id: Option<i32>,
+    pub tipo_empaque_id: Option<i32>,
+    pub tipo_uva_id: Option<i32>,
+    pub cliente_id: Option<i32>,
     pub created_at: Option<String>,
     pub updated_at: Option<String>,
 }
@@ -39,13 +41,15 @@ impl From<produccion::Model> for ProduccionResponse {
             id: model.id,
             jornalero_id: model.jornalero_id,
             temporada_id: model.temporada_id,
-            variedad: model.variedad,
             lote: model.lote,
-            empaque: model.empaque,
-            tipo: model.tipo,
+
             cantidad: model.cantidad,
             created_at: model.created_at.map(|dt| dt.to_string()),
             updated_at: model.updated_at.map(|dt| dt.to_string()),
+            variedad_id: model.variedad_id,
+            tipo_empaque_id: model.tipo_empaque_id,
+            tipo_uva_id: model.tipo_uva_id,
+            cliente_id: model.cliente_id,
         }
     }
 }
@@ -74,14 +78,15 @@ pub async fn post_produccion(
         id: ActiveValue::NotSet,
         jornalero_id: ActiveValue::Set(data.jornalero_id),
         temporada_id: ActiveValue::Set(data.temporada_id),
-        variedad: ActiveValue::Set(data.variedad),
         lote: ActiveValue::Set(data.lote),
-        empaque: ActiveValue::Set(data.empaque),
-        tipo: ActiveValue::Set(data.tipo),
         cantidad: ActiveValue::Set(data.cantidad),
         fecha: ActiveValue::Set(data.fecha),
         created_at: ActiveValue::NotSet,
         updated_at: ActiveValue::NotSet,
+        variedad_id: ActiveValue::Set(data.variedad_id),
+        tipo_empaque_id: ActiveValue::Set(data.tipo_empaque_id),
+        tipo_uva_id: ActiveValue::Set(data.tipo_uva_id),
+        cliente_id: ActiveValue::Set(data.cliente_id),
     };
 
     let res = match Produccion::insert(produccion).exec(&connection).await {
@@ -206,12 +211,13 @@ pub async fn put_produccion(
 
     produccion_actulizada.jornalero_id = ActiveValue::Set(data.jornalero_id);
     produccion_actulizada.temporada_id = ActiveValue::Set(data.temporada_id);
-    produccion_actulizada.variedad = ActiveValue::Set(data.variedad);
     produccion_actulizada.lote = ActiveValue::Set(data.lote);
-    produccion_actulizada.empaque = ActiveValue::Set(data.empaque);
-    produccion_actulizada.tipo = ActiveValue::Set(data.tipo);
     produccion_actulizada.cantidad = ActiveValue::Set(data.cantidad);
     produccion_actulizada.fecha = ActiveValue::Set(data.fecha);
+    produccion_actulizada.variedad_id = ActiveValue::Set(data.variedad_id);
+    produccion_actulizada.tipo_empaque_id = ActiveValue::Set(data.tipo_empaque_id);
+    produccion_actulizada.tipo_uva_id = ActiveValue::Set(data.tipo_uva_id);
+    produccion_actulizada.cliente_id = ActiveValue::Set(data.cliente_id);
 
     let res = match produccion_actulizada.update(&connection).await {
         Ok(result) => result,

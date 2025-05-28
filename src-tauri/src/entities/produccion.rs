@@ -10,14 +10,15 @@ pub struct Model {
     pub fecha: Date,
     pub jornalero_id: i32,
     pub temporada_id: i32,
-    pub variedad: String,
     pub lote: String,
-    pub empaque: String,
-    pub tipo: String,
     #[sea_orm(column_type = "Decimal(Some((15, 3)))")]
     pub cantidad: Decimal,
     pub created_at: Option<DateTimeUtc>,
     pub updated_at: Option<DateTimeUtc>,
+    pub variedad_id: Option<i32>,
+    pub tipo_empaque_id: Option<i32>,
+    pub tipo_uva_id: Option<i32>,
+    pub cliente_id: Option<i32>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

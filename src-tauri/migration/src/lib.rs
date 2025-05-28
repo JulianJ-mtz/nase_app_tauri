@@ -3,6 +3,11 @@ mod m20250526_001159_create_table_cuadrilla;
 mod m20250526_001923_create_table_jornalero;
 mod m20250526_002315_create_table_produccion;
 mod m20250526_002615_create_table_lider_cuadrilla;
+mod m20250528_075840_create_table_cliente;
+mod m20250528_080117_create_table_tipo_uva;
+mod m20250528_080238_create_table_tipo_empaque;
+mod m20250528_080408_create_table_variedad;
+mod m20250528_080500_update_table_produccion;
 
 pub use sea_orm_migration::prelude::*;
 
@@ -17,6 +22,11 @@ impl MigratorTrait for Migrator {
             Box::new(m20250526_001923_create_table_jornalero::CreateJornalero),
             Box::new(m20250526_002315_create_table_produccion::CreateProduccion),
             Box::new(m20250526_002615_create_table_lider_cuadrilla::CreateLiderCuadrilla),
+            Box::new(m20250528_075840_create_table_cliente::CreateCliente),
+            Box::new(m20250528_080117_create_table_tipo_uva::CreateTipoUva),
+            Box::new(m20250528_080238_create_table_tipo_empaque::CreateTipoEmpaque),
+            Box::new(m20250528_080408_create_table_variedad::CreateVariedad),
+            Box::new(m20250528_080500_update_table_produccion::UpdateProduccion),
         ]
     }
 }

@@ -2,7 +2,11 @@
 
 pub mod prelude;
 
+pub mod cliente;
 pub mod cuadrilla;
 pub mod jornalero;
 pub mod produccion;
 pub mod temporada;
+pub mod tipo_empaque;
+pub mod tipo_uva;
+pub mod variedad;
