@@ -31,7 +31,9 @@ export default function RootLayout({
             >
                 <OnlineStatusProvider>
                     <Navbar />
-                    {children}
+                    <div className="m-5">
+                        {children}
+                    </div>
                 </OnlineStatusProvider>
             </body>
         </html>
