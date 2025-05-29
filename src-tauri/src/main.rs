@@ -23,27 +23,63 @@ fn main() {
         // Establecer el manejador de invocación
         .plugin(tauri_plugin_sql::Builder::default().build())
         .invoke_handler(tauri::generate_handler![
+            
+            // === Jornaleros ===
             post_jornalero,
             get_jornaleros,
             get_jornalero_by_id,
             put_jornalero,
             delete_jornalero,
             get_jornaleros_by_cuadrilla,
+            
+            // === Cuadrillas ===
             get_cuadrillas,
             post_cuadrilla,
             get_cuadrilla_by_id,
             put_cuadrilla,
             delete_cuadrilla,
+            
+            // === Producción ===
             post_produccion,
             get_produccion,
             get_produccion_by_id,
             put_produccion,
             delete_produccion,
+            
+            // === Temporadas ===
             post_temporada,
             get_temporadas,
             get_temporada_by_id,
             put_temporada,
-            delete_temporada
+            delete_temporada,
+            
+            // === Tipo Uva ===
+            post_tipo_uva,
+            get_tipo_uva,
+            get_tipo_uva_by_id,
+            put_tipo_uva,
+            delete_tipo_uva,
+            
+            // === Tipo Empaque ===
+            post_tipo_empaque,
+            get_tipo_empaque,
+            get_tipo_empaque_by_id,
+            put_tipo_empaque,
+            delete_tipo_empaque,
+            
+            // === Variedad ===
+            post_variedad,
+            get_variedad,
+            get_variedad_by_id,
+            put_variedad,
+            delete_variedad,
+            
+            // === Cliente ===
+            post_cliente,
+            get_cliente,
+            get_cliente_by_id,
+            put_cliente,
+            delete_cliente
         ])
         // Iniciar la aplicación
         .run(tauri::generate_context!())

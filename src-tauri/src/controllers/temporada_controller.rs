@@ -3,7 +3,6 @@ use crate::entities::temporada::Model;
 use crate::entities::*;
 use crate::APP_STATE;
 use app_lib::obt_connection;
-use rust_decimal::Decimal;
 use sea_orm::prelude::*;
 use sea_orm::*;
 use serde::{Deserialize, Serialize};
@@ -11,11 +10,9 @@ use tauri::AppHandle;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TemporadaData {
-    pub id: i32,
+    // pub id: i32,
     pub fecha_inicial: String, // Se recibe como string para facilitar la serialización
     pub fecha_final: Option<String>, // Se recibe como string para facilitar la serialización
-    pub meses: Option<i32>,
-    pub produccion_total: Option<Decimal>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -23,8 +20,6 @@ pub struct TemporadaResponse {
     pub id: i32,
     pub fecha_inicial: String,
     pub fecha_final: Option<String>,
-    pub meses: Option<i32>,
-    pub produccion_total: Option<Decimal>,
     pub created_at: Option<String>,
     pub updated_at: Option<String>,
 }
@@ -35,8 +30,6 @@ impl From<temporada::Model> for TemporadaResponse {
             id: model.id,
             fecha_inicial: model.fecha_inicial.to_string(),
             fecha_final: model.fecha_final.map(|date| date.to_string()),
-            meses: model.meses,
-            produccion_total: model.produccion_total,
             created_at: model.created_at.map(|dt| dt.to_string()),
             updated_at: model.updated_at.map(|dt| dt.to_string()),
         }
@@ -72,8 +65,6 @@ pub async fn post_temporada(app_handle: AppHandle, data: TemporadaData) -> Resul
         id: ActiveValue::NotSet,
         fecha_inicial: ActiveValue::Set(fecha_inicial),
         fecha_final: ActiveValue::Set(Some(fecha_final)),
-        meses: ActiveValue::Set(data.meses),
-        produccion_total: ActiveValue::Set(data.produccion_total),
         created_at: ActiveValue::NotSet,
         updated_at: ActiveValue::NotSet,
     };
@@ -215,8 +206,6 @@ pub async fn put_temporada(
 
     temporada_actualizada.fecha_inicial = ActiveValue::Set(fecha_inicial);
     temporada_actualizada.fecha_final = ActiveValue::Set(Some(fecha_final));
-    temporada_actualizada.meses = ActiveValue::Set(data.meses);
-    temporada_actualizada.produccion_total = ActiveValue::Set(data.produccion_total);
 
     let res = match temporada_actualizada.update(&connection).await {
         Ok(result) => result,

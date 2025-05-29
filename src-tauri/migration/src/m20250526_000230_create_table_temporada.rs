@@ -9,8 +9,6 @@ pub enum Temporada {
     Id,
     FechaInicial,
     FechaFinal,
-    Meses,
-    ProduccionTotal,
     CreatedAt,
     UpdatedAt,
 }
@@ -32,12 +30,6 @@ impl MigrationTrait for CreateTemporada {
                     )
                     .col(ColumnDef::new(Temporada::FechaInicial).date().not_null())
                     .col(ColumnDef::new(Temporada::FechaFinal).date().null())
-                    .col(ColumnDef::new(Temporada::Meses).integer().null())
-                    .col(
-                        ColumnDef::new(Temporada::ProduccionTotal)
-                            .decimal_len(15, 3)
-                            .default(0.0),
-                    )
                     .col(
                         ColumnDef::new(Temporada::CreatedAt)
                             .timestamp()

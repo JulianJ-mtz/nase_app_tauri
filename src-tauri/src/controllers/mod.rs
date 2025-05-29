@@ -1,3 +1,5 @@
+pub mod cliente_controller;
+pub use cliente_controller::*;
 pub mod cuadrilla_controller;
 pub use cuadrilla_controller::*;
 pub mod jornaleros_controller;
@@ -6,3 +8,9 @@ pub mod produccion_controller;
 pub use produccion_controller::*;
 pub mod temporada_controller;
 pub use temporada_controller::*;
+pub mod tipo_empaque_controller;
+pub use tipo_empaque_controller::*;
+pub mod tipo_uva_controller;
+pub use tipo_uva_controller::*;
+pub mod variedad_controller;
+pub use variedad_controller::*;
