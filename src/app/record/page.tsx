@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-
 import {
     Dialog,
     DialogContent,
@@ -13,11 +11,12 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { JornaleroForm } from "@/components/JornaleroForm";
-
 import { useJornaleroStore } from "@/lib/storeJornalero";
 import { DataTableJornalero } from "./dataTableJonalero";
 import { createColumns } from "./columsTableJornalero";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { FileSpreadsheet, UserRound } from "lucide-react";
 
 export default function Record() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -56,14 +55,55 @@ export default function Record() {
     return (
         <>
             <div className="container mx-auto py-10">
-                <div className="flex flex-col gap-1 mb-10">
-                    <h1 className="text-4xl font-bold">
-                        Directorio de Jornaleros
+                <div className="flex flex-col gap-1 mb-6">
+                    <h1 className="text-3xl font-bold">
+                        Gestión de Producción
                     </h1>
                     <p className="text-sm text-gray-500">
-                        Aquí puedes ver la lista de jornaleros registrados en la
-                        base de datos.
+                        Administra jornaleros y registra su producción.
                     </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <Card className="flex flex-col">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <UserRound className="h-5 w-5" />
+                                Jornaleros
+                            </CardTitle>
+                            <CardDescription>
+                                Gestiona los jornaleros del sistema
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex-grow">
+                            <p>Añade, edita o elimina jornaleros.</p>
+                        </CardContent>
+                        <div className="p-6 pt-0 mt-auto">
+                            <Button onClick={() => setIsDialogOpen(true)} className="w-full">
+                                Gestionar Jornaleros
+                            </Button>
+                        </div>
+                    </Card>
+
+                    <Card className="flex flex-col">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <FileSpreadsheet className="h-5 w-5" />
+                                Producción
+                            </CardTitle>
+                            <CardDescription>
+                                Registra la producción de los jornaleros
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="flex-grow">
+                            <p>Registra la producción diaria de cada jornalero, incluyendo variedad, tipo de uva, empaque y cliente.</p>
+                        </CardContent>
+                        <div className="p-6 pt-0 mt-auto">
+                            <Button asChild className="w-full">
+                                <Link href="/record/produccion">Registrar Producción</Link>
+                            </Button>
+                        </div>
+                    </Card>
                 </div>
 
                 <Card>

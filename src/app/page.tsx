@@ -1,6 +1,6 @@
 import { OnlineStatusIndicator } from "@/components/OnlineStatusIndicator";
 import { Button } from "@/components/ui/button";
-import { UserRound } from "lucide-react";
+import { UserRound, Users, Calendar, LineChart, Layers, Package, Grape, Building } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 
@@ -13,8 +13,48 @@ export default function Home() {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
+                            <Calendar className="h-5 w-5" />
+                            Temporadas
+                        </CardTitle>
+                        <CardDescription>
+                            Gestiona los periodos de trabajo agrícola
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <p>Crea y administra temporadas de producción con fechas de inicio y fin.</p>
+                    </CardContent>
+                    <CardFooter>
+                        <Button asChild>
+                            <Link href="/temporadas">Ir a Temporadas</Link>
+                        </Button>
+                    </CardFooter>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Users className="h-5 w-5" />
+                            Cuadrillas
+                        </CardTitle>
+                        <CardDescription>
+                            Administra grupos de trabajo
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <p>Gestiona las cuadrillas y sus asignaciones a temporadas específicas.</p>
+                    </CardContent>
+                    <CardFooter>
+                        <Button asChild>
+                            <Link href="/cuadrillas">Ir a Cuadrillas</Link>
+                        </Button>
+                    </CardFooter>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
                             <UserRound className="h-5 w-5" />
-                            Gestión de Jornaleros
+                            Jornaleros
                         </CardTitle>
                         <CardDescription>
                             Administra la información de tus jornaleros
@@ -29,8 +69,66 @@ export default function Home() {
                         </Button>
                     </CardFooter>
                 </Card>
-                
-                {/* Más tarjetas pueden ser añadidas aquí para otras secciones */}
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <LineChart className="h-5 w-5" />
+                            Producción
+                        </CardTitle>
+                        <CardDescription>
+                            Registra y consulta la producción diaria
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <p>Gestiona los registros de producción de cada jornalero.</p>
+                    </CardContent>
+                    <CardFooter>
+                        <Button asChild>
+                            <Link href="/record">Ir a Producción</Link>
+                        </Button>
+                    </CardFooter>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Layers className="h-5 w-5" />
+                            Catálogos
+                        </CardTitle>
+                        <CardDescription>
+                            Administra los catálogos del sistema
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <p>Gestiona variedades, tipos de uva, empaques y clientes.</p>
+                    </CardContent>
+                    <CardFooter>
+                        <Button asChild>
+                            <Link href="/catalogos">Ir a Catálogos</Link>
+                        </Button>
+                    </CardFooter>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <LineChart className="h-5 w-5" />
+                            Métricas
+                        </CardTitle>
+                        <CardDescription>
+                            Visualiza estadísticas y reportes
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <p>Consulta métricas de producción y rendimiento.</p>
+                    </CardContent>
+                    <CardFooter>
+                        <Button asChild>
+                            <Link href="/metrics">Ir a Métricas</Link>
+                        </Button>
+                    </CardFooter>
+                </Card>
             </div>
             
             <div className="mt-6">

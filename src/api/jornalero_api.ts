@@ -18,7 +18,6 @@ export interface JornaleroData {
     edad: number;
     estado: string;
     fecha_contratacion: string;
-    produccion_jornalero?: number | null;
     errores?: number | null;
     cuadrilla_id?: number | null;
 }

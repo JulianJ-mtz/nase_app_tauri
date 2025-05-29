@@ -2,7 +2,18 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Leaf, Menu, BarChart3, Users, Sprout, UserRound } from "lucide-react";
+import {
+    Leaf,
+    Menu,
+    BarChart3,
+    Users,
+    Sprout,
+    UserRound,
+    Calendar,
+    Package,
+    Layers,
+    Building,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { OnlineStatusIndicator } from "@/components/OnlineStatusIndicator";
@@ -14,22 +25,16 @@ export function Navbar() {
 
     const routes = [
         {
-            href: "/production",
-            label: "Producción",
-            icon: <Sprout className="mr-2 h-5 w-5" />,
-            active: pathname === "/production",
+            href: "/temporadas",
+            label: "Temporadas",
+            icon: <Calendar className="mr-2 h-5 w-5" />,
+            active: pathname === "/temporadas",
         },
         {
-            href: "/record",
-            label: "Registro",
+            href: "/cuadrillas",
+            label: "Cuadrillas",
             icon: <Users className="mr-2 h-5 w-5" />,
-            active: pathname === "/record",
-        },
-        {
-            href: "/metrics",
-            label: "Métricas",
-            icon: <BarChart3 className="mr-2 h-5 w-5" />,
-            active: pathname === "/metrics",
+            active: pathname === "/cuadrillas",
         },
         {
             href: "/jornaleros",
@@ -38,10 +43,23 @@ export function Navbar() {
             active: pathname === "/jornaleros",
         },
         {
-            href: "/cuadrillas",
-            label: "Cuadrillas",
-            icon: <Users className="mr-2 h-5 w-5" />,
-            active: pathname === "/cuadrillas",
+            href: "/record",
+            label: "Producción",
+            icon: <Sprout className="mr-2 h-5 w-5" />,
+            active: pathname === "/record",
+        },
+        {
+            href: "/catalogos",
+            label: "Catálogos",
+            icon: <Layers className="mr-2 h-5 w-5" />,
+            active:
+                pathname === "/catalogos" || pathname.startsWith("/catalogos/"),
+        },
+        {
+            href: "/metrics",
+            label: "Métricas",
+            icon: <BarChart3 className="mr-2 h-5 w-5" />,
+            active: pathname === "/metrics",
         },
     ];
 
@@ -49,9 +67,14 @@ export function Navbar() {
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
                 <Link href="/" className="flex items-center gap-2">
-                    <Leaf className="h-6 w-6 text-primary" />
                     <span className="text-lg font-bold text-primary hidden md:inline-block">
-                        NASE
+                        <img
+                            src="/logo.png"
+                            alt="NASE"
+                            width={100}
+                            height={100}
+                            className="cursor-pointer"
+                        />
                     </span>
                 </Link>
 

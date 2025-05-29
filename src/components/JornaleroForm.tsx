@@ -46,7 +46,6 @@ export function JornaleroForm({ jornaleroId, onSuccess }: JornaleroFormProps) {
         edad: 18,
         estado: "Activo",
         fecha_contratacion: formattedToday,
-        produccion_jornalero: null,
         errores: 0,
         cuadrilla_id: null,
     });
@@ -70,8 +69,6 @@ export function JornaleroForm({ jornaleroId, onSuccess }: JornaleroFormProps) {
                             edad: jornalero.edad,
                             estado: jornalero.estado,
                             fecha_contratacion: jornalero.fecha_contratacion,
-                            produccion_jornalero:
-                                jornalero.produccion_jornalero,
                             errores: jornalero.errores || 0,
                             cuadrilla_id: jornalero.cuadrilla_id,
                         });
@@ -150,11 +147,6 @@ export function JornaleroForm({ jornaleroId, onSuccess }: JornaleroFormProps) {
             const dataToSend = {
                 ...formData,
                 edad: Number(formData.edad),
-                produccion_jornalero:
-                    formData.produccion_jornalero === null ||
-                    formData.produccion_jornalero === undefined
-                        ? null
-                        : Number(formData.produccion_jornalero),
                 errores:
                     formData.errores === null || formData.errores === undefined
                         ? null
@@ -191,7 +183,6 @@ export function JornaleroForm({ jornaleroId, onSuccess }: JornaleroFormProps) {
                     edad: 18,
                     estado: "Activo",
                     fecha_contratacion: formattedToday,
-                    produccion_jornalero: null,
                     errores: 0,
                     cuadrilla_id: null,
                 });
@@ -248,227 +239,133 @@ export function JornaleroForm({ jornaleroId, onSuccess }: JornaleroFormProps) {
             <form onSubmit={handleSubmit}>
                 <CardContent className="space-y-5">
                     <div className="space-y-1">
-                        <Label htmlFor="nombre" className="text-sm font-medium">
-                            Nombre completo
-                        </Label>
+                        <Label htmlFor="nombre">Nombre completo *</Label>
                         <Input
                             id="nombre"
                             name="nombre"
                             placeholder="Nombre del jornalero"
                             value={formData.nombre}
                             onChange={handleChange}
-                            className="focus-visible:ring-primary"
                             required
                         />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
-                            <Label
-                                htmlFor="edad"
-                                className="text-sm font-medium"
-                            >
-                                Edad
-                            </Label>
+                            <Label htmlFor="edad">Edad *</Label>
                             <Input
                                 id="edad"
                                 name="edad"
                                 type="number"
                                 min={16}
-                                value={formData.edad}
+                                max={100}
+                                placeholder="Edad"
+                                value={formData.edad ?? ""}
                                 onChange={handleChange}
-                                className="focus-visible:ring-primary"
                                 required
                             />
                         </div>
 
                         <div className="space-y-1">
-                            <Label
-                                htmlFor="estado"
-                                className="text-sm font-medium"
-                            >
-                                Estado
-                            </Label>
+                            <Label htmlFor="estado">Estado *</Label>
                             <Select
                                 value={formData.estado}
                                 onValueChange={(value) =>
                                     handleSelectChange(value, "estado")
                                 }
                             >
-                                <SelectTrigger className="focus:ring-primary">
+                                <SelectTrigger id="estado">
                                     <SelectValue placeholder="Seleccionar estado" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="Activo">
-                                        <div className="flex items-center gap-2">
-                                            <Badge
-                                                variant="outline"
-                                                className="bg-green-100 text-green-800 border-green-300"
-                                            >
-                                                Activo
-                                            </Badge>
-                                        </div>
-                                    </SelectItem>
+                                    <SelectItem value="Activo">Activo</SelectItem>
                                     <SelectItem value="Inactivo">
-                                        <div className="flex items-center gap-2">
-                                            <Badge
-                                                variant="outline"
-                                                className="bg-gray-100 text-gray-800 border-gray-300"
-                                            >
-                                                Inactivo
-                                            </Badge>
-                                        </div>
+                                        Inactivo
                                     </SelectItem>
                                     <SelectItem value="Suspendido">
-                                        <div className="flex items-center gap-2">
-                                            <Badge
-                                                variant="outline"
-                                                className="bg-yellow-100 text-yellow-800 border-yellow-300"
-                                            >
-                                                Suspendido
-                                            </Badge>
-                                        </div>
-                                    </SelectItem>
-                                    <SelectItem value="Vacaciones">
-                                        <div className="flex items-center gap-2">
-                                            <Badge
-                                                variant="outline"
-                                                className="bg-blue-100 text-blue-800 border-blue-300"
-                                            >
-                                                Vacaciones
-                                            </Badge>
-                                        </div>
+                                        Suspendido
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                     </div>
 
-                    <div className="space-y-1">
-                        <Label
-                            htmlFor="fecha_contratacion"
-                            className="text-sm font-medium"
-                        >
-                            Fecha de Contratación
-                        </Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                            <Label htmlFor="fecha_contratacion">
+                                Fecha de contratación *
+                            </Label>
+                            <Input
+                                id="fecha_contratacion"
+                                name="fecha_contratacion"
+                                type="date"
+                                value={formData.fecha_contratacion}
+                                onChange={handleChange}
+                                required
+                            />
+                        </div>
 
-                        <Input
-                            id="fecha_contratacion"
-                            name="fecha_contratacion"
-                            type="date"
-                            value={formData.fecha_contratacion}
-                            onChange={(e) => {
-                                handleChange(e);
-                                setDate(new Date(e.target.value));
-                            }}
-                            className="focus-visible:ring-primary"
-                            required
-                        />
+                        <div className="space-y-1">
+                            <Label htmlFor="errores">Errores</Label>
+                            <Input
+                                id="errores"
+                                name="errores"
+                                type="number"
+                                min={0}
+                                placeholder="Número de errores"
+                                value={formData.errores ?? ""}
+                                onChange={handleChange}
+                            />
+                        </div>
                     </div>
 
-                    <Separator />
-
                     <div className="space-y-1">
-                        <Label
-                            htmlFor="cuadrilla_id"
-                            className="text-sm font-medium"
-                        >
-                            Cuadrilla
-                        </Label>
+                        <Label htmlFor="cuadrilla_id">Cuadrilla</Label>
                         <Select
-                            value={formData.cuadrilla_id?.toString() || "null"}
+                            value={
+                                formData.cuadrilla_id !== null
+                                    ? formData.cuadrilla_id?.toString()
+                                    : "null"
+                            }
                             onValueChange={(value) =>
-                                handleSelectChange(
-                                    value === "null" ? null : value,
-                                    "cuadrilla_id"
-                                )
+                                handleSelectChange(value, "cuadrilla_id")
                             }
                         >
-                            <SelectTrigger>
+                            <SelectTrigger id="cuadrilla_id">
                                 <SelectValue placeholder="Seleccionar cuadrilla" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="null">
-                                    Sin cuadrilla asignada
+                                    Sin asignar
                                 </SelectItem>
                                 {cuadrillas.map((cuadrilla) => (
                                     <SelectItem
                                         key={cuadrilla.id}
                                         value={cuadrilla.id.toString()}
                                     >
-                                        Cuadrilla {cuadrilla.id} -{" "}
-                                        {cuadrilla.LiderCuadrilla ||
-                                            "Sin líder"}
-                                        ({cuadrilla.Lote})
+                                        Cuadrilla {cuadrilla.id} - Lote:{" "}
+                                        {cuadrilla.Lote}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                     </div>
-
-                    <div className="space-y-1">
-                        <Label
-                            htmlFor="produccion_jornalero"
-                            className="text-sm font-medium"
-                        >
-                            Producción (kg)
-                        </Label>
-                        <Input
-                            id="produccion_jornalero"
-                            name="produccion_jornalero"
-                            type="number"
-                            placeholder="Producción individual"
-                            value={formData.produccion_jornalero ?? ""}
-                            onChange={handleChange}
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Producción individual del jornalero
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                            <Label
-                                htmlFor="errores"
-                                className="text-sm font-medium"
-                            >
-                                Errores
-                            </Label>
-                            <Input
-                                id="errores"
-                                name="errores"
-                                type="number"
-                                min={0}
-                                value={
-                                    formData.errores === null
-                                        ? 0
-                                        : formData.errores
-                                }
-                                onChange={handleChange}
-                                className="focus-visible:ring-primary"
-                                placeholder="0"
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">
-                                Cantidad de errores registrados
-                            </p>
-                        </div>
-                    </div>
                 </CardContent>
-
-                <CardFooter className="flex justify-end border-t pt-4 mt-6">
+                <CardFooter className="flex justify-between border-t pt-5">
                     <Button
-                        type="submit"
-                        disabled={loading}
-                        className="relative"
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                            if (onSuccess) onSuccess();
+                        }}
                     >
+                        Cancelar
+                    </Button>
+                    <Button type="submit" disabled={loading}>
                         {loading && (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         )}
-                        {loading
-                            ? "Guardando..."
-                            : jornaleroId
-                            ? "Actualizar Jornalero"
-                            : "Guardar Jornalero"}
+                        {jornaleroId ? "Actualizar" : "Guardar"}
                     </Button>
                 </CardFooter>
             </form>

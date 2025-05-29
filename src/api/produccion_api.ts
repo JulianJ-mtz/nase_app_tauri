@@ -5,11 +5,13 @@ export interface Produccion {
     id: number;
     jornalero_id: number;
     temporada_id: number;
-    variedad: string;
+    variedad_id: number;
+    tipo_uva_id: number;
+    tipo_empaque_id: number;
+    cliente_id: number;
     lote: string;
-    empaque?: string;
-    tipo: string;
-    cantidad: number; // Adjust type if using Decimal in Rust
+    cantidad: number;
+    fecha: string; // Added field to match the backend
     created_at?: string; // Optional field
     updated_at?: string; // Optional field
 }
@@ -18,11 +20,13 @@ export interface Produccion {
 export interface ProduccionData {
     jornalero_id: number;
     temporada_id: number;
-    variedad: string;
+    variedad_id: number;
+    tipo_uva_id: number;
+    tipo_empaque_id: number;
+    cliente_id: number;
     lote: string;
-    empaque?: string;
-    tipo: string;
     cantidad: number; // Adjust type if using Decimal in Rust
+    fecha: string; // Add this required field - use ISO date format (YYYY-MM-DD)
 }
 
 // Function to obtain all Produccion records
