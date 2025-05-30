@@ -3,7 +3,6 @@ use crate::entities::prelude::*;
 use crate::entities::*;
 use crate::APP_STATE;
 use app_lib::obt_connection;
-use rust_decimal::Decimal;
 use sea_orm::prelude::*;
 use sea_orm::*;
 use serde::{Deserialize, Serialize};
@@ -13,24 +12,24 @@ use tauri::AppHandle;
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CuadrillaData {
     pub id: Option<i32>,
-    pub lider_cuadrilla: Option<i32>,
-    pub produccion_cuadrilla: Option<Decimal>,
+    pub lider_cuadrilla_id: Option<i32>,
+    // pub produccion_cuadrilla: Option<Decimal>,   
     pub lote: String,
-    pub variedad: String,
-    pub empaque: Option<String>,
-    pub integrantes: Option<i32>,
+    pub variedad_id: Option<i32>,
+    // pub empaque: Option<String>,
+    // pub integrantes: Option<i32>,
     pub temporada_id: Option<i32>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CuadrillaResponse {
     pub id: i32,
-    pub lider_cuadrilla: Option<i32>,
-    pub produccion_cuadrilla: Option<Decimal>,
+    pub lider_cuadrilla_id: Option<i32>,
+    // pub produccion_cuadrilla: Option<Decimal>,
     pub lote: String,
-    pub variedad: String,
-    pub empaque: Option<String>,
-    pub integrantes: Option<i32>,
+    pub variedad_id: Option<i32>,
+    // pub empaque: Option<String>,
+    // pub integrantes: Option<i32>,
     pub temporada_id: Option<i32>,
     pub created_at: Option<String>,
     pub updated_at: Option<String>,
@@ -40,12 +39,9 @@ impl From<cuadrilla::Model> for CuadrillaResponse {
     fn from(model: cuadrilla::Model) -> Self {
         CuadrillaResponse {
             id: model.id,
-            lider_cuadrilla: model.lider_cuadrilla,
-            produccion_cuadrilla: model.produccion_cuadrilla,
+            lider_cuadrilla_id: model.lider_cuadrilla_id,
             lote: model.lote,
-            variedad: model.variedad,
-            empaque: model.empaque,
-            integrantes: model.integrantes,
+            variedad_id: model.variedad_id,
             temporada_id: model.temporada_id,
             created_at: model.created_at.map(|dt| dt.to_string()),
             updated_at: model.updated_at.map(|dt| dt.to_string()),
@@ -65,12 +61,12 @@ pub async fn post_cuadrilla(app_handle: AppHandle, data: CuadrillaData) -> Resul
 
     let cuadrilla = cuadrilla::ActiveModel {
         id: ActiveValue::NotSet,
-        lider_cuadrilla: ActiveValue::Set(data.lider_cuadrilla),
-        produccion_cuadrilla: ActiveValue::Set(data.produccion_cuadrilla),
+        lider_cuadrilla_id: ActiveValue::Set(data.lider_cuadrilla_id),
+        // produccion_cuadrilla: ActiveValue::Set(data.produccion_cuadrilla),
         lote: ActiveValue::Set(data.lote),
-        variedad: ActiveValue::Set(data.variedad),
-        empaque: ActiveValue::Set(data.empaque),
-        integrantes: ActiveValue::Set(data.integrantes),
+        variedad_id: ActiveValue::Set(data.variedad_id),
+        // empaque: ActiveValue::Set(data.empaque),
+        // integrantes: ActiveValue::Set(data.integr
         temporada_id: ActiveValue::Set(data.temporada_id),
         created_at: ActiveValue::NotSet,
         updated_at: ActiveValue::NotSet,
@@ -197,13 +193,13 @@ pub async fn put_cuadrilla(
 
     let mut cuadrilla_actulizada: cuadrilla::ActiveModel = cuadrilla_existente.into();
 
-    cuadrilla_actulizada.lider_cuadrilla = ActiveValue::Set(data.lider_cuadrilla);
-    cuadrilla_actulizada.integrantes = ActiveValue::Set(data.integrantes);
-    cuadrilla_actulizada.produccion_cuadrilla = ActiveValue::Set(data.produccion_cuadrilla);
+    cuadrilla_actulizada.lider_cuadrilla_id = ActiveValue::Set(data.lider_cuadrilla_id);
+    // cuadrilla_actulizada.integrantes = ActiveValue::Set(data.integrantes);
+    // cuadrilla_actulizada.produccion_cuadrilla = ActiveValue::Set(data.produccion_cuadrilla);
     cuadrilla_actulizada.lote = ActiveValue::Set(data.lote);
-    cuadrilla_actulizada.integrantes = ActiveValue::Set(data.integrantes);
-    cuadrilla_actulizada.empaque = ActiveValue::Set(data.empaque);
-    cuadrilla_actulizada.variedad = ActiveValue::Set(data.variedad);
+    // cuadrilla_actulizada.integrantes = ActiveValue::Set(data.integrantes);
+    // cuadrilla_actulizada.empaque = ActiveValue::Set(data.empaque);
+    cuadrilla_actulizada.variedad_id = ActiveValue::Set(data.variedad_id);
     cuadrilla_actulizada.temporada_id = ActiveValue::Set(data.temporada_id);
 
     let res = match cuadrilla_actulizada.update(&connection).await {

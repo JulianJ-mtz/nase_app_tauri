@@ -14,7 +14,7 @@ pub struct JornaleroData {
     pub edad: i32,
     pub estado: String,
     pub fecha_contratacion: String, // Formato YYYY-MM-DD
-    pub produccion_jornalero: Option<Decimal>,
+    // pub produccion_jornalero: Option<Decimal>,
     pub errores: Option<i32>,
     pub cuadrilla_id: Option<i32>,
 }
@@ -26,7 +26,7 @@ pub struct JornaleroResponse {
     pub edad: i32,
     pub estado: String,
     pub fecha_contratacion: String,
-    pub produccion_jornalero: Option<Decimal>,
+    // pub produccion_jornalero: Option<Decimal>,
     pub errores: Option<i32>,
     pub cuadrilla_id: Option<i32>,
     pub created_at: Option<String>,
@@ -41,7 +41,7 @@ impl From<jornalero::Model> for JornaleroResponse {
             edad: model.edad,
             estado: model.estado,
             fecha_contratacion: model.fecha_contratacion.to_string(),
-            produccion_jornalero: model.produccion_jornalero,
+            // produccion_jornalero: model.produccion_jornalero,
             errores: model.errores,
             cuadrilla_id: model.cuadrilla_id,
             created_at: model.created_at.map(|dt| dt.to_string()),
@@ -80,7 +80,7 @@ pub async fn post_jornalero(app_handle: AppHandle, data: JornaleroData) -> Resul
         edad: ActiveValue::Set(data.edad),
         estado: ActiveValue::Set(data.estado),
         fecha_contratacion: ActiveValue::Set(fecha_contratacion),
-        produccion_jornalero: ActiveValue::Set(data.produccion_jornalero),
+        // produccion_jornalero: ActiveValue::Set(data.produccion_jornalero),
         errores: ActiveValue::Set(data.errores),
         cuadrilla_id: ActiveValue::Set(data.cuadrilla_id),
         created_at: ActiveValue::NotSet,
@@ -217,6 +217,29 @@ pub async fn put_jornalero(
         }
     };
 
+    // Verificar si el jornalero es líder de alguna cuadrilla
+    let es_lider_cuadrilla = match Cuadrilla::find()
+        .filter(cuadrilla::Column::LiderCuadrillaId.eq(id))
+        .one(&connection)
+        .await
+    {
+        Ok(cuadrilla_liderada) => cuadrilla_liderada,
+        Err(e) => {
+            println!("Error al verificar liderazgo: {}", e);
+            return Err(format!("Error al verificar liderazgo: {}", e));
+        }
+    };
+
+    // Si es líder de una cuadrilla y trata de cambiar su cuadrilla_id
+    if let Some(cuadrilla_liderada) = es_lider_cuadrilla {
+        if data.cuadrilla_id != Some(cuadrilla_liderada.id) {
+            return Err(format!(
+                "No se puede cambiar la asignación de cuadrilla porque este jornalero es el líder de la cuadrilla {}. Primero debe asignar otro líder a esa cuadrilla.",
+                cuadrilla_liderada.id
+            ));
+        }
+    }
+
     // Parsear la fecha
     let fecha_contratacion = match Date::from_str(&data.fecha_contratacion) {
         Ok(date) => date,
@@ -231,7 +254,7 @@ pub async fn put_jornalero(
     jornalero_actualizado.edad = ActiveValue::Set(data.edad);
     jornalero_actualizado.estado = ActiveValue::Set(data.estado);
     jornalero_actualizado.fecha_contratacion = ActiveValue::Set(fecha_contratacion);
-    jornalero_actualizado.produccion_jornalero = ActiveValue::Set(data.produccion_jornalero);
+    // jornalero_actualizado.produccion_jornalero = ActiveValue::Set(data.produccion_jornalero);
     jornalero_actualizado.errores = ActiveValue::Set(data.errores);
     jornalero_actualizado.cuadrilla_id = ActiveValue::Set(data.cuadrilla_id);
 
@@ -247,7 +270,7 @@ pub async fn put_jornalero(
     // Cerrar la conexión explícitamente
     drop(connection);
 
-    Ok(format!("Jornalero ID: {} actualizado con éxito", res.id))
+    Ok(format!("Jornalero actualizado: {}", res.nombre))
 }
 
 #[tauri::command]

@@ -11,8 +11,6 @@ pub struct Model {
     pub edad: i32,
     pub estado: String,
     pub fecha_contratacion: Date,
-    #[sea_orm(column_type = "Decimal(Some((15, 3)))", nullable)]
-    pub produccion_jornalero: Option<Decimal>,
     pub errores: Option<i32>,
     pub cuadrilla_id: Option<i32>,
     pub created_at: Option<DateTimeUtc>,
@@ -29,19 +27,11 @@ pub enum Relation {
         on_delete = "SetNull"
     )]
     Cuadrilla,
-    #[sea_orm(has_many = "super::produccion::Entity")]
-    Produccion,
 }
 
 impl Related<super::cuadrilla::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Cuadrilla.def()
-    }
-}
-
-impl Related<super::produccion::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Produccion.def()
     }
 }
 

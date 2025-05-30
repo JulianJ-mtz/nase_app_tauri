@@ -7,13 +7,9 @@ use sea_orm::entity::prelude::*;
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub lider_cuadrilla: Option<i32>,
-    #[sea_orm(column_type = "Decimal(Some((15, 3)))", nullable)]
-    pub produccion_cuadrilla: Option<Decimal>,
+    pub lider_cuadrilla_id: Option<i32>,
     pub lote: String,
-    pub variedad: String,
-    pub empaque: Option<String>,
-    pub integrantes: Option<i32>,
+    pub variedad_id: Option<i32>,
     pub temporada_id: Option<i32>,
     pub created_at: Option<DateTimeUtc>,
     pub updated_at: Option<DateTimeUtc>,
@@ -21,8 +17,16 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::jornalero::Entity")]
+    #[sea_orm(
+        belongs_to = "super::jornalero::Entity",
+        from = "Column::LiderCuadrillaId",
+        to = "super::jornalero::Column::Id",
+        on_update = "Cascade",
+        on_delete = "SetNull"
+    )]
     Jornalero,
+    #[sea_orm(has_many = "super::produccion::Entity")]
+    Produccion,
     #[sea_orm(
         belongs_to = "super::temporada::Entity",
         from = "Column::TemporadaId",
@@ -31,6 +35,14 @@ pub enum Relation {
         on_delete = "Restrict"
     )]
     Temporada,
+    #[sea_orm(
+        belongs_to = "super::variedad::Entity",
+        from = "Column::VariedadId",
+        to = "super::variedad::Column::Id",
+        on_update = "Cascade",
+        on_delete = "Restrict"
+    )]
+    Variedad,
 }
 
 impl Related<super::jornalero::Entity> for Entity {
@@ -39,9 +51,21 @@ impl Related<super::jornalero::Entity> for Entity {
     }
 }
 
+impl Related<super::produccion::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Produccion.def()
+    }
+}
+
 impl Related<super::temporada::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::Temporada.def()
+    }
+}
+
+impl Related<super::variedad::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Variedad.def()
     }
 }
 

@@ -1,6 +1,6 @@
-use sea_orm_migration::prelude::*;
-
 use crate::m20250526_000230_create_table_temporada::Temporada;
+use crate::m20250528_080408_create_table_variedad::Variedad;
+use sea_orm_migration::prelude::*;
 
 #[derive(DeriveMigrationName)]
 pub struct CreateCuadrilla;
@@ -9,13 +9,10 @@ pub struct CreateCuadrilla;
 pub enum Cuadrilla {
     Table,
     Id,
-    LiderCuadrilla,
-    ProduccionCuadrilla,
+    LiderCuadrillaId,
     Lote,
-    Variedad,
-    Empaque,
-    Integrantes,
     TemporadaId,
+    VariedadId,
     CreatedAt,
     UpdatedAt,
 }
@@ -36,12 +33,8 @@ impl MigrationTrait for CreateCuadrilla {
                             .primary_key(),
                     )
                     .col(
-                        ColumnDef::new(Cuadrilla::LiderCuadrilla).integer().null(), // Solo el campo, SIN FK constraint
-                    )
-                    .col(
-                        ColumnDef::new(Cuadrilla::ProduccionCuadrilla)
-                            .decimal_len(15, 3)
-                            .default(0.0),
+                        ColumnDef::new(Cuadrilla::LiderCuadrillaId).integer().null(),
+                        // NO agregamos la FK a Jornalero todavía
                     )
                     .col(
                         ColumnDef::new(Cuadrilla::Lote)
@@ -49,19 +42,7 @@ impl MigrationTrait for CreateCuadrilla {
                             .string_len(100)
                             .not_null(),
                     )
-                    .col(
-                        ColumnDef::new(Cuadrilla::Variedad)
-                            .string()
-                            .string_len(100)
-                            .not_null(),
-                    )
-                    .col(
-                        ColumnDef::new(Cuadrilla::Empaque)
-                            .string()
-                            .string_len(100)
-                            .null(),
-                    )
-                    .col(ColumnDef::new(Cuadrilla::Integrantes).integer().default(0))
+                    .col(ColumnDef::new(Cuadrilla::VariedadId).integer().null())
                     .col(ColumnDef::new(Cuadrilla::TemporadaId).integer().null())
                     .col(
                         ColumnDef::new(Cuadrilla::CreatedAt)
@@ -73,6 +54,15 @@ impl MigrationTrait for CreateCuadrilla {
                             .timestamp()
                             .default(Expr::current_timestamp()),
                     )
+                    // Solo agregamos las FK que NO tienen dependencia circular
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk_cuadrilla_variedad")
+                            .from(Cuadrilla::Table, Cuadrilla::VariedadId)
+                            .to(Variedad::Table, Variedad::Id)
+                            .on_delete(ForeignKeyAction::Restrict)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk_cuadrilla_temporada")
@@ -83,7 +73,9 @@ impl MigrationTrait for CreateCuadrilla {
                     )
                     .to_owned(),
             )
-            .await
+            .await?;
+
+        Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
