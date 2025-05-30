@@ -3,13 +3,12 @@ import { invoke } from '@tauri-apps/api/core';
 // Define the Produccion interface to match the Rust ProduccionResponse struct
 export interface Produccion {
     id: number;
-    jornalero_id: number;
+    cuadrilla_id: number;
     temporada_id: number;
-    variedad_id: number;
     tipo_uva_id: number;
     tipo_empaque_id: number;
     cliente_id: number;
-    lote: string;
+    // lote: string;
     cantidad: number;
     fecha: string; // Added field to match the backend
     created_at?: string; // Optional field
@@ -18,13 +17,12 @@ export interface Produccion {
 
 // Define the ProduccionData interface for inserting new records
 export interface ProduccionData {
-    jornalero_id: number;
+    cuadrilla_id: number;
     temporada_id: number;
-    variedad_id: number;
     tipo_uva_id: number;
     tipo_empaque_id: number;
     cliente_id: number;
-    lote: string;
+    // lote: string;
     cantidad: number; // Adjust type if using Decimal in Rust
     fecha: string; // Add this required field - use ISO date format (YYYY-MM-DD)
 }

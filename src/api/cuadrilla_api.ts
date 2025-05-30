@@ -2,23 +2,25 @@ import { invoke } from "@tauri-apps/api/core";
 
 export interface Cuadrilla {
     id: number;
-    LiderCuadrilla: string;
-    ProduccionCuadrilla: number;
-    Lote: string;
+    lider_cuadrilla_id: number;
+    // ProduccionCuadrilla: number;
+    lote: string;
+    variedad_id: number;
     // Variedad: string;
     // Integrantes: string;
     // Empaque: string | null;
-    TemporadaId: number;
-    CreatedAt: string;
-    UpdatedAt: string;
+    temporada_id: number;
+    created_at: string;
+    updated_at: string;
 }
 
 
 export interface CuadrillaData {
     id?: number;
-    lider_cuadrilla?: number | null;
-    produccion_cuadrilla?: number | null;
+    lider_cuadrilla_id?: number | null;
+    // produccion_cuadrilla?: number | null;
     lote: string;
+    variedad_id: number | null;
     // variedad: string;
     // integrantes?: number | null;
     // empaque?: string | null;

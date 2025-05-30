@@ -5,8 +5,6 @@ export interface Temporada {
     id: number,
     fecha_inicial: string,
     fecha_final?: string,
-    meses?: number,
-    produccion_total?: number,
     created_at: string,
     updated_at: string,
 }
@@ -14,8 +12,6 @@ export interface Temporada {
 export interface TemporadaData {
     fecha_inicial: string,
     fecha_final?: string,
-    meses?: number,
-    produccion_total?: number,
 }
 
 export async function obtenerTemporadas(): Promise<Temporada[]> {
