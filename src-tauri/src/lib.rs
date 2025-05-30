@@ -3,8 +3,12 @@ use sea_orm::{Database, DatabaseConnection, DbErr, ConnectOptions};
 use std::env;
 use std::time::Duration;
 use tauri::Manager;
+use dotenv::dotenv;
 
 pub async fn obt_connection(app_handle: &tauri::AppHandle) -> Result<DatabaseConnection, DbErr> {
+    // Cargar las variables de entorno desde el archivo .env
+    dotenv().ok();
+
     // Obtener el directorio de datos de la aplicación (fuera del código fuente)
     let app_data_dir = app_handle
         .path()
@@ -16,9 +20,10 @@ pub async fn obt_connection(app_handle: &tauri::AppHandle) -> Result<DatabaseCon
         return Err(DbErr::Custom(format!("Error creando directorio: {}", e)));
     }
     
-    let db_path = app_data_dir.join("test_nase.db");
-    let db_url = format!("sqlite:{}", db_path.to_string_lossy());
-    
+    // let db_path = app_data_dir.join("test_nase.db");
+    // let db_url = format!("sqlite:{}", db_path.to_string_lossy());
+    let db_url = env::var("DATABASE_URL").unwrap_or_else(|_| format!("sqlite:{}", app_data_dir.join("test_nase.db").to_string_lossy()));
+
     println!("Conectando a: {}", db_url);
     
     // Configurar opciones de conexión
