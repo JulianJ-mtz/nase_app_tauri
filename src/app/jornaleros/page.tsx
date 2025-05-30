@@ -177,8 +177,8 @@ export default function JornalerosPage() {
                                                         }{" "}
                                                         | Lote:{" "}
                                                         {cuadrillaInfo.Lote} |
-                                                        Variedad:{" "}
-                                                        {cuadrillaInfo.Variedad}
+                                                        {/* Variedad:{" "}
+                                                        {cuadrillaInfo.Variedad} */}
                                                     </span>
                                                 )}
                                             </CardTitle>

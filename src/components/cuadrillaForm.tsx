@@ -41,9 +41,9 @@ export function CuadrillaForm({ cuadrillaId, onSuccess }: CuadrillaFormProps) {
 
     const [formData, setFormData] = useState<CuadrillaData>({
         lote: "",
-        variedad: "",
-        integrantes: null,
-        empaque: null,
+        // variedad: "",
+        // integrantes: null,
+        // empaque: null,
         temporada_id: null,
         lider_cuadrilla: null,
         produccion_cuadrilla: null,
@@ -65,10 +65,10 @@ export function CuadrillaForm({ cuadrillaId, onSuccess }: CuadrillaFormProps) {
                         // Convert from API response to our form data structure
                         setFormData({
                             lote: cuadrilla.Lote ?? "",
-                            variedad: cuadrilla.Variedad ?? "",
-                            integrantes:
-                                parseInt(cuadrilla.Integrantes) || null,
-                            empaque: cuadrilla.Empaque ?? null,
+                            // variedad: cuadrilla.Variedad ?? "",
+                            // integrantes:
+                            //     parseInt(cuadrilla.Integrantes) || null,
+                            // empaque: cuadrilla.Empaque ?? null,
                             temporada_id: cuadrilla.TemporadaId ?? null,
                             lider_cuadrilla:
                                 parseInt(cuadrilla.LiderCuadrilla) || null,
@@ -108,10 +108,10 @@ export function CuadrillaForm({ cuadrillaId, onSuccess }: CuadrillaFormProps) {
             toast.error("El lote es requerido");
             return;
         }
-        if (!formData.variedad.trim()) {
-            toast.error("La variedad es requerida");
-            return;
-        }
+        // if (!formData.variedad.trim()) {
+        //     toast.error("La variedad es requerida");
+        //     return;
+        // }
 
         try {
             setLoading(true);
@@ -126,9 +126,9 @@ export function CuadrillaForm({ cuadrillaId, onSuccess }: CuadrillaFormProps) {
             if (!cuadrillaId) {
                 setFormData({
                     lote: "",
-                    variedad: "",
-                    integrantes: null,
-                    empaque: null,
+                    // variedad: "",
+                    // integrantes: null,
+                    // empaque: null,
                     temporada_id: null,
                     lider_cuadrilla: null,
                     produccion_cuadrilla: null,
@@ -200,7 +200,7 @@ export function CuadrillaForm({ cuadrillaId, onSuccess }: CuadrillaFormProps) {
                             required
                         />
                     </div>
-                    <div className="space-y-1">
+                    {/* <div className="space-y-1">
                         <Label
                             htmlFor="variedad"
                             className="text-sm font-medium"
@@ -215,7 +215,7 @@ export function CuadrillaForm({ cuadrillaId, onSuccess }: CuadrillaFormProps) {
                             onChange={handleChange}
                             required
                         />
-                    </div>
+                    </div> */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-1">
                             <Label
@@ -258,7 +258,7 @@ export function CuadrillaForm({ cuadrillaId, onSuccess }: CuadrillaFormProps) {
                                 El líder debe ser un jornalero activo
                             </p>
                         </div>
-                        <div className="space-y-1">
+                        {/* <div className="space-y-1">
                             <Label
                                 htmlFor="integrantes"
                                 className="text-sm font-medium"
@@ -266,17 +266,17 @@ export function CuadrillaForm({ cuadrillaId, onSuccess }: CuadrillaFormProps) {
                                 Capacidad de Integrantes
                             </Label>
                             <Input
-                                id="integrantes"
-                                name="integrantes"
-                                type="number"
-                                placeholder="Capacidad máxima"
-                                value={formData.integrantes ?? ""}
-                                onChange={handleChange}
-                            />
-                        </div>
+                                 id="integrantes"
+                                 name="integrantes"
+                                 type="number"
+                                 placeholder="Capacidad máxima"
+                                 value={formData.integrantes ?? ""}
+                                 onChange={handleChange}
+                             />
+                        </div> */}
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1">
+                        {/* <div className="space-y-1">
                             <Label
                                 htmlFor="produccion_cuadrilla"
                                 className="text-sm font-medium"
@@ -294,23 +294,23 @@ export function CuadrillaForm({ cuadrillaId, onSuccess }: CuadrillaFormProps) {
                             <p className="text-xs text-muted-foreground mt-1">
                                 Meta de producción para esta cuadrilla
                             </p>
-                        </div>
-                        <div className="space-y-1">
+                        </div> */}
+                        {/* <div className="space-y-1">
                             <Label
                                 htmlFor="empaque"
                                 className="text-sm font-medium"
                             >
                                 Empaque
                             </Label>
-                            <Input
-                                id="empaque"
-                                name="empaque"
-                                type="text"
-                                placeholder="Tipo de empaque"
-                                value={formData.empaque ?? ""}
-                                onChange={handleChange}
-                            />
-                        </div>
+                             <Input
+                                 id="empaque"
+                                 name="empaque"
+                                 type="text"
+                                 placeholder="Tipo de empaque"
+                                 value={formData.empaque ?? ""}
+                                 onChange={handleChange}
+                             />
+                        </div> */}
                     </div>
                     <div className="space-y-1">
                         <Label

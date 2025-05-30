@@ -5,9 +5,9 @@ export interface Cuadrilla {
     LiderCuadrilla: string;
     ProduccionCuadrilla: number;
     Lote: string;
-    Variedad: string;
-    Integrantes: string;
-    Empaque: string | null;
+    // Variedad: string;
+    // Integrantes: string;
+    // Empaque: string | null;
     TemporadaId: number;
     CreatedAt: string;
     UpdatedAt: string;
@@ -19,9 +19,9 @@ export interface CuadrillaData {
     lider_cuadrilla?: number | null;
     produccion_cuadrilla?: number | null;
     lote: string;
-    variedad: string;
-    integrantes?: number | null;
-    empaque?: string | null;
+    // variedad: string;
+    // integrantes?: number | null;
+    // empaque?: string | null;
     temporada_id?: number | null;
 }
 
