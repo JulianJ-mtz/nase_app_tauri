@@ -73,3 +73,30 @@ export async function eliminarCuadrilla(id: number): Promise<string> {
         throw error;
     }
 }
+
+export async function obtenerWarningEliminacionCuadrilla(id: number): Promise<string> {
+    try {
+        return await invoke<string>('get_cuadrilla_delete_warning', { id });
+    } catch (error) {
+        console.error('Error al obtener warning de eliminación:', error);
+        throw error;
+    }
+}
+
+export async function forceEliminarCuadrilla(id: number): Promise<string> {
+    try {
+        return await invoke<string>('force_delete_cuadrilla', { id });
+    } catch (error) {
+        console.error('Error al eliminar cuadrilla forzadamente:', error);
+        throw error;
+    }
+}
+
+export async function reasignarJornalerosDeCuadrilla(cuadrillaId: number): Promise<string> {
+    try {
+        return await invoke<string>('reassign_jornaleros_from_cuadrilla', { id: cuadrillaId });
+    } catch (error) {
+        console.error('Error al reasignar jornaleros de cuadrilla:', error);
+        throw error;
+    }
+}

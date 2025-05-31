@@ -31,6 +31,24 @@ export async function obtenerJornaleros(): Promise<Jornalero[]> {
     }
 }
 
+export async function obtenerTodosLosJornaleros(): Promise<Jornalero[]> {
+    try {
+        return await invoke<Jornalero[]>('get_all_jornaleros');
+    } catch (error) {
+        console.error('Error al obtener todos los jornaleros:', error);
+        throw error;
+    }
+}
+
+export async function obtenerJornalerosInactivos(): Promise<Jornalero[]> {
+    try {
+        return await invoke<Jornalero[]>('get_inactive_jornaleros');
+    } catch (error) {
+        console.error('Error al obtener jornaleros inactivos:', error);
+        throw error;
+    }
+}
+
 export async function obtenerJornaleroPorId(id: number): Promise<Jornalero | null> {
     try {
         return await invoke<Jornalero | null>('get_jornalero_by_id', { id });
@@ -74,6 +92,15 @@ export async function eliminarJornalero(id: number): Promise<string> {
         return await invoke<string>('delete_jornalero', { id });
     } catch (error) {
         console.error('Error al eliminar jornalero:', error);
+        throw error;
+    }
+}
+
+export async function reactivarJornalero(id: number): Promise<string> {
+    try {
+        return await invoke<string>('reactivate_jornalero', { id });
+    } catch (error) {
+        console.error('Error al reactivar jornalero:', error);
         throw error;
     }
 }
