@@ -13,6 +13,7 @@ import {
     Package,
     Layers,
     Building,
+    Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -24,42 +25,51 @@ export function Navbar() {
     const pathname = usePathname();
 
     const routes = [
+        // Main workflow - following database dependencies
         {
             href: "/temporadas",
             label: "Temporadas",
             icon: <Calendar className="mr-2 h-5 w-5" />,
             active: pathname === "/temporadas",
+            description: "Gestión de temporadas de trabajo",
         },
         {
             href: "/cuadrillas",
             label: "Cuadrillas",
             icon: <Users className="mr-2 h-5 w-5" />,
             active: pathname === "/cuadrillas",
+            description: "Organización de equipos de trabajo",
         },
         {
             href: "/jornaleros",
             label: "Jornaleros",
             icon: <UserRound className="mr-2 h-5 w-5" />,
             active: pathname === "/jornaleros",
+            description: "Gestión de trabajadores",
         },
         {
             href: "/record",
             label: "Producción",
             icon: <Sprout className="mr-2 h-5 w-5" />,
             active: pathname === "/record",
+            description: "Registro de producción diaria",
         },
-        {
-            href: "/catalogos",
-            label: "Catálogos",
-            icon: <Layers className="mr-2 h-5 w-5" />,
-            active:
-                pathname === "/catalogos" || pathname.startsWith("/catalogos/"),
-        },
+        // Analytics and reports
         {
             href: "/metrics",
             label: "Métricas",
             icon: <BarChart3 className="mr-2 h-5 w-5" />,
             active: pathname === "/metrics",
+            description: "Análisis y reportes",
+        },
+        // Configuration
+        {
+            href: "/catalogos",
+            label: "Configuración",
+            icon: <Settings className="mr-2 h-5 w-5" />,
+            active:
+                pathname === "/catalogos" || pathname.startsWith("/catalogos/"),
+            description: "Catálogos y configuración del sistema",
         },
     ];
 
@@ -89,6 +99,7 @@ export function Navbar() {
                                         ? "bg-accent text-accent-foreground"
                                         : "text-muted-foreground hover:text-foreground"
                                 }`}
+                                title={route.description}
                             >
                                 {route.icon}
                                 {route.label}
@@ -134,14 +145,19 @@ export function Navbar() {
                                         key={route.href}
                                         href={route.href}
                                         onClick={() => setOpen(false)}
-                                        className={`flex items-center px-3 py-2 text-sm font-medium transition-colors rounded-md hover:bg-accent hover:text-accent-foreground ${
+                                        className={`flex flex-col px-3 py-3 text-sm font-medium transition-colors rounded-md hover:bg-accent hover:text-accent-foreground ${
                                             route.active
                                                 ? "bg-accent text-accent-foreground"
                                                 : "text-muted-foreground hover:text-foreground"
                                         }`}
                                     >
-                                        {route.icon}
-                                        {route.label}
+                                        <div className="flex items-center">
+                                            {route.icon}
+                                            {route.label}
+                                        </div>
+                                        <p className="text-xs text-muted-foreground mt-1 ml-7">
+                                            {route.description}
+                                        </p>
                                     </Link>
                                 ))}
                             </nav>

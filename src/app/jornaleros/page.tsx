@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { JornaleroForm } from "@/components/JornaleroForm";
+import { JornaleroForm } from "@/components/forms/JornaleroForm";
 import { Separator } from "@/components/ui/separator";
 import { useJornaleroStore } from "@/lib/storeJornalero";
 import { useCuadrillaStore } from "@/lib/storeCuadrilla";
@@ -67,6 +67,13 @@ export default function JornalerosPage() {
         handleDelete,
         handleViewCuadrilla,
     });
+
+    // Helper function to get leader name
+    const getLiderName = (liderId: number | null) => {
+        if (!liderId) return "Sin líder";
+        const lider = jornaleros.find(j => j.id === liderId);
+        return lider ? lider.nombre : `ID: ${liderId}`;
+    };
 
     // Group jornaleros by cuadrilla
     const jornalerosByCuadrilla: Record<string, Jornalero[]> = {};
@@ -172,13 +179,9 @@ export default function JornalerosPage() {
                                                 {cuadrillaInfo && (
                                                     <span className="text-sm font-normal text-muted-foreground">
                                                         Líder:{" "}
-                                                        {
-                                                            cuadrillaInfo.LiderCuadrilla
-                                                        }{" "}
+                                                        {getLiderName(cuadrillaInfo.lider_cuadrilla_id)}{" "}
                                                         | Lote:{" "}
-                                                        {cuadrillaInfo.Lote} |
-                                                        {/* Variedad:{" "}
-                                                        {cuadrillaInfo.Variedad} */}
+                                                        {cuadrillaInfo.lote}
                                                     </span>
                                                 )}
                                             </CardTitle>
@@ -324,7 +327,7 @@ export default function JornalerosPage() {
                                                 className="border-b"
                                             >
                                                 <td className="py-2">
-                                                    {cuadrilla.LiderCuadrilla}
+                                                    {getLiderName(cuadrilla.lider_cuadrilla_id)} - Lote: {cuadrilla.lote}
                                                 </td>
                                                 <td className="py-2">
                                                     {
@@ -351,7 +354,7 @@ export default function JornalerosPage() {
 
             {/* Dialog for editing jornalero */}
             <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-xl">
                     <DialogHeader>
                         <DialogTitle>Editar Jornalero</DialogTitle>
                         <DialogDescription>

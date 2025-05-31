@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Users } from "lucide-react";
-import { CuadrillaForm } from "@/components/cuadrillaForm";
+import { CuadrillaForm } from "@/components/forms/CuadrillaForm";
 import { createColumns } from "./columsTableCuadrilla";
 import { DataTableCuadrilla } from "./dataTableCuadrilla";
 import { useCuadrillaStore } from "@/lib/storeCuadrilla";
+import { useJornaleroStore } from "@/lib/storeJornalero";
 import { 
     Dialog,
     DialogContent,
@@ -18,13 +19,23 @@ import { CuadrillaJornaleros } from "@/components/CuadrillaJornaleros";
 import { Spinner } from "@/components/ui/spinner";
 
 export default function CuadrillasPage() {
-    const { cuadrillas, fetchCuadrillas, loading, deleteCuadrilla } = useCuadrillaStore();
+    const { cuadrillas, fetchCuadrillas, loading, deleteCuadrilla, error } = useCuadrillaStore();
+    const { jornaleros, fetchJornaleros } = useJornaleroStore();
     const [selectedCuadrillaId, setSelectedCuadrillaId] = useState<number | null>(null);
     const [showJornalerosDialog, setShowJornalerosDialog] = useState(false);
 
     useEffect(() => {
         fetchCuadrillas();
-    }, [fetchCuadrillas]);
+        fetchJornaleros();
+    }, [fetchCuadrillas, fetchJornaleros]);
+
+    // Debug: Log cuadrillas data
+    useEffect(() => {
+        console.log("Cuadrillas data:", cuadrillas);
+        console.log("Jornaleros data:", jornaleros);
+        console.log("Loading:", loading);
+        console.log("Error:", error);
+    }, [cuadrillas, jornaleros, loading, error]);
 
     const handleViewJornaleros = (cuadrillaId: number) => {
         setSelectedCuadrillaId(cuadrillaId);
@@ -41,6 +52,7 @@ export default function CuadrillasPage() {
         handleEdit: () => {},
         handleDelete,
         handleViewJornaleros,
+        jornaleros,
     });
 
     return (
@@ -57,6 +69,13 @@ export default function CuadrillasPage() {
                 <CuadrillaForm />
             </div>
 
+            {/* Debug info */}
+            {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    Error: {error}
+                </div>
+            )}
+
             <Card>
                 <CardContent className="p-4">
                     {loading ? (
@@ -64,7 +83,13 @@ export default function CuadrillasPage() {
                             <Spinner />
                         </div>
                     ) : (
-                        <DataTableCuadrilla columns={columns} data={cuadrillas} />
+                        <>
+                            {/* Debug: Show cuadrillas count */}
+                            <div className="mb-4 text-sm text-gray-600">
+                                Total cuadrillas: {cuadrillas.length} | Total jornaleros: {jornaleros.length}
+                            </div>
+                            <DataTableCuadrilla columns={columns} data={cuadrillas} />
+                        </>
                     )}
                 </CardContent>
             </Card>
@@ -73,13 +98,12 @@ export default function CuadrillasPage() {
                 open={showJornalerosDialog} 
                 onOpenChange={setShowJornalerosDialog}
             >
-                <DialogContent className="max-w-4xl">
+                <DialogContent className="max-w-7xl">
                     <DialogTitle>
                         Jornaleros de Cuadrilla
                     </DialogTitle>
                     {selectedCuadrillaId && (
                         <CuadrillaJornaleros 
-
                             cuadrillaId={selectedCuadrillaId} 
                             onClose={() => setShowJornalerosDialog(false)}
                         />
