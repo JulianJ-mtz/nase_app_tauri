@@ -25,6 +25,12 @@ pub enum Relation {
         on_delete = "SetNull"
     )]
     Jornalero,
+    #[sea_orm(
+        has_many = "super::jornalero::Entity",
+        from = "Column::Id",
+        to = "super::jornalero::Column::CuadrillaId"
+    )]
+    Jornaleros,
     #[sea_orm(has_many = "super::produccion::Entity")]
     Produccion,
     #[sea_orm(
@@ -47,7 +53,7 @@ pub enum Relation {
 
 impl Related<super::jornalero::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Jornalero.def()
+        Relation::Jornaleros.def()
     }
 }
 

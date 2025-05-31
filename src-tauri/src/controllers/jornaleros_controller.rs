@@ -111,7 +111,7 @@ pub async fn get_jornaleros(app_handle: AppHandle) -> Result<Vec<JornaleroRespon
     {
         let mut state = APP_STATE.lock().unwrap();
         state.operation_count += 1;
-        println!("Operación de consulta #{}", state.operation_count);
+        println!("Operación de consulta jornaleros activos #{}", state.operation_count);
     }
 
     // Obtener conexión
@@ -123,11 +123,97 @@ pub async fn get_jornaleros(app_handle: AppHandle) -> Result<Vec<JornaleroRespon
         }
     };
 
-    // Ejecutar consulta
+    // Ejecutar consulta solo para jornaleros activos
+    let jornaleros = match Jornalero::find()
+        .filter(jornalero::Column::Estado.eq("Activo"))
+        .all(&connection)
+        .await
+    {
+        Ok(result) => result,
+        Err(e) => {
+            println!("Error al consultar jornaleros: {}", e);
+            return Err(format!("Error de consulta: {}", e));
+        }
+    };
+
+    // Cerrar conexión
+    drop(connection);
+
+    // Convertir los modelos a la respuesta serializable
+    let response = jornaleros
+        .into_iter()
+        .map(JornaleroResponse::from)
+        .collect();
+
+    Ok(response)
+}
+
+#[tauri::command]
+pub async fn get_all_jornaleros(app_handle: AppHandle) -> Result<Vec<JornaleroResponse>, String> {
+    // Incrementar contador para debug
+    {
+        let mut state = APP_STATE.lock().unwrap();
+        state.operation_count += 1;
+        println!("Operación de consulta todos los jornaleros #{}", state.operation_count);
+    }
+
+    // Obtener conexión
+    let connection = match obt_connection(&app_handle).await {
+        Ok(conn) => conn,
+        Err(e) => {
+            println!("Error al conectar a la base de datos: {}", e);
+            return Err(format!("Error de conexión: {}", e));
+        }
+    };
+
+    // Ejecutar consulta para todos los jornaleros
     let jornaleros = match Jornalero::find().all(&connection).await {
         Ok(result) => result,
         Err(e) => {
             println!("Error al consultar jornaleros: {}", e);
+            return Err(format!("Error de consulta: {}", e));
+        }
+    };
+
+    // Cerrar conexión
+    drop(connection);
+
+    // Convertir los modelos a la respuesta serializable
+    let response = jornaleros
+        .into_iter()
+        .map(JornaleroResponse::from)
+        .collect();
+
+    Ok(response)
+}
+
+#[tauri::command]
+pub async fn get_inactive_jornaleros(app_handle: AppHandle) -> Result<Vec<JornaleroResponse>, String> {
+    // Incrementar contador para debug
+    {
+        let mut state = APP_STATE.lock().unwrap();
+        state.operation_count += 1;
+        println!("Operación de consulta jornaleros inactivos #{}", state.operation_count);
+    }
+
+    // Obtener conexión
+    let connection = match obt_connection(&app_handle).await {
+        Ok(conn) => conn,
+        Err(e) => {
+            println!("Error al conectar a la base de datos: {}", e);
+            return Err(format!("Error de conexión: {}", e));
+        }
+    };
+
+    // Ejecutar consulta solo para jornaleros inactivos
+    let jornaleros = match Jornalero::find()
+        .filter(jornalero::Column::Estado.eq("Inactivo"))
+        .all(&connection)
+        .await
+    {
+        Ok(result) => result,
+        Err(e) => {
+            println!("Error al consultar jornaleros inactivos: {}", e);
             return Err(format!("Error de consulta: {}", e));
         }
     };
@@ -278,7 +364,7 @@ pub async fn delete_jornalero(app_handle: AppHandle, id: i32) -> Result<String, 
     {
         let mut state = APP_STATE.lock().unwrap();
         state.operation_count += 1;
-        println!("Operación de eliminación #{}", state.operation_count);
+        println!("Operación de desactivación (soft delete) #{}", state.operation_count);
     }
 
     let connection = match obt_connection(&app_handle).await {
@@ -289,20 +375,83 @@ pub async fn delete_jornalero(app_handle: AppHandle, id: i32) -> Result<String, 
         }
     };
 
-    let res = match Jornalero::delete_by_id(id).exec(&connection).await {
+    // Verificar que el jornalero existe
+    let jornalero_existente = match Jornalero::find_by_id(id).one(&connection).await {
+        Ok(Some(j)) => j,
+        Ok(None) => {
+            return Err(format!("No existe un jornalero con ID: {}", id));
+        }
+        Err(e) => {
+            println!("Error al buscar jornalero: {}", e);
+            return Err(format!("Error de búsqueda: {}", e));
+        }
+    };
+
+    // Verificar si ya está inactivo
+    if jornalero_existente.estado == "Inactivo" {
+        return Err(format!("El jornalero ya está desactivado"));
+    }
+
+    // Verificar si el jornalero es líder de alguna cuadrilla
+    let cuadrilla_liderada = match Cuadrilla::find()
+        .filter(cuadrilla::Column::LiderCuadrillaId.eq(id))
+        .one(&connection)
+        .await
+    {
+        Ok(cuadrilla_liderada) => cuadrilla_liderada,
+        Err(e) => {
+            println!("Error al verificar liderazgo: {}", e);
+            return Err(format!("Error al verificar liderazgo: {}", e));
+        }
+    };
+
+    // Guardamos si había cuadrilla liderada
+    let tenia_cuadrilla_liderada = cuadrilla_liderada.is_some();
+
+    // Si es líder de una cuadrilla, actualizar la cuadrilla para que quede sin líder
+    if let Some(cuadrilla) = cuadrilla_liderada {
+        println!("El jornalero {} es líder de la cuadrilla {}. Removiendo liderazgo...", id, cuadrilla.id);
+        
+        let mut cuadrilla_actualizada: cuadrilla::ActiveModel = cuadrilla.into();
+        cuadrilla_actualizada.lider_cuadrilla_id = ActiveValue::Set(None);
+        
+        match cuadrilla_actualizada.update(&connection).await {
+            Ok(_) => {
+                println!("Cuadrilla actualizada exitosamente - líder removido");
+            }
+            Err(e) => {
+                println!("Error al actualizar cuadrilla: {}", e);
+                return Err(format!("Error al actualizar cuadrilla: {}", e));
+            }
+        }
+    }
+
+    // Realizar soft delete: cambiar estado a "Inactivo"
+    let mut jornalero_actualizado: jornalero::ActiveModel = jornalero_existente.into();
+    jornalero_actualizado.estado = ActiveValue::Set("Inactivo".to_string());
+    jornalero_actualizado.cuadrilla_id = ActiveValue::Set(None); // También remover de cualquier cuadrilla
+
+    let res = match jornalero_actualizado.update(&connection).await {
         Ok(result) => result,
         Err(e) => {
-            println!("Error al eliminar jornalero: {}", e);
-            return Err(format!("Error de eliminación: {}", e));
+            println!("Error al desactivar jornalero: {}", e);
+            return Err(format!("Error al desactivar jornalero: {}", e));
         }
     };
 
     drop(connection);
 
-    Ok(format!(
-        "Jornalero ID: {} eliminado con éxito",
-        res.rows_affected
-    ))
+    if tenia_cuadrilla_liderada {
+        Ok(format!(
+            "Jornalero '{}' desactivado con éxito. La cuadrilla quedó sin líder y puede ser reasignada.",
+            res.nombre
+        ))
+    } else {
+        Ok(format!(
+            "Jornalero '{}' desactivado con éxito.",
+            res.nombre
+        ))
+    }
 }
 
 #[tauri::command]
@@ -314,7 +463,10 @@ pub async fn get_jornaleros_by_cuadrilla(
     {
         let mut state = APP_STATE.lock().unwrap();
         state.operation_count += 1;
-        println!("Operación de consulta jornaleros por cuadrilla #{}", state.operation_count);
+        println!(
+            "Operación de consulta jornaleros por cuadrilla #{}",
+            state.operation_count
+        );
     }
 
     // Obtener conexión
@@ -349,4 +501,54 @@ pub async fn get_jornaleros_by_cuadrilla(
         .collect();
 
     Ok(response)
+}
+
+#[tauri::command]
+pub async fn reactivate_jornalero(app_handle: AppHandle, id: i32) -> Result<String, String> {
+    {
+        let mut state = APP_STATE.lock().unwrap();
+        state.operation_count += 1;
+        println!("Operación de reactivación #{}", state.operation_count);
+    }
+
+    let connection = match obt_connection(&app_handle).await {
+        Ok(conn) => conn,
+        Err(e) => {
+            println!("Error al conectar a la base de datos: {}", e);
+            return Err(format!("Error de conexión: {}", e));
+        }
+    };
+
+    // Verificar que el jornalero existe
+    let jornalero_existente = match Jornalero::find_by_id(id).one(&connection).await {
+        Ok(Some(j)) => j,
+        Ok(None) => {
+            return Err(format!("No existe un jornalero con ID: {}", id));
+        }
+        Err(e) => {
+            println!("Error al buscar jornalero: {}", e);
+            return Err(format!("Error de búsqueda: {}", e));
+        }
+    };
+
+    // Verificar si ya está activo
+    if jornalero_existente.estado == "Activo" {
+        return Err(format!("El jornalero ya está activo"));
+    }
+
+    // Reactivar: cambiar estado a "Activo"
+    let mut jornalero_actualizado: jornalero::ActiveModel = jornalero_existente.into();
+    jornalero_actualizado.estado = ActiveValue::Set("Activo".to_string());
+
+    let res = match jornalero_actualizado.update(&connection).await {
+        Ok(result) => result,
+        Err(e) => {
+            println!("Error al reactivar jornalero: {}", e);
+            return Err(format!("Error al reactivar jornalero: {}", e));
+        }
+    };
+
+    drop(connection);
+
+    Ok(format!("Jornalero '{}' reactivado con éxito.", res.nombre))
 }

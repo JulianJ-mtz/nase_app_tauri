@@ -51,20 +51,20 @@ pub async fn post_temporada(app_handle: AppHandle, data: TemporadaData) -> Resul
         .map_err(|e| format!("Error en formato de fecha inicial: {}", e))?;
 
     let fecha_final = match data.fecha_final.as_ref() {
-        Some(fecha) => match Date::parse_from_str(fecha, "%Y-%m-%d") {
-            Ok(date) => date,
+        Some(fecha) if !fecha.is_empty() => match Date::parse_from_str(fecha, "%Y-%m-%d") {
+            Ok(date) => Some(date),
             Err(e) => {
                 println!("Error al parsear fecha final: {}", e);
                 return Err(format!("Error en formato de fecha final: {}", e));
             }
         },
-        None => return Err("Fecha final no proporcionada".to_string()),
+        _ => None, // Permite que sea None (temporada sin fecha final)
     };
 
     let temporada = temporada::ActiveModel {
         id: ActiveValue::NotSet,
         fecha_inicial: ActiveValue::Set(fecha_inicial),
-        fecha_final: ActiveValue::Set(Some(fecha_final)),
+        fecha_final: ActiveValue::Set(fecha_final),
         created_at: ActiveValue::NotSet,
         updated_at: ActiveValue::NotSet,
     };
@@ -192,20 +192,20 @@ pub async fn put_temporada(
         .map_err(|e| format!("Error en formato de fecha inicial: {}", e))?;
 
     let fecha_final = match data.fecha_final.as_ref() {
-        Some(fecha) => match Date::parse_from_str(fecha, "%Y-%m-%d") {
-            Ok(date) => date,
+        Some(fecha) if !fecha.is_empty() => match Date::parse_from_str(fecha, "%Y-%m-%d") {
+            Ok(date) => Some(date),
             Err(e) => {
                 println!("Error al parsear fecha final: {}", e);
                 return Err(format!("Error en formato de fecha final: {}", e));
             }
         },
-        None => return Err("Fecha final no proporcionada".to_string()),
+        _ => None, // Permite que sea None (temporada sin fecha final)
     };
 
     let mut temporada_actualizada: temporada::ActiveModel = temporada_existente.into();
 
     temporada_actualizada.fecha_inicial = ActiveValue::Set(fecha_inicial);
-    temporada_actualizada.fecha_final = ActiveValue::Set(Some(fecha_final));
+    temporada_actualizada.fecha_final = ActiveValue::Set(fecha_final);
 
     let res = match temporada_actualizada.update(&connection).await {
         Ok(result) => result,

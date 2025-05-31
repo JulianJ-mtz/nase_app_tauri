@@ -8,9 +8,8 @@ use sea_orm::*;
 use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Deserialize)]
 pub struct ClienteData {
-    pub id: i32,
     pub codigo: i32,
     pub nombre: String,
 }
