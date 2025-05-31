@@ -3,13 +3,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -42,6 +35,7 @@ import {
 } from "@/api/produccion_api";
 import { Cuadrilla, obtenerCuadrillas } from "@/api/cuadrilla_api";
 import { Jornalero, obtenerJornaleros } from "@/api/jornalero_api";
+import { FormModal } from "@/components/modals";
 
 export default function ProduccionPage() {
     const [producciones, setProducciones] = useState<Produccion[]>([]);
@@ -260,203 +254,198 @@ export default function ProduccionPage() {
         <div className="container mx-auto py-10">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">Registro de Producción</h1>
-                <Dialog open={open} onOpenChange={handleOpenChange}>
-                    <DialogTrigger asChild>
-                        <Button>Nuevo Registro</Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[800px]">
-                        <DialogHeader>
-                            <DialogTitle>
-                                Nuevo Registro de Producción
-                            </DialogTitle>
-                        </DialogHeader>
-                        <form
-                            onSubmit={handleSubmit}
-                            className="space-y-4 pt-4"
-                        >
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="cuadrilla">
-                                        Cuadrilla *
-                                    </Label>
-                                    <Select
-                                        value={cuadrillaId?.toString()}
-                                        onValueChange={(value) =>
-                                            setCuadrillaId(Number(value))
-                                        }
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Seleccionar cuadrilla" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {loading ? (
-                                                <div>
-                                                    Cargando cuadrillas...
-                                                </div>
-                                            ) : (
-                                                cuadrillas.map((cuadrilla) => (
-                                                    <SelectItem
-                                                        key={cuadrilla.id}
-                                                        value={cuadrilla.id.toString()}
-                                                    >
-                                                        {getJornaleroNombre(
-                                                            cuadrilla.lider_cuadrilla_id
-                                                        )}
-                                                    </SelectItem>
-                                                ))
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="temporada">
-                                        Temporada *
-                                    </Label>
-                                    <Select
-                                        value={temporadaId?.toString()}
-                                        onValueChange={(value) =>
-                                            setTemporadaId(Number(value))
-                                        }
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Seleccionar temporada" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {temporadas.map((temporada) => (
-                                                <SelectItem
-                                                    key={temporada.id}
-                                                    value={temporada.id.toString()}
-                                                >
-                                                    Temporada {temporada.id} (
-                                                    {formatDate(
-                                                        temporada.fecha_inicial
-                                                    )}
-                                                    )
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="tipoUva">
-                                        Tipo de Uva *
-                                    </Label>
-                                    <Select
-                                        value={tipoUvaId?.toString()}
-                                        onValueChange={(value) =>
-                                            setTipoUvaId(Number(value))
-                                        }
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Seleccionar tipo de uva" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {tiposUva.map((tipoUva) => (
-                                                <SelectItem
-                                                    key={tipoUva.id}
-                                                    value={tipoUva.id.toString()}
-                                                >
-                                                    {tipoUva.nombre}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="tipoEmpaque">
-                                        Tipo de Empaque *
-                                    </Label>
-                                    <Select
-                                        value={tipoEmpaqueId?.toString()}
-                                        onValueChange={(value) =>
-                                            setTipoEmpaqueId(Number(value))
-                                        }
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Seleccionar tipo de empaque" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {tiposEmpaque.map((tipoEmpaque) => (
-                                                <SelectItem
-                                                    key={tipoEmpaque.id}
-                                                    value={tipoEmpaque.id.toString()}
-                                                >
-                                                    {tipoEmpaque.nombre}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="cliente">Cliente *</Label>
-                                    <Select
-                                        value={clienteId?.toString()}
-                                        onValueChange={(value) =>
-                                            setClienteId(Number(value))
-                                        }
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Seleccionar cliente" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {clientes.map((cliente) => (
-                                                <SelectItem
-                                                    key={cliente.id}
-                                                    value={cliente.id.toString()}
-                                                >
-                                                    {cliente.nombre}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="cantidad">
-                                        Cantidad (kg) *
-                                    </Label>
-                                    <Input
-                                        id="cantidad"
-                                        type="number"
-                                        step="0.01"
-                                        min="0.01"
-                                        value={cantidad ?? ""}
-                                        onChange={(e) =>
-                                            setCantidad(
-                                                e.target.value
-                                                    ? Number(e.target.value)
-                                                    : undefined
-                                            )
-                                        }
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex justify-end space-x-2 pt-4">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => setOpen(false)}
-                                >
-                                    Cancelar
-                                </Button>
-                                <Button type="submit">Guardar</Button>
-                            </div>
-                        </form>
-                    </DialogContent>
-                </Dialog>
+                <Button onClick={() => setOpen(true)}>Nuevo Registro</Button>
             </div>
+
+            {/* Modal for new production record */}
+            <FormModal
+                open={open}
+                onOpenChange={handleOpenChange}
+                title="Nuevo Registro de Producción"
+                maxWidth="max-w-4xl"
+            >
+                <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="cuadrilla">
+                                Cuadrilla *
+                            </Label>
+                            <Select
+                                value={cuadrillaId?.toString()}
+                                onValueChange={(value) =>
+                                    setCuadrillaId(Number(value))
+                                }
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Seleccionar cuadrilla" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {loading ? (
+                                        <div>
+                                            Cargando cuadrillas...
+                                        </div>
+                                    ) : (
+                                        cuadrillas.map((cuadrilla) => (
+                                            <SelectItem
+                                                key={cuadrilla.id}
+                                                value={cuadrilla.id.toString()}
+                                            >
+                                                {getJornaleroNombre(
+                                                    cuadrilla.lider_cuadrilla_id
+                                                )}
+                                            </SelectItem>
+                                        ))
+                                    )}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="temporada">
+                                Temporada *
+                            </Label>
+                            <Select
+                                value={temporadaId?.toString()}
+                                onValueChange={(value) =>
+                                    setTemporadaId(Number(value))
+                                }
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Seleccionar temporada" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {temporadas.map((temporada) => (
+                                        <SelectItem
+                                            key={temporada.id}
+                                            value={temporada.id.toString()}
+                                        >
+                                            Temporada {temporada.id} (
+                                            {formatDate(
+                                                temporada.fecha_inicial
+                                            )}
+                                            )
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="tipoUva">
+                                Tipo de Uva *
+                            </Label>
+                            <Select
+                                value={tipoUvaId?.toString()}
+                                onValueChange={(value) =>
+                                    setTipoUvaId(Number(value))
+                                }
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Seleccionar tipo de uva" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {tiposUva.map((tipoUva) => (
+                                        <SelectItem
+                                            key={tipoUva.id}
+                                            value={tipoUva.id.toString()}
+                                        >
+                                            {tipoUva.nombre}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="tipoEmpaque">
+                                Tipo de Empaque *
+                            </Label>
+                            <Select
+                                value={tipoEmpaqueId?.toString()}
+                                onValueChange={(value) =>
+                                    setTipoEmpaqueId(Number(value))
+                                }
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Seleccionar tipo de empaque" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {tiposEmpaque.map((tipoEmpaque) => (
+                                        <SelectItem
+                                            key={tipoEmpaque.id}
+                                            value={tipoEmpaque.id.toString()}
+                                        >
+                                            {tipoEmpaque.nombre}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="cliente">Cliente *</Label>
+                            <Select
+                                value={clienteId?.toString()}
+                                onValueChange={(value) =>
+                                    setClienteId(Number(value))
+                                }
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Seleccionar cliente" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {clientes.map((cliente) => (
+                                        <SelectItem
+                                            key={cliente.id}
+                                            value={cliente.id.toString()}
+                                        >
+                                            {cliente.nombre}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="cantidad">
+                                Cantidad (kg) *
+                            </Label>
+                            <Input
+                                id="cantidad"
+                                type="number"
+                                step="0.01"
+                                min="0.01"
+                                value={cantidad ?? ""}
+                                onChange={(e) =>
+                                    setCantidad(
+                                        e.target.value
+                                            ? Number(e.target.value)
+                                            : undefined
+                                    )
+                                }
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-2 pt-4">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setOpen(false)}
+                        >
+                            Cancelar
+                        </Button>
+                        <Button type="submit">Guardar</Button>
+                    </div>
+                </form>
+            </FormModal>
 
             <Card>
                 <CardHeader>

@@ -3,23 +3,17 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
-import { TemporadaForm, JornaleroForm } from "@/components/forms";
-import { useJornaleroStore } from "@/lib/storeJornalero";
-import { useTemporadaStore } from "@/lib/storeTemporada";
-import { DataTableJornalero } from "./dataTableJonalero";
-import { createColumns } from "./columsTableJornalero";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import { Calendar, FileSpreadsheet, UserRound, Plus, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FormModal } from "@/components/modals";
+import { JornaleroForm, TemporadaForm } from "@/components/forms";
+import { useJornaleroStore } from "@/lib/storeJornalero";
+import { useTemporadaStore } from "@/lib/storeTemporada";
+import { DataTableJornalero } from "../jornaleros/dataTableJonalero";
+import { createColumns } from "../jornaleros/columsTableJornalero";
 
 export default function Record() {
     const [isJornaleroDialogOpen, setIsJornaleroDialogOpen] = useState(false);
@@ -336,36 +330,28 @@ export default function Record() {
                 </TabsContent>
             </Tabs>
 
-            {/* Dialog for Jornalero */}
-            <Dialog open={isJornaleroDialogOpen} onOpenChange={setIsJornaleroDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>
-                            {editJornaleroId ? "Editar" : "Nuevo"} Jornalero
-                        </DialogTitle>
-                        <DialogDescription>
-                            {editJornaleroId ? "Actualiza la información del jornalero" : "Introduce los datos del nuevo jornalero"}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <JornaleroForm
-                        jornaleroId={editJornaleroId}
-                        onSuccess={handleJornaleroSuccess}
-                    />
-                </DialogContent>
-            </Dialog>
+            {/* Modal for Jornalero */}
+            <FormModal
+                open={isJornaleroDialogOpen}
+                onOpenChange={setIsJornaleroDialogOpen}
+                title={editJornaleroId ? "Editar" : "Nuevo"} 
+                description={editJornaleroId ? "Actualiza la información del jornalero" : "Introduce los datos del nuevo jornalero"}
+            >
+                <JornaleroForm
+                    jornaleroId={editJornaleroId}
+                    onSuccess={handleJornaleroSuccess}
+                />
+            </FormModal>
 
-            {/* Dialog for Temporada */}
-            <Dialog open={isTemporadaDialogOpen} onOpenChange={setIsTemporadaDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Nueva Temporada</DialogTitle>
-                        <DialogDescription>
-                            Crea una nueva temporada de trabajo definiendo las fechas de inicio y fin
-                        </DialogDescription>
-                    </DialogHeader>
-                    <TemporadaForm onSuccess={handleTemporadaSuccess} />
-                </DialogContent>
-            </Dialog>
+            {/* Modal for Temporada */}
+            <FormModal
+                open={isTemporadaDialogOpen}
+                onOpenChange={setIsTemporadaDialogOpen}
+                title="Nueva Temporada"
+                description="Crea una nueva temporada de trabajo definiendo las fechas de inicio y fin"
+            >
+                <TemporadaForm onSuccess={handleTemporadaSuccess} />
+            </FormModal>
         </div>
     );
 }

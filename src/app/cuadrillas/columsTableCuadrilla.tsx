@@ -1,3 +1,5 @@
+"use client";
+
 import { Cuadrilla } from "@/api/cuadrilla_api";
 import { Jornalero } from "@/api/jornalero_api";
 import { Button } from "@/components/ui/button";

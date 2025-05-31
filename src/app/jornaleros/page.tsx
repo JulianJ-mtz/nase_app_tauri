@@ -6,25 +6,24 @@ import { Separator } from "@/components/ui/separator";
 import { useJornaleroStore } from "@/lib/storeJornalero";
 import { useCuadrillaStore } from "@/lib/storeCuadrilla";
 import { useEffect } from "react";
-import { DataTableJornalero } from "../record/dataTableJonalero";
-import { createColumns } from "../record/columsTableJornalero";
+import { DataTableJornalero } from "./dataTableJonalero";
+import { createColumns, createInactiveColumns } from "./columsTableJornalero";
 import { Button } from "@/components/ui/button";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
 import { CuadrillaJornaleros } from "@/components/CuadrillaJornaleros";
 import { Jornalero } from "@/api/jornalero_api";
 import { toast } from "sonner";
-import { Edit, Trash, UserPlus } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Edit, Trash, UserPlus, AlertTriangle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+    DeleteConfirmationModal, 
+    FormModal, 
+    ReactivateConfirmationModal, 
+    CuadrillaViewModal 
+} from "@/components/modals";
 
 export default function JornalerosPage() {
-    const { fetchJornaleros, jornaleros, deleteJornalero } =
+    const { fetchJornaleros, jornaleros, deleteJornalero, fetchJornalerosInactivos, jornalerosInactivos, reactivateJornalero } =
         useJornaleroStore();
     const { fetchCuadrillas, cuadrillas } = useCuadrillaStore();
 
@@ -35,11 +34,18 @@ export default function JornalerosPage() {
     >(null);
     const [showCuadrillaDialog, setShowCuadrillaDialog] = useState(false);
     const [showEditDialog, setShowEditDialog] = useState(false);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [showReactivateDialog, setShowReactivateDialog] = useState(false);
+    const [jornaleroToDelete, setJornaleroToDelete] = useState<Jornalero | null>(null);
+    const [jornaleroToReactivate, setJornaleroToReactivate] = useState<Jornalero | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isReactivating, setIsReactivating] = useState(false);
 
     useEffect(() => {
         fetchJornaleros();
         fetchCuadrillas();
-    }, [fetchJornaleros, fetchCuadrillas]);
+        fetchJornalerosInactivos();
+    }, [fetchJornaleros, fetchCuadrillas, fetchJornalerosInactivos]);
 
     const handleEdit = (id: number) => {
         const jornalero = jornaleros.find((j) => j.id === id);
@@ -50,11 +56,67 @@ export default function JornalerosPage() {
     };
 
     const handleDelete = (id: number) => {
-        if (window.confirm("¿Estás seguro de eliminar este jornalero?")) {
-            deleteJornalero(id)
-                .then(() => toast.success("Jornalero eliminado con éxito"))
-                .catch((error) => toast.error("Error al eliminar jornalero"));
+        const jornalero = jornaleros.find((j) => j.id === id);
+        if (jornalero) {
+            setJornaleroToDelete(jornalero);
+            setShowDeleteDialog(true);
         }
+    };
+
+    const handleReactivate = (id: number) => {
+        const jornalero = jornalerosInactivos.find((j) => j.id === id);
+        if (jornalero) {
+            setJornaleroToReactivate(jornalero);
+            setShowReactivateDialog(true);
+        }
+    };
+
+    const confirmDelete = async () => {
+        if (!jornaleroToDelete) return;
+        
+        setIsDeleting(true);
+        try {
+            await deleteJornalero(jornaleroToDelete.id);
+            toast.success("Jornalero desactivado con éxito");
+            setShowDeleteDialog(false);
+            setJornaleroToDelete(null);
+        } catch (error) {
+            console.error("Error al desactivar jornalero:", error);
+            const errorMessage = typeof error === 'string' ? error : 
+                               (error as any)?.message || "Error al desactivar jornalero";
+            toast.error(errorMessage);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    const confirmReactivate = async () => {
+        if (!jornaleroToReactivate) return;
+        
+        setIsReactivating(true);
+        try {
+            await reactivateJornalero(jornaleroToReactivate.id);
+            toast.success("Jornalero reactivado con éxito");
+            setShowReactivateDialog(false);
+            setJornaleroToReactivate(null);
+        } catch (error) {
+            console.error("Error al reactivar jornalero:", error);
+            const errorMessage = typeof error === 'string' ? error : 
+                               (error as any)?.message || "Error al reactivar jornalero";
+            toast.error(errorMessage);
+        } finally {
+            setIsReactivating(false);
+        }
+    };
+
+    const cancelDelete = () => {
+        setShowDeleteDialog(false);
+        setJornaleroToDelete(null);
+    };
+
+    const cancelReactivate = () => {
+        setShowReactivateDialog(false);
+        setJornaleroToReactivate(null);
     };
 
     const handleViewCuadrilla = (cuadrillaId: number) => {
@@ -68,10 +130,15 @@ export default function JornalerosPage() {
         handleViewCuadrilla,
     });
 
+    // Crear columnas para jornaleros inactivos (sin botón de editar/eliminar, con botón de reactivar)
+    const inactiveColumns = createInactiveColumns({
+        handleReactivate,
+    });
+
     // Helper function to get leader name
     const getLiderName = (liderId: number | null) => {
         if (!liderId) return "Sin líder";
-        const lider = jornaleros.find(j => j.id === liderId);
+        const lider = jornaleros.find((j) => j.id === liderId);
         return lider ? lider.nombre : `ID: ${liderId}`;
     };
 
@@ -112,7 +179,8 @@ export default function JornalerosPage() {
                         </p>
                     </div>
                     <TabsList>
-                        <TabsTrigger value="todos">Todos</TabsTrigger>
+                        <TabsTrigger value="todos">Activos</TabsTrigger>
+                        <TabsTrigger value="inactivos">Inactivos</TabsTrigger>
                         <TabsTrigger value="cuadrillas">
                             Por Cuadrilla
                         </TabsTrigger>
@@ -132,7 +200,10 @@ export default function JornalerosPage() {
                                 </CardHeader>
                                 <CardContent>
                                     <JornaleroForm
-                                        onSuccess={fetchJornaleros}
+                                        onSuccess={() => {
+                                            fetchJornaleros();
+                                            fetchJornalerosInactivos();
+                                        }}
                                     />
                                 </CardContent>
                             </Card>
@@ -152,6 +223,32 @@ export default function JornalerosPage() {
                             </Card>
                         </div>
                     </div>
+                </TabsContent>
+
+                <TabsContent value="inactivos" className="space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <UserPlus className="h-5 w-5 text-muted-foreground" />
+                                Jornaleros Inactivos
+                            </CardTitle>
+                            <CardDescription>
+                                Jornaleros que han sido desactivados. Puedes reactivarlos desde aquí.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {jornalerosInactivos.length === 0 ? (
+                                <div className="text-center py-8 text-muted-foreground">
+                                    No hay jornaleros inactivos
+                                </div>
+                            ) : (
+                                <DataTableJornalero
+                                    columns={inactiveColumns}
+                                    data={jornalerosInactivos}
+                                />
+                            )}
+                        </CardContent>
+                    </Card>
                 </TabsContent>
 
                 <TabsContent value="cuadrillas" className="space-y-6">
@@ -179,7 +276,9 @@ export default function JornalerosPage() {
                                                 {cuadrillaInfo && (
                                                     <span className="text-sm font-normal text-muted-foreground">
                                                         Líder:{" "}
-                                                        {getLiderName(cuadrillaInfo.lider_cuadrilla_id)}{" "}
+                                                        {getLiderName(
+                                                            cuadrillaInfo.lider_cuadrilla_id
+                                                        )}{" "}
                                                         | Lote:{" "}
                                                         {cuadrillaInfo.lote}
                                                     </span>
@@ -327,7 +426,10 @@ export default function JornalerosPage() {
                                                 className="border-b"
                                             >
                                                 <td className="py-2">
-                                                    {getLiderName(cuadrilla.lider_cuadrilla_id)} - Lote: {cuadrilla.lote}
+                                                    {getLiderName(
+                                                        cuadrilla.lider_cuadrilla_id
+                                                    )}{" "}
+                                                    - Lote: {cuadrilla.lote}
                                                 </td>
                                                 <td className="py-2">
                                                     {
@@ -352,42 +454,56 @@ export default function JornalerosPage() {
                 </TabsContent>
             </Tabs>
 
-            {/* Dialog for editing jornalero */}
-            <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-                <DialogContent className="max-w-xl">
-                    <DialogHeader>
-                        <DialogTitle>Editar Jornalero</DialogTitle>
-                        <DialogDescription>
-                            Actualice la información del jornalero
-                        </DialogDescription>
-                    </DialogHeader>
-                    {selectedJornalero && (
-                        <JornaleroForm
-                            jornaleroId={selectedJornalero.id}
-                            onSuccess={() => {
-                                fetchJornaleros();
-                                setShowEditDialog(false);
-                            }}
-                        />
-                    )}
-                </DialogContent>
-            </Dialog>
+            {/* Modal for deleting jornalero */}
+            <DeleteConfirmationModal
+                open={showDeleteDialog}
+                onOpenChange={setShowDeleteDialog}
+                title="Confirmar Eliminación"
+                itemName={jornaleroToDelete?.nombre}
+                description="¿Estás seguro de que deseas desactivar al jornalero?"
+                onConfirm={confirmDelete}
+                loading={isDeleting}
+            />
 
-            {/* Dialog for viewing cuadrilla */}
-            <Dialog
+            {/* Modal for editing jornalero */}
+            <FormModal
+                open={showEditDialog}
+                onOpenChange={setShowEditDialog}
+                title="Editar Jornalero"
+                description="Actualice la información del jornalero"
+                maxWidth="max-w-xl"
+            >
+                {selectedJornalero && (
+                    <JornaleroForm
+                        jornaleroId={selectedJornalero.id}
+                        onSuccess={() => {
+                            fetchJornaleros();
+                            fetchJornalerosInactivos();
+                            fetchCuadrillas();
+                            setShowEditDialog(false);
+                        }}
+                    />
+                )}
+            </FormModal>
+
+            {/* Modal for viewing cuadrilla */}
+            <CuadrillaViewModal
                 open={showCuadrillaDialog}
                 onOpenChange={setShowCuadrillaDialog}
-            >
-                <DialogContent className="max-w-4xl">
-                    <DialogTitle>Cuadrilla</DialogTitle>
-                    {selectedCuadrillaId && (
-                        <CuadrillaJornaleros
-                            cuadrillaId={selectedCuadrillaId}
-                            onClose={() => setShowCuadrillaDialog(false)}
-                        />
-                    )}
-                </DialogContent>
-            </Dialog>
+                cuadrillaId={selectedCuadrillaId ?? undefined}
+                onClose={() => setShowCuadrillaDialog(false)}
+            />
+
+            {/* Modal for reactivating jornalero */}
+            <ReactivateConfirmationModal
+                open={showReactivateDialog}
+                onOpenChange={setShowReactivateDialog}
+                title="Confirmar Reactivación"
+                itemName={jornaleroToReactivate?.nombre}
+                description="¿Estás seguro de que deseas reactivar al jornalero? El jornalero volverá a estar disponible para asignaciones."
+                onConfirm={confirmReactivate}
+                loading={isReactivating}
+            />
         </div>
     );
 }

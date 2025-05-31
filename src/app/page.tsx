@@ -1,3 +1,5 @@
+"use client";
+
 import { OnlineStatusIndicator } from "@/components/OnlineStatusIndicator";
 import { Button } from "@/components/ui/button";
 import { UserRound, Users, Calendar, LineChart, Layers, Package, Grape, Building } from "lucide-react";
