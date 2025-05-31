@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { useCuadrillaStore } from "@/lib/storeCuadrilla";
 import { Jornalero } from "@/api/jornalero_api";
@@ -33,6 +35,7 @@ export function CuadrillaJornaleros({
         loading,
         getCuadrillaById,
         cuadrillas,
+        fetchCuadrillas,
     } = useCuadrillaStore();
     const { jornaleros, updateJornalero } = useJornaleroStore();
     const [cuadrilla, setCuadrilla] = useState<Cuadrilla | null>(null);
@@ -69,17 +72,18 @@ export function CuadrillaJornaleros({
             .filter((j) => {
                 if (j.cuadrilla_id === cuadrillaId) return false;
                 if (j.cuadrilla_id === null) return true;
-                
+
                 const liderazgo = getLiderazgoInfo(j.id);
                 if (liderazgo.esLiderDeOtra) return false;
-                
+
                 return true;
             })
             // Deduplicar por ID para evitar duplicados
-            .filter((jornalero, index, self) => 
-                index === self.findIndex(j => j.id === jornalero.id)
+            .filter(
+                (jornalero, index, self) =>
+                    index === self.findIndex((j) => j.id === jornalero.id)
             );
-            
+
         setJornalerosDisponibles(disponibles);
     }, [
         cuadrillaId,
@@ -107,6 +111,7 @@ export function CuadrillaJornaleros({
             });
 
             fetchJornalerosByCuadrillaId(cuadrillaId);
+            fetchCuadrillas();
 
             setJornalerosDisponibles((prev) =>
                 prev.filter((j) => j.id !== jornalero.id)
@@ -150,10 +155,11 @@ export function CuadrillaJornaleros({
             });
 
             fetchJornalerosByCuadrillaId(cuadrillaId);
+            fetchCuadrillas();
 
             // Mejorar: Solo agregar si no existe ya en la lista
             setJornalerosDisponibles((prev) => {
-                const exists = prev.find(j => j.id === jornalero.id);
+                const exists = prev.find((j) => j.id === jornalero.id);
                 return exists ? prev : [...prev, jornalero];
             });
 
