@@ -2,294 +2,195 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
+import { Plus, Search, Edit, Trash2, Grape } from "lucide-react";
 import {
     Variedad,
-    VariedadData,
     obtenerVariedades,
-    insertarVariedad,
-    actualizarVariedad,
     eliminarVariedad,
 } from "@/api/variedad_api";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
+import { FormModal, DeleteConfirmationModal } from "@/components/modals";
+import { VariedadForm } from "@/components/forms";
 
 export default function VariedadesPage() {
     const [variedades, setVariedades] = useState<Variedad[]>([]);
+    const [filteredVariedades, setFilteredVariedades] = useState<Variedad[]>([]);
     const [loading, setLoading] = useState(true);
-    const [open, setOpen] = useState(false);
-    const [editMode, setEditMode] = useState(false);
-    const [currentVariedad, setCurrentVariedad] = useState<Variedad | null>(
-        null
-    );
+    const [searchTerm, setSearchTerm] = useState("");
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [editingVariedad, setEditingVariedad] = useState<Variedad | null>(null);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [variedadToDelete, setVariedadToDelete] = useState<Variedad | null>(null);
 
-    // Form state
-    const [codigo, setCodigo] = useState<number | undefined>(undefined);
-    const [nombre, setNombre] = useState("");
-
-    useEffect(() => {
-        loadVariedades();
-    }, []);
-
-    const loadVariedades = async () => {
+    const fetchVariedades = async () => {
         try {
             setLoading(true);
             const data = await obtenerVariedades();
             setVariedades(data);
+            setFilteredVariedades(data);
         } catch (error) {
             console.error("Error cargando variedades:", error);
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "No se pudieron cargar las variedades",
-            });
+            toast.error("Error al cargar variedades");
         } finally {
             setLoading(false);
         }
     };
 
-    const resetForm = () => {
-        setCodigo(undefined);
-        setNombre("");
-        setCurrentVariedad(null);
-        setEditMode(false);
+    useEffect(() => {
+        fetchVariedades();
+    }, []);
+
+    useEffect(() => {
+        const filtered = variedades.filter(variedad =>
+            variedad.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            variedad.codigo.toString().includes(searchTerm)
+        );
+        setFilteredVariedades(filtered);
+    }, [searchTerm, variedades]);
+
+    const handleEdit = (variedad: Variedad) => {
+        setEditingVariedad(variedad);
+        setDialogOpen(true);
     };
 
-    const handleOpenChange = (open: boolean) => {
-        setOpen(open);
-        if (!open) {
-            resetForm();
-        }
+    const handleNewVariedad = () => {
+        setEditingVariedad(null);
+        setDialogOpen(true);
     };
 
-    const handleEditVariedad = (variedad: Variedad) => {
-        setCurrentVariedad(variedad);
-        setCodigo(variedad.codigo);
-        setNombre(variedad.nombre);
-        setEditMode(true);
-        setOpen(true);
+    const handleFormSuccess = () => {
+        setDialogOpen(false);
+        setEditingVariedad(null);
+        fetchVariedades();
     };
 
-    const handleDeleteVariedad = async (id: number) => {
-        if (confirm("¿Estás seguro de que deseas eliminar esta variedad?")) {
-            try {
-                await eliminarVariedad(id);
-                toast({
-                    title: "Éxito",
-                    description: "Variedad eliminada correctamente",
-                });
-                loadVariedades();
-            } catch (error) {
-                console.error("Error eliminando variedad:", error);
-                toast({
-                    variant: "destructive",
-                    title: "Error",
-                    description: "No se pudo eliminar la variedad",
-                });
-            }
-        }
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!codigo || !nombre) {
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "Todos los campos son obligatorios",
-            });
-            return;
-        }
-
-        const variedadData: VariedadData = {
-            codigo,
-            nombre,
-        };
-
+    const handleDelete = async (id: number) => {
         try {
-            if (editMode && currentVariedad) {
-                await actualizarVariedad(currentVariedad.id, variedadData);
-                toast({
-                    title: "Éxito",
-                    description: "Variedad actualizada correctamente",
-                });
-            } else {
-                await insertarVariedad(variedadData);
-                toast({
-                    title: "Éxito",
-                    description: "Variedad creada correctamente",
-                });
-            }
-
-            setOpen(false);
-            resetForm();
-            loadVariedades();
+            await eliminarVariedad(id);
+            toast.success("Variedad eliminada exitosamente");
+            fetchVariedades();
+            setDeleteDialogOpen(false);
+            setVariedadToDelete(null);
         } catch (error) {
-            console.error("Error guardando variedad:", error);
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "No se pudo guardar la variedad",
-            });
+            console.error("Error eliminando variedad:", error);
+            toast.error("Error al eliminar variedad");
         }
+    };
+
+    const handleDeleteConfirmation = (variedad: Variedad) => {
+        setVariedadToDelete(variedad);
+        setDeleteDialogOpen(true);
     };
 
     return (
-        <div className="container mx-auto py-10">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-3xl font-bold">Variedades</h1>
-                <Dialog open={open} onOpenChange={handleOpenChange}>
-                    <DialogTrigger asChild>
-                        <Button>Nueva Variedad</Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[600px]">
-                        <DialogHeader>
-                            <DialogTitle>
-                                {editMode
-                                    ? "Editar Variedad"
-                                    : "Nueva Variedad"}
-                            </DialogTitle>
-                        </DialogHeader>
-                        <form
-                            onSubmit={handleSubmit}
-                            className="space-y-4 pt-4"
-                        >
-                            <div className="space-y-2">
-                                <Label htmlFor="codigo">Código *</Label>
-                                <Input
-                                    id="codigo"
-                                    type="number"
-                                    value={codigo ?? ""}
-                                    onChange={(e) =>
-                                        setCodigo(
-                                            e.target.value
-                                                ? Number(e.target.value)
-                                                : undefined
-                                        )
-                                    }
-                                    required
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="nombre">Nombre *</Label>
-                                <Input
-                                    id="nombre"
-                                    value={nombre}
-                                    onChange={(e) => setNombre(e.target.value)}
-                                    required
-                                />
-                            </div>
-
-                            <div className="flex justify-end space-x-2 pt-4">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => setOpen(false)}
-                                >
-                                    Cancelar
-                                </Button>
-                                <Button type="submit">
-                                    {editMode ? "Actualizar" : "Crear"}
-                                </Button>
-                            </div>
-                        </form>
-                    </DialogContent>
-                </Dialog>
+        <div className="container mx-auto p-6 space-y-8">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Gestión de Variedades</h1>
+                    <p className="text-muted-foreground mt-2">
+                        Administra el catálogo de variedades de uva
+                    </p>
+                </div>
+                <Button onClick={handleNewVariedad}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nueva Variedad
+                </Button>
             </div>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Lista de Variedades</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                        <Grape className="h-5 w-5" />
+                        Lista de Variedades
+                    </CardTitle>
+                    <CardDescription>
+                        Total de variedades registradas: {variedades.length}
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
+                    <div className="flex items-center space-x-2 mb-4">
+                        <Search className="h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Buscar por nombre o código..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="max-w-sm"
+                        />
+                    </div>
+
                     {loading ? (
-                        <div className="flex justify-center py-8">
-                            Cargando...
+                        <div className="text-center py-8">
+                            <p className="text-muted-foreground">Cargando variedades...</p>
+                        </div>
+                    ) : filteredVariedades.length === 0 ? (
+                        <div className="text-center py-8">
+                            <Grape className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                            <p className="text-muted-foreground">
+                                {searchTerm ? "No se encontraron variedades" : "No hay variedades registradas"}
+                            </p>
                         </div>
                     ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>ID</TableHead>
-                                    <TableHead>Código</TableHead>
-                                    <TableHead>Nombre</TableHead>
-                                    <TableHead className="text-right">
-                                        Acciones
-                                    </TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {variedades.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={4}
-                                            className="text-center"
-                                        >
-                                            No hay variedades registradas
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    variedades.map((variedad) => (
-                                        <TableRow key={variedad.id}>
-                                            <TableCell>{variedad.id}</TableCell>
-                                            <TableCell>
-                                                {variedad.codigo}
-                                            </TableCell>
-                                            <TableCell>
-                                                {variedad.nombre}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <div className="flex justify-end space-x-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() =>
-                                                            handleEditVariedad(
-                                                                variedad
-                                                            )
-                                                        }
-                                                    >
-                                                        Editar
-                                                    </Button>
-                                                    <Button
-                                                        variant="destructive"
-                                                        size="sm"
-                                                        onClick={() =>
-                                                            handleDeleteVariedad(
-                                                                variedad.id
-                                                            )
-                                                        }
-                                                    >
-                                                        Eliminar
-                                                    </Button>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {filteredVariedades.map((variedad) => (
+                                <Card key={variedad.id} className="hover:shadow-md transition-shadow">
+                                    <CardHeader className="pb-3">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <CardTitle className="text-lg">{variedad.nombre}</CardTitle>
+                                                <p className="text-sm text-muted-foreground">Código: {variedad.codigo}</p>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleEdit(variedad)}
+                                                >
+                                                    <Edit className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                    onClick={() => handleDeleteConfirmation(variedad)}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </CardHeader>
+                                </Card>
+                            ))}
+                        </div>
                     )}
                 </CardContent>
             </Card>
+
+            {/* Modals */}
+            <FormModal
+                open={dialogOpen}
+                onOpenChange={setDialogOpen}
+                title={editingVariedad ? "Editar Variedad" : "Nueva Variedad"}
+                description={editingVariedad 
+                    ? "Actualiza la información de la variedad"
+                    : "Ingresa los datos de la nueva variedad"}
+                maxWidth="max-w-2xl"
+            >
+                <VariedadForm
+                    variedadId={editingVariedad?.id}
+                    onSuccess={handleFormSuccess}
+                />
+            </FormModal>
+
+            <DeleteConfirmationModal
+                open={deleteDialogOpen}
+                onOpenChange={setDeleteDialogOpen}
+                title="¿Eliminar variedad?"
+                itemName={variedadToDelete?.nombre}
+                description="Esta acción no se puede deshacer. Se eliminará permanentemente la variedad."
+                onConfirm={() => variedadToDelete && handleDelete(variedadToDelete.id)}
+            />
         </div>
     );
 }
