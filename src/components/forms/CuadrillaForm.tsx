@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Users } from "lucide-react";
+import { Loader2, Users, ExternalLink } from "lucide-react";
 import { useCuadrillaStore } from "@/lib/storeCuadrilla";
 import { useJornaleroStore } from "@/lib/storeJornalero";
 import { useTemporadaStore } from "@/lib/storeTemporada";
@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { obtenerVariedades, Variedad } from "@/api/variedad_api";
 import { Separator } from "@/components/ui/separator";
+import { useRouter } from "next/navigation";
 
 interface CuadrillaFormProps {
     cuadrillaId?: number;
@@ -38,6 +39,7 @@ export function CuadrillaForm({ cuadrillaId, onSuccess }: CuadrillaFormProps) {
         useCuadrillaStore();
     const { jornaleros, fetchJornaleros } = useJornaleroStore();
     const { temporadas, fetchTemporadas } = useTemporadaStore();
+    const router = useRouter();
 
     const [variedades, setVariedades] = useState<Variedad[]>([]);
 
@@ -261,17 +263,24 @@ export function CuadrillaForm({ cuadrillaId, onSuccess }: CuadrillaFormProps) {
                                         handleSelectChange(value, "variedad_id")
                                     }
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="w-full">
                                         <SelectValue placeholder="Selecciona una variedad" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="max-w-[300px]">
                                         {variedades.map((variedad) => (
                                             <SelectItem
                                                 key={variedad.id}
                                                 value={variedad.id.toString()}
+                                                className="flex flex-col items-start py-2"
                                             >
-                                                {variedad.nombre} (Código:{" "}
-                                                {variedad.codigo})
+                                                <div className="w-full">
+                                                    <div className="font-medium truncate">
+                                                        {variedad.nombre}
+                                                    </div>
+                                                    <div className="text-xs text-muted-foreground">
+                                                        Código: {variedad.codigo}
+                                                    </div>
+                                                </div>
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -329,17 +338,72 @@ export function CuadrillaForm({ cuadrillaId, onSuccess }: CuadrillaFormProps) {
                                     </SelectContent>
                                 </Select>
                             ) : (
-                                <Input
-                                    value={
-                                        "No hay jornaleros disponibles para asignar como líder"
-                                    }
-                                    disabled
-                                    className="text-xs text-muted-foreground"
-                                />
+                                <div className="space-y-2">
+                                    <Select disabled>
+                                        <SelectTrigger className="bg-muted">
+                                            <SelectValue placeholder="Sin líder asignado" />
+                                        </SelectTrigger>
+                                    </Select>
+                                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
+                                        <div className="flex items-center gap-2 text-amber-800">
+                                            <Users className="h-4 w-4" />
+                                            <span className="text-sm font-medium">
+                                                No hay jornaleros disponibles
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-amber-700 mt-1">
+                                            Para asignar un líder, necesitas jornaleros activos que no estén asignados a otras cuadrillas.
+                                        </p>
+                                        {jornaleros.length === 0 ? (
+                                            <div>
+                                                <p className="text-xs text-amber-700 mt-1">
+                                                    • No hay jornaleros registrados en el sistema
+                                                </p>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="mt-2 h-7 text-xs bg-white hover:bg-amber-50 border-amber-300 text-amber-800"
+                                                    onClick={() => router.push('/jornaleros')}
+                                                >
+                                                    <ExternalLink className="h-3 w-3 mr-1" />
+                                                    Ir a crear jornalero
+                                                </Button>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                {jornaleros.filter(j => j.estado === "Activo").length === 0 && (
+                                                    <div>
+                                                        <p className="text-xs text-amber-700 mt-1">
+                                                            • No hay jornaleros activos en el sistema
+                                                        </p>
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="mt-2 h-7 text-xs bg-white hover:bg-amber-50 border-amber-300 text-amber-800"
+                                                            onClick={() => router.push('/jornaleros')}
+                                                        >
+                                                            <ExternalLink className="h-3 w-3 mr-1" />
+                                                            Ver jornaleros
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                                {jornaleros.filter(j => j.estado === "Activo" && j.cuadrilla_id !== null).length > 0 && (
+                                                    <p className="text-xs text-amber-700 mt-1">
+                                                        • Todos los jornaleros activos ya están asignados a cuadrillas
+                                                    </p>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
                             )}
 
                             <p className="text-xs text-muted-foreground">
-                                Solo se muestran jornaleros activos disponibles
+                                {availableLeaders.length > 0 
+                                    ? "Solo se muestran jornaleros activos disponibles"
+                                    : "Puedes crear la cuadrilla sin líder y asignar uno después"}
                             </p>
                         </div>
                     </div>

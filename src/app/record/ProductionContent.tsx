@@ -14,9 +14,10 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Calendar, Package, Trash } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { ProductionStatistics } from "./ProductionStatistics";
-import { ProductionForm } from "../forms/ProductionForm";
+import { ProductionForm } from "../../components/forms/ProductionForm";
 import { ProductionFilters } from "./ProductionFilters";
 import { ColumnDef } from "@tanstack/react-table";
+import { formatCreatedAt } from "@/lib/utils";
 import { toast } from "sonner";
 
 // Stores
@@ -34,14 +35,19 @@ interface ProductionTabProps {
     onSuccess?: () => void;
 }
 
-export function ProductionTab({
+export function ProductionContent({
     onNewTemporada,
     onSuccess,
 }: ProductionTabProps) {
     // Stores
     const { temporadas, fetchTemporadas } = useTemporadaStore();
     const { cuadrillas, fetchCuadrillas } = useCuadrillaStore();
-    const { producciones, loading: produccionLoading, fetchProducciones, deleteProduccion } = useProduccionStore();
+    const {
+        producciones,
+        loading: produccionLoading,
+        fetchProducciones,
+        deleteProduccion,
+    } = useProduccionStore();
     const { jornaleros, fetchJornaleros } = useJornaleroStore();
 
     // Estados para datos de catálogo
@@ -51,8 +57,10 @@ export function ProductionTab({
 
     // Estados para filtros
     const [searchTerm, setSearchTerm] = useState("");
-    const [selectedTemporadaFilter, setSelectedTemporadaFilter] = useState<string>("all");
-    const [selectedClienteFilter, setSelectedClienteFilter] = useState<string>("all");
+    const [selectedTemporadaFilter, setSelectedTemporadaFilter] =
+        useState<string>("all");
+    const [selectedClienteFilter, setSelectedClienteFilter] =
+        useState<string>("all");
     const [dateFilter, setDateFilter] = useState<string>("all");
 
     // Cargar datos de catálogo
@@ -81,53 +89,79 @@ export function ProductionTab({
         fetchJornaleros();
         fetchProducciones();
         loadCatalogData();
-    }, [fetchTemporadas, fetchCuadrillas, fetchJornaleros, fetchProducciones, loadCatalogData]);
+    }, [
+        fetchTemporadas,
+        fetchCuadrillas,
+        fetchJornaleros,
+        fetchProducciones,
+        loadCatalogData,
+    ]);
 
     // Helper functions
-    const getCuadrillaNombre = useCallback((id: number) => {
-        const cuadrilla = cuadrillas.find((c) => c.id === id);
-        if (!cuadrilla) return "Desconocida";
-        const lider = jornaleros.find((j) => j.id === cuadrilla.lider_cuadrilla_id);
-        return lider ? `${cuadrilla.lote} (${lider.nombre})` : cuadrilla.lote;
-    }, [cuadrillas, jornaleros]);
+    const getCuadrillaNombre = useCallback(
+        (id: number) => {
+            const cuadrilla = cuadrillas.find((c) => c.id === id);
+            if (!cuadrilla) return "Desconocida";
+            const lider = jornaleros.find(
+                (j) => j.id === cuadrilla.lider_cuadrilla_id
+            );
+            return lider
+                ? `${cuadrilla.lote} (${lider.nombre})`
+                : cuadrilla.lote;
+        },
+        [cuadrillas, jornaleros]
+    );
 
-    const getVariedadNombre = useCallback((cuadrillaId: number) => {
-        const cuadrilla = cuadrillas.find((c) => c.id === cuadrillaId);
-        if (!cuadrilla || !cuadrilla.variedad_id) return "No asignada";
-        const variedad = variedades.find((v) => v.id === cuadrilla.variedad_id);
-        return variedad ? variedad.nombre : "Desconocida";
-    }, [cuadrillas, variedades]);
+    const getVariedadNombre = useCallback(
+        (cuadrillaId: number) => {
+            const cuadrilla = cuadrillas.find((c) => c.id === cuadrillaId);
+            if (!cuadrilla || !cuadrilla.variedad_id) return "No asignada";
+            const variedad = variedades.find(
+                (v) => v.id === cuadrilla.variedad_id
+            );
+            return variedad ? variedad.nombre : "Desconocida";
+        },
+        [cuadrillas, variedades]
+    );
 
-    const getClienteNombre = useCallback((id: number) => {
-        const cliente = clientes.find((c) => c.id === id);
-        return cliente ? cliente.nombre : "Desconocido";
-    }, [clientes]);
+    const getClienteNombre = useCallback(
+        (id: number) => {
+            const cliente = clientes.find((c) => c.id === id);
+            return cliente ? cliente.nombre : "Desconocido";
+        },
+        [clientes]
+    );
 
-    const formatDate = useCallback((dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString();
+    const getDate = useCallback((dateString: string | null) => {
+        return formatCreatedAt(dateString);
     }, []);
 
-    const formatNumber = useCallback((value: number, decimals: number = 1): string => {
-        if (typeof value !== 'number' || isNaN(value)) {
-            return '0.0';
-        }
-        return value.toFixed(decimals);
-    }, []);
+    const formatNumber = useCallback(
+        (value: number, decimals: number = 1): string => {
+            if (typeof value !== "number" || isNaN(value)) {
+                return "0.0";
+            }
+            return value.toFixed(decimals);
+        },
+        []
+    );
 
     // Handle delete production
-    const handleDeleteProduccion = useCallback(async (id: number) => {
-        try {
-            await deleteProduccion(id);
-            toast.success("Registro de producción eliminado correctamente");
-            if (onSuccess) {
-                onSuccess();
+    const handleDeleteProduccion = useCallback(
+        async (id: number) => {
+            try {
+                await deleteProduccion(id);
+                toast.success("Registro de producción eliminado correctamente");
+                if (onSuccess) {
+                    onSuccess();
+                }
+            } catch (error) {
+                console.error("Error eliminando producción:", error);
+                toast.error("No se pudo eliminar el registro de producción");
             }
-        } catch (error) {
-            console.error("Error eliminando producción:", error);
-            toast.error("No se pudo eliminar el registro de producción");
-        }
-    }, [deleteProduccion, onSuccess]);
+        },
+        [deleteProduccion, onSuccess]
+    );
 
     // Handle production success
     const handleProductionSuccess = useCallback(() => {
@@ -140,21 +174,30 @@ export function ProductionTab({
     // Datos filtrados y estadísticas (memoizados)
     const filteredProducciones = useMemo(() => {
         if (!producciones || producciones.length === 0) return [];
-        
+
         return producciones.filter((produccion) => {
-            const cuadrillaNombre = getCuadrillaNombre(produccion.cuadrilla_id).toLowerCase();
-            const clienteNombre = getClienteNombre(produccion.cliente_id).toLowerCase();
-            const variedadNombre = getVariedadNombre(produccion.cuadrilla_id).toLowerCase();
-            
-            const matchesSearch = searchTerm === "" || 
+            const cuadrillaNombre = getCuadrillaNombre(
+                produccion.cuadrilla_id
+            ).toLowerCase();
+            const clienteNombre = getClienteNombre(
+                produccion.cliente_id
+            ).toLowerCase();
+            const variedadNombre = getVariedadNombre(
+                produccion.cuadrilla_id
+            ).toLowerCase();
+
+            const matchesSearch =
+                searchTerm === "" ||
                 cuadrillaNombre.includes(searchTerm.toLowerCase()) ||
                 clienteNombre.includes(searchTerm.toLowerCase()) ||
                 variedadNombre.includes(searchTerm.toLowerCase());
 
-            const matchesTemporada = selectedTemporadaFilter === "all" || 
+            const matchesTemporada =
+                selectedTemporadaFilter === "all" ||
                 produccion.temporada_id.toString() === selectedTemporadaFilter;
 
-            const matchesCliente = selectedClienteFilter === "all" || 
+            const matchesCliente =
+                selectedClienteFilter === "all" ||
                 produccion.cliente_id.toString() === selectedClienteFilter;
 
             const today = new Date();
@@ -171,9 +214,23 @@ export function ProductionTab({
                 matchesDate = produccionDate >= monthAgo;
             }
 
-            return matchesSearch && matchesTemporada && matchesCliente && matchesDate;
+            return (
+                matchesSearch &&
+                matchesTemporada &&
+                matchesCliente &&
+                matchesDate
+            );
         });
-    }, [producciones, searchTerm, selectedTemporadaFilter, selectedClienteFilter, dateFilter, getCuadrillaNombre, getClienteNombre, getVariedadNombre]);
+    }, [
+        producciones,
+        searchTerm,
+        selectedTemporadaFilter,
+        selectedClienteFilter,
+        dateFilter,
+        getCuadrillaNombre,
+        getClienteNombre,
+        getVariedadNombre,
+    ]);
 
     const estadisticas = useMemo(() => {
         if (!filteredProducciones || filteredProducciones.length === 0) {
@@ -182,7 +239,7 @@ export function ProductionTab({
                 registrosFiltered: 0,
                 clientesUnicos: 0,
                 cuadrillasActivas: 0,
-                promedioProduccion: 0
+                promedioProduccion: 0,
             };
         }
 
@@ -190,80 +247,102 @@ export function ProductionTab({
             const cantidad = Number(p.cantidad) || 0;
             return sum + cantidad;
         }, 0);
-        
+
         const registrosFiltered = filteredProducciones.length;
-        const clientesUnicos = new Set(filteredProducciones.map(p => p.cliente_id)).size;
-        const cuadrillasActivas = new Set(filteredProducciones.map(p => p.cuadrilla_id)).size;
-        const promedioProduccion = registrosFiltered > 0 ? totalFiltered / registrosFiltered : 0;
+        const clientesUnicos = new Set(
+            filteredProducciones.map((p) => p.cliente_id)
+        ).size;
+        const cuadrillasActivas = new Set(
+            filteredProducciones.map((p) => p.cuadrilla_id)
+        ).size;
+        const promedioProduccion =
+            registrosFiltered > 0 ? totalFiltered / registrosFiltered : 0;
 
         return {
             totalFiltered: Number(totalFiltered) || 0,
             registrosFiltered: Number(registrosFiltered) || 0,
             clientesUnicos: Number(clientesUnicos) || 0,
             cuadrillasActivas: Number(cuadrillasActivas) || 0,
-            promedioProduccion: Number(promedioProduccion) || 0
+            promedioProduccion: Number(promedioProduccion) || 0,
         };
     }, [filteredProducciones]);
 
     // Columnas para la tabla de producción (memoizadas)
-    const produccionColumns: ColumnDef<any>[] = useMemo(() => [
-        {
-            accessorKey: "id",
-            header: "ID",
-            cell: ({ row }) => <Badge variant="outline">#{row.original.id}</Badge>,
-        },
-        {
-            accessorKey: "cuadrilla_id",
-            header: "Cuadrilla",
-            cell: ({ row }) => getCuadrillaNombre(row.original.cuadrilla_id),
-        },
-        {
-            accessorKey: "variedad",
-            header: "Variedad",
-            cell: ({ row }) => {
-                const nombre = getVariedadNombre(row.original.cuadrilla_id);
-                return <Badge variant="secondary">{nombre}</Badge>;
+    const produccionColumns: ColumnDef<any>[] = useMemo(
+        () => [
+            {
+                accessorKey: "id",
+                header: "ID",
+                cell: ({ row }) => (
+                    <Badge variant="outline">#{row.original.id}</Badge>
+                ),
             },
-        },
-        {
-            accessorKey: "cliente_id",
-            header: "Cliente",
-            cell: ({ row }) => getClienteNombre(row.original.cliente_id),
-        },
-        {
-            accessorKey: "cantidad",
-            header: "Cantidad (kg)",
-            cell: ({ row }) => (
-                <div className="flex items-center gap-1">
-                    <Package className="h-3 w-3 text-muted-foreground" />
-                    <span className="font-medium">{row.original.cantidad} kg</span>
-                </div>
-            ),
-        },
-        {
-            accessorKey: "fecha",
-            header: "Fecha",
-            cell: ({ row }) => formatDate(row.original.fecha),
-        },
-        {
-            id: "acciones",
-            header: "Acciones",
-            cell: ({ row }) => (
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDeleteProduccion(row.original.id)}
-                    title="Eliminar registro"
-                >
-                    <Trash className="h-4 w-4 text-destructive" />
-                </Button>
-            ),
-        },
-    ], [getCuadrillaNombre, getVariedadNombre, getClienteNombre, formatDate, handleDeleteProduccion]);
+            {
+                accessorKey: "cuadrilla_id",
+                header: "Cuadrilla",
+                cell: ({ row }) =>
+                    getCuadrillaNombre(row.original.cuadrilla_id),
+            },
+            {
+                accessorKey: "variedad",
+                header: "Variedad",
+                cell: ({ row }) => {
+                    const nombre = getVariedadNombre(row.original.cuadrilla_id);
+                    return <Badge variant="secondary">{nombre}</Badge>;
+                },
+            },
+            {
+                accessorKey: "cliente_id",
+                header: "Cliente",
+                cell: ({ row }) => getClienteNombre(row.original.cliente_id),
+            },
+            {
+                accessorKey: "cantidad",
+                header: "Cantidad",
+                cell: ({ row }) => (
+                    <div className="flex items-center gap-1">
+                        <Package className="h-3 w-3 text-muted-foreground" />
+                        <span className="font-medium">
+                            {row.original.cantidad} cajas
+                        </span>
+                    </div>
+                ),
+            },
+            {
+                accessorKey: "fecha",
+                header: "Fecha",
+                cell: ({ row }) => getDate(row.original.fecha),
+            },
+            {
+                id: "acciones",
+                header: "Acciones",
+                cell: ({ row }) => (
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteProduccion(row.original.id)}
+                        title="Eliminar registro"
+                    >
+                        <Trash className="h-4 w-4 text-destructive" />
+                    </Button>
+                ),
+            },
+        ],
+        [
+            getCuadrillaNombre,
+            getVariedadNombre,
+            getClienteNombre,
+            getDate,
+            handleDeleteProduccion,
+        ]
+    );
 
     // Get active temporadas
-    const activeTemporadas = useMemo(() => 
-        temporadas.filter(t => !t.fecha_final || new Date(t.fecha_final) >= new Date()),
+    const activeTemporadas = useMemo(
+        () =>
+            temporadas.filter(
+                (t) => !t.fecha_final || new Date(t.fecha_final) >= new Date()
+            ),
         [temporadas]
     );
 
@@ -341,13 +420,13 @@ export function ProductionTab({
                         <CardTitle className="flex items-center justify-between">
                             <span>Registros de Producción</span>
                             <Badge variant="outline">
-                                {formatNumber(estadisticas.registrosFiltered)}{" "}
-                                de {producciones.length}
+                                {estadisticas.registrosFiltered} de{" "}
+                                {producciones.length}
                             </Badge>
                         </CardTitle>
                         <CardDescription>
                             Total filtrado:{" "}
-                            {formatNumber(estadisticas.totalFiltered)} kg
+                            {formatNumber(estadisticas.totalFiltered)} cajas
                         </CardDescription>
                     </CardHeader>
                     <CardContent>

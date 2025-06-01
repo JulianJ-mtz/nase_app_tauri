@@ -393,7 +393,7 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
 
                     {/* Cantidad */}
                     <div className="space-y-2">
-                        <Label htmlFor="cantidad">Cantidad (kg) *</Label>
+                        <Label htmlFor="cantidad">Cantidad (# de cajas) *</Label>
                         <Input
                             id="cantidad"
                             type="number"
@@ -406,7 +406,7 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
                                 )
                             }
                             className={formErrors.cantidad ? "border-red-500" : ""}
-                            placeholder="Ingresa la cantidad en kilogramos"
+                            placeholder="Ingresa la cantidad en # de cajas"
                             required
                         />
                         {formErrors.cantidad && (

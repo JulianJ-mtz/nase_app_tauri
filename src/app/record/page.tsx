@@ -5,7 +5,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { useTemporadaStore } from "@/lib/storeTemporada";
 import { useProduccionStore } from "@/lib/storeProduccion";
-import { ProductionTab } from "@/components/record";
+import { ProductionContent } from "./ProductionContent";
 
 export default function Record() {
     const [isTemporadaDialogOpen, setIsTemporadaDialogOpen] = useState(false);
@@ -44,7 +44,7 @@ export default function Record() {
                 </Alert>
             )}
 
-            <ProductionTab
+            <ProductionContent
                 onNewTemporada={() => setIsTemporadaDialogOpen(true)}
                 onSuccess={handleProductionSuccess}
             />

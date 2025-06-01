@@ -2,15 +2,21 @@
 
 import { Cuadrilla } from "@/api/cuadrilla_api";
 import { Jornalero } from "@/api/jornalero_api";
+import { Temporada } from "@/api/temporada_api";
+import { Variedad } from "@/api/variedad_api";
 import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
 import { Pencil, Trash, Users } from "lucide-react";
+import { useCallback } from "react";
+import { formatCreatedAt } from "@/lib/utils";
 
 interface ColumnHandlers {
     handleEdit: (id: number) => void;
     handleDelete: (id: number) => void;
     handleViewJornaleros?: (id: number) => void;
     jornaleros: Jornalero[];
+    temporadas: Temporada[];
+    variedades: Variedad[];
 }
 
 export const createColumns = ({
@@ -18,70 +24,104 @@ export const createColumns = ({
     handleDelete,
     handleViewJornaleros,
     jornaleros,
+    temporadas,
+    variedades,
 }: ColumnHandlers): ColumnDef<Cuadrilla>[] => {
-    // Helper function to get leader name
-    const getLiderName = (liderId: number | null) => {
-        if (!liderId) return "Sin líder";
-        const lider = jornaleros.find((j) => j.id === liderId);
-        return lider ? lider.nombre : `ID: ${liderId}`;
-    };
+    
+    
+    const getDate = useCallback(
+        (dateString: string | null) => {
+            return formatCreatedAt(dateString);
+        },
+        []
+    );
+    
+    
+    const getLiderName = useCallback(
+        (liderId: number | null) => {
+            if (!liderId) return "Sin líder";
+            const lider = jornaleros.find((j) => j.id === liderId);
+            return lider ? lider.nombre : `ID: ${liderId}`;
+        },
+        [jornaleros]
+    );
+
+    const getTemporadaName = useCallback(
+        (temporadaId: number | null) => {
+            if (!temporadaId) return "Sin temporada";
+            const temporada = temporadas.find((t) => t.id === temporadaId);
+            return temporada ? `T-${temporada.id}` : `ID: ${temporadaId}`;
+        },
+        [temporadas]
+    );
+
+    const getVariedadNombre = useCallback(
+        (cuadrilla: Cuadrilla) => {
+            if (!cuadrilla || !cuadrilla.variedad_id) return "No asignada";
+            const variedad = variedades.find(
+                (v) => v.id === cuadrilla.variedad_id
+            );
+            return variedad ? variedad.nombre : "Desconocida";
+        },
+        [variedades]
+    );
 
     return [
         {
             accessorKey: "id",
-            header: "ID",
+            header: () => <div className="text-center">ID</div>,
             cell: ({ row }) => (
                 <div className="text-center">{row.original.id}</div>
             ),
         },
         {
             accessorKey: "lider_cuadrilla_id",
-            header: "Líder",
+            header: () => <div className="text-center">Líder</div>,
             cell: ({ row }) => (
-                <div className="font-medium">
+                <div className="font-medium text-center">
                     {getLiderName(row.original.lider_cuadrilla_id)}
                 </div>
             ),
         },
         {
             accessorKey: "lote",
-            header: "Lote",
-            cell: ({ row }) => <div>{row.original.lote}</div>,
+            header: () => <div className="text-center">Lote</div>,
+            cell: ({ row }) => (
+                <div className="text-center">{row.original.lote}</div>
+            ),
         },
         {
             accessorKey: "variedad_id",
-            header: "Variedad (ID)",
+            header: () => <div className="text-center">Variedad</div>,
             cell: ({ row }) => (
                 <div className="text-center">
-                    {row.original.variedad_id || "Sin variedad"}
+                    {getVariedadNombre(row.original)}
                 </div>
             ),
         },
         {
             accessorKey: "temporada_id",
-            header: "Temporada (ID)",
+            header: () => <div className="text-center">Temporada</div>,
             cell: ({ row }) => (
                 <div className="text-center">
-                    {row.original.temporada_id || "Sin temporada"}
+                    {getTemporadaName(row.original.temporada_id)}
                 </div>
             ),
         },
         {
             accessorKey: "created_at",
-            header: "Fecha Creación",
+            header: () => <div className="text-center">Fecha Creación</div>,
             cell: ({ row }) => (
-                <div className="text-sm">
-                    {row.original.created_at
-                        ? new Date(row.original.created_at).toLocaleDateString()
-                        : "N/A"}
+                <div className="text-sm text-center ">
+                    {getDate(row.original.created_at)}
                 </div>
             ),
         },
         {
             id: "acciones",
-            header: "Acciones",
+            header: () => <div className="text-center">Acciones</div>,
             cell: ({ row }) => (
-                <div className="flex flex-row gap-2">
+                <div className="flex flex-row gap-2 justify-center">
                     {handleViewJornaleros && (
                         <Button
                             variant="ghost"

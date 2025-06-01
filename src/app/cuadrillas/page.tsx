@@ -1,22 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Plus, Users, Trash, AlertTriangle } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { CuadrillaForm } from "@/components/forms/CuadrillaForm";
 import { createColumns } from "./columsTableCuadrilla";
 import { DataTable } from "@/components/ui/data-table";
 import { useCuadrillaStore } from "@/lib/storeCuadrilla";
 import { useJornaleroStore } from "@/lib/storeJornalero";
-import { CuadrillaJornaleros } from "@/components/CuadrillaJornaleros";
-import { 
-    DeleteConfirmationModal, 
+import {
+    DeleteConfirmationModal,
     CuadrillaViewModal,
-    FormModal 
+    FormModal,
 } from "@/components/modals";
 import { PageLayout, FormSection, DataSection } from "@/components/layout";
 import { useCrudOperations } from "@/hooks/useCrudOperations";
 import { Cuadrilla } from "@/api/cuadrilla_api";
+import { useTemporadaStore } from "@/lib/storeTemporada";
+import { obtenerVariedades, Variedad } from "@/api/variedad_api";
 
 export default function CuadrillasPage() {
     const {
@@ -29,7 +28,12 @@ export default function CuadrillasPage() {
         error,
     } = useCuadrillaStore();
     const { jornaleros, fetchJornaleros } = useJornaleroStore();
-    const [selectedCuadrillaId, setSelectedCuadrillaId] = useState<number | null>(null);
+    const { temporadas } = useTemporadaStore();
+    const [variedades, setVariedades] = useState<Variedad[]>([]);
+
+    const [selectedCuadrillaId, setSelectedCuadrillaId] = useState<
+        number | null
+    >(null);
     const [showJornalerosDialog, setShowJornalerosDialog] = useState(false);
 
     // Estados para los diálogos de eliminación
@@ -37,12 +41,15 @@ export default function CuadrillasPage() {
     const [deleteWarning, setDeleteWarning] = useState<string>("");
     const [deleteError, setDeleteError] = useState<string>("");
     const [successMessage, setSuccessMessage] = useState<string>("");
-    const [requiresForceDelete, setRequiresForceDelete] = useState<boolean>(false);
+    const [requiresForceDelete, setRequiresForceDelete] =
+        useState<boolean>(false);
 
     const crud = useCrudOperations<Cuadrilla>({
         fetchData: async () => {
             await fetchCuadrillas();
             await fetchJornaleros();
+            const variedades = await obtenerVariedades();
+            setVariedades(variedades);
         },
         deleteFunction: async (id: number) => {
             try {
@@ -52,7 +59,7 @@ export default function CuadrillasPage() {
                 if (warning.includes("producción están asociados")) {
                     setRequiresForceDelete(true);
                     setForceDeleteDialogOpen(true);
-                    throw new Error("Requiere eliminación forzada");
+                    console.log("Requiere eliminación forzada");
                 } else {
                     return await deleteCuadrilla(id);
                 }
@@ -87,7 +94,8 @@ export default function CuadrillasPage() {
             setTimeout(() => setSuccessMessage(""), 5000);
         } catch (error) {
             console.error("Error en eliminación forzada:", error);
-            const errorMessage = error instanceof Error ? error.message : "Error desconocido";
+            const errorMessage =
+                error instanceof Error ? error.message : "Error desconocido";
             setDeleteError(errorMessage);
         }
     };
@@ -103,11 +111,17 @@ export default function CuadrillasPage() {
         },
         handleViewJornaleros,
         jornaleros,
+        temporadas,
+        variedades,
     });
 
     // Calculate stats
-    const jornalerosAsignados = jornaleros.filter(j => j.cuadrilla_id !== null).length;
-    const cuadrillasConLider = cuadrillas.filter(c => c.lider_cuadrilla_id !== null).length;
+    const jornalerosAsignados = jornaleros.filter(
+        (j) => j.cuadrilla_id !== null
+    ).length;
+    const cuadrillasConLider = cuadrillas.filter(
+        (c) => c.lider_cuadrilla_id !== null
+    ).length;
 
     const tabs = [
         {
@@ -115,7 +129,7 @@ export default function CuadrillasPage() {
             label: "Lista de Cuadrillas",
             content: (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <FormSection 
+                    <FormSection
                         title="Crear Nueva Cuadrilla"
                         description="Registra una nueva cuadrilla en el sistema"
                         className="lg:col-span-1"
@@ -123,8 +137,8 @@ export default function CuadrillasPage() {
                         <CuadrillaForm onSuccess={crud.handleFormSuccess} />
                     </FormSection>
 
-                    <DataSection 
-                        title="Cuadrillas Registradas" 
+                    <DataSection
+                        title="Cuadrillas Registradas"
                         description={`${cuadrillas.length} cuadrillas en el sistema`}
                         className="lg:col-span-2"
                     >
@@ -144,25 +158,36 @@ export default function CuadrillasPage() {
             label: "Estadísticas",
             content: (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <DataSection title="Total Cuadrillas" description="Cuadrillas registradas">
+                    <DataSection
+                        title="Total Cuadrillas"
+                        description="Cuadrillas registradas"
+                    >
                         <div className="text-3xl font-bold text-blue-600">
                             {cuadrillas.length}
                         </div>
                     </DataSection>
 
-                    <DataSection title="Con Líder Asignado" description="Cuadrillas con liderazgo">
+                    <DataSection
+                        title="Con Líder Asignado"
+                        description="Cuadrillas con liderazgo"
+                    >
                         <div className="text-3xl font-bold text-green-600">
                             {cuadrillasConLider}
                         </div>
                         <div className="text-sm text-muted-foreground mt-2">
-                            {cuadrillas.length > 0 
-                                ? `${((cuadrillasConLider / cuadrillas.length) * 100).toFixed(1)}% del total`
-                                : "0% del total"
-                            }
+                            {cuadrillas.length > 0
+                                ? `${(
+                                      (cuadrillasConLider / cuadrillas.length) *
+                                      100
+                                  ).toFixed(1)}% del total`
+                                : "0% del total"}
                         </div>
                     </DataSection>
 
-                    <DataSection title="Jornaleros Asignados" description="Total en cuadrillas">
+                    <DataSection
+                        title="Jornaleros Asignados"
+                        description="Total en cuadrillas"
+                    >
                         <div className="text-3xl font-bold text-purple-600">
                             {jornalerosAsignados}
                         </div>
@@ -171,16 +196,17 @@ export default function CuadrillasPage() {
                         </div>
                     </DataSection>
 
-                    <DataSection 
-                        title="Promedio por Cuadrilla" 
+                    <DataSection
+                        title="Promedio por Cuadrilla"
                         description="Jornaleros por cuadrilla"
                         className="md:col-span-3"
                     >
                         <div className="text-3xl font-bold text-orange-600">
-                            {cuadrillas.length > 0 
-                                ? (jornalerosAsignados / cuadrillas.length).toFixed(1) 
-                                : 0
-                            }
+                            {cuadrillas.length > 0
+                                ? (
+                                      jornalerosAsignados / cuadrillas.length
+                                  ).toFixed(1)
+                                : 0}
                         </div>
                         <div className="text-sm text-muted-foreground mt-2">
                             Promedio de jornaleros por cuadrilla
@@ -209,7 +235,11 @@ export default function CuadrillasPage() {
                 open={crud.showDeleteDialog}
                 onOpenChange={crud.setShowDeleteDialog}
                 title="Confirmar Eliminación"
-                itemName={crud.entityToDelete ? `Cuadrilla ${crud.entityToDelete.id}` : undefined}
+                itemName={
+                    crud.entityToDelete
+                        ? `Cuadrilla ${crud.entityToDelete.id}`
+                        : undefined
+                }
                 description="¿Estás seguro de que deseas eliminar esta cuadrilla?"
                 warning={deleteWarning}
                 error={deleteError}
