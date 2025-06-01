@@ -8,14 +8,12 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub fecha: Date,
-    pub jornalero_id: i32,
+    pub cuadrilla_id: i32,
     pub temporada_id: i32,
-    pub lote: String,
     #[sea_orm(column_type = "Decimal(Some((15, 3)))")]
     pub cantidad: Decimal,
     pub created_at: Option<DateTimeUtc>,
     pub updated_at: Option<DateTimeUtc>,
-    pub variedad_id: Option<i32>,
     pub tipo_empaque_id: Option<i32>,
     pub tipo_uva_id: Option<i32>,
     pub cliente_id: Option<i32>,
@@ -24,13 +22,13 @@ pub struct Model {
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
-        belongs_to = "super::jornalero::Entity",
-        from = "Column::JornaleroId",
-        to = "super::jornalero::Column::Id",
+        belongs_to = "super::cuadrilla::Entity",
+        from = "Column::CuadrillaId",
+        to = "super::cuadrilla::Column::Id",
         on_update = "Cascade",
         on_delete = "Cascade"
     )]
-    Jornalero,
+    Cuadrilla,
     #[sea_orm(
         belongs_to = "super::temporada::Entity",
         from = "Column::TemporadaId",
@@ -41,9 +39,9 @@ pub enum Relation {
     Temporada,
 }
 
-impl Related<super::jornalero::Entity> for Entity {
+impl Related<super::cuadrilla::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Jornalero.def()
+        Relation::Cuadrilla.def()
     }
 }
 

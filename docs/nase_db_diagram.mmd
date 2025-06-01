@@ -3,83 +3,83 @@ erDiagram
         int id PK
         date fecha_inicial
         date fecha_final
-        int meses
-        decimal produccion_total
-        datetime created_at
-        datetime updated_at
+        timestamp created_at
+        timestamp updated_at
     }
+    
     CUADRILLA {
         int id PK
-        int lider_cuadrilla
-        decimal produccion_cuadrilla
+        int lider_cuadrilla_id FK "NULL"
         string lote
-        string variedad
-        string empaque
-        int integrantes
-        int temporada_id FK
-        datetime created_at
-        datetime updated_at
+        int variedad_id FK "NULL"
+        int temporada_id FK "NULL"
+        timestamp created_at
+        timestamp updated_at
     }
+    
     JORNALERO {
         int id PK
         string nombre
         int edad
-        string estado
+        string estado "DEFAULT 'ACTIVO'"
         date fecha_contratacion
-        decimal produccion_jornalero
-        int errores
-        int cuadrilla_id FK
-        datetime created_at
-        datetime updated_at
+        int errores "DEFAULT 0"
+        int cuadrilla_id FK "NULL"
+        timestamp created_at
+        timestamp updated_at
     }
+    
     PRODUCCION {
         int id PK
         date fecha
-        int jornalero_id FK
+        int cuadrilla_id FK
         int temporada_id FK
-        string lote
-        decimal cantidad
-        int variedad_id FK
-        int tipo_empaque_id FK
-        int tipo_uva_id FK
-        int cliente_id FK
-        datetime created_at
-        datetime updated_at
+        real cantidad
+        int tipo_empaque_id FK "NULL"
+        int tipo_uva_id FK "NULL"
+        int cliente_id FK "NULL"
+        timestamp created_at
+        timestamp updated_at
     }
+    
     VARIEDAD {
         int id PK
-        int codigo
+        int codigo "UNIQUE"
         string nombre
-        datetime created_at
-        datetime updated_at
+        timestamp created_at
+        timestamp updated_at
     }
+    
     TIPO_UVA {
         int id PK
-        int codigo
+        int codigo "UNIQUE"
         string nombre
-        datetime created_at
-        datetime updated_at
+        timestamp created_at
+        timestamp updated_at
     }
+    
     TIPO_EMPAQUE {
         int id PK
-        int codigo
+        int codigo "UNIQUE"
         string nombre
-        datetime created_at
-        datetime updated_at
+        timestamp created_at
+        timestamp updated_at
     }
+    
     CLIENTE {
         int id PK
-        int codigo
+        int codigo "UNIQUE"
         string nombre
-        datetime created_at
-        datetime updated_at
+        timestamp created_at
+        timestamp updated_at
     }
     
     TEMPORADA ||--o{ CUADRILLA : "tiene"
     TEMPORADA ||--o{ PRODUCCION : "tiene"
     CUADRILLA ||--o{ JORNALERO : "tiene"
-    JORNALERO ||--o{ PRODUCCION : "registra"
-    VARIEDAD ||--o{ PRODUCCION : "clasifica"
+    CUADRILLA ||--o{ PRODUCCION : "registra"
+    CUADRILLA }o--|| JORNALERO : "liderada_por"
+    CUADRILLA }o--|| VARIEDAD : "cultiva"
     TIPO_UVA ||--o{ PRODUCCION : "clasifica"
     TIPO_EMPAQUE ||--o{ PRODUCCION : "clasifica"
     CLIENTE ||--o{ PRODUCCION : "destina"

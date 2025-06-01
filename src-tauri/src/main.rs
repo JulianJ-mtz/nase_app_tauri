@@ -27,9 +27,12 @@ fn main() {
             // === Jornaleros ===
             post_jornalero,
             get_jornaleros,
+            get_all_jornaleros,
+            get_inactive_jornaleros,
             get_jornalero_by_id,
             put_jornalero,
             delete_jornalero,
+            reactivate_jornalero,
             get_jornaleros_by_cuadrilla,
             
             // === Cuadrillas ===
@@ -38,6 +41,9 @@ fn main() {
             get_cuadrilla_by_id,
             put_cuadrilla,
             delete_cuadrilla,
+            get_cuadrilla_delete_warning,
+            force_delete_cuadrilla,
+            reassign_jornaleros_from_cuadrilla,
             
             // === Producción ===
             post_produccion,

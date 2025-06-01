@@ -68,13 +68,23 @@ impl MigrationTrait for CreateVariedad {
             .to_owned();
 
         manager.exec_stmt(insert_varieties).await?;
-
         Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        // Delete all records from variedad table before dropping it
+        manager
+            .exec_stmt(Query::delete().from_table(Variedad::Table).to_owned())
+            .await?;
+
         manager
             .drop_table(Table::drop().table(Variedad::Table).to_owned())
             .await
     }
+
+    // async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+    //     manager
+    //         .drop_table(Table::drop().table(Variedad::Table).to_owned())
+    //         .await
+    // }
 }

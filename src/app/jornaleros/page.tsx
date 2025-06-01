@@ -1,61 +1,52 @@
 "use client";
 
-import { useState } from "react";
-import { JornaleroForm } from "@/components/JornaleroForm";
-import { Separator } from "@/components/ui/separator";
+import { useState, useEffect } from "react";
+import { JornaleroForm } from "@/components/forms/JornaleroForm";
 import { useJornaleroStore } from "@/lib/storeJornalero";
 import { useCuadrillaStore } from "@/lib/storeCuadrilla";
-import { useEffect } from "react";
-import { DataTableJornalero } from "../record/dataTableJonalero";
-import { createColumns } from "../record/columsTableJornalero";
+import { DataTable } from "@/components/ui/data-table";
+import { createColumns, createInactiveColumns } from "./columsTableJornalero";
 import { Button } from "@/components/ui/button";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
 import { CuadrillaJornaleros } from "@/components/CuadrillaJornaleros";
 import { Jornalero } from "@/api/jornalero_api";
-import { toast } from "sonner";
-import { Edit, Trash, UserPlus } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Edit, Trash, UserPlus, AlertTriangle } from "lucide-react";
+import { 
+    DeleteConfirmationModal, 
+    FormModal, 
+    ReactivateConfirmationModal, 
+    CuadrillaViewModal 
+} from "@/components/modals";
+import { PageLayout, FormSection, DataSection } from "@/components/layout";
+import { useCrudOperations } from "@/hooks/useCrudOperations";
 
 export default function JornalerosPage() {
-    const { fetchJornaleros, jornaleros, deleteJornalero } =
-        useJornaleroStore();
+    const { 
+        fetchJornaleros, 
+        jornaleros, 
+        deleteJornalero, 
+        fetchJornalerosInactivos, 
+        jornalerosInactivos, 
+        reactivateJornalero 
+    } = useJornaleroStore();
+    
     const { fetchCuadrillas, cuadrillas } = useCuadrillaStore();
-
-    const [selectedJornalero, setSelectedJornalero] =
-        useState<Jornalero | null>(null);
-    const [selectedCuadrillaId, setSelectedCuadrillaId] = useState<
-        number | null
-    >(null);
+    const [selectedCuadrillaId, setSelectedCuadrillaId] = useState<number | null>(null);
     const [showCuadrillaDialog, setShowCuadrillaDialog] = useState(false);
-    const [showEditDialog, setShowEditDialog] = useState(false);
+
+    const crud = useCrudOperations<Jornalero>({
+        fetchData: async () => {
+            await fetchJornaleros();
+            await fetchJornalerosInactivos();
+            await fetchCuadrillas();
+        },
+        deleteFunction: deleteJornalero,
+        reactivateFunction: reactivateJornalero,
+        entityName: "Jornalero",
+    });
 
     useEffect(() => {
-        fetchJornaleros();
-        fetchCuadrillas();
-    }, [fetchJornaleros, fetchCuadrillas]);
-
-    const handleEdit = (id: number) => {
-        const jornalero = jornaleros.find((j) => j.id === id);
-        if (jornalero) {
-            setSelectedJornalero(jornalero);
-            setShowEditDialog(true);
-        }
-    };
-
-    const handleDelete = (id: number) => {
-        if (window.confirm("¿Estás seguro de eliminar este jornalero?")) {
-            deleteJornalero(id)
-                .then(() => toast.success("Jornalero eliminado con éxito"))
-                .catch((error) => toast.error("Error al eliminar jornalero"));
-        }
-    };
+        crud.handleFormSuccess();
+    }, []);
 
     const handleViewCuadrilla = (cuadrillaId: number) => {
         setSelectedCuadrillaId(cuadrillaId);
@@ -63,328 +54,227 @@ export default function JornalerosPage() {
     };
 
     const columns = createColumns({
-        handleEdit,
-        handleDelete,
+        handleEdit: (id: number) => {
+            const jornalero = jornaleros.find((j) => j.id === id);
+            if (jornalero) crud.handleEdit(jornalero);
+        },
+        handleDelete: (id: number) => {
+            const jornalero = jornaleros.find((j) => j.id === id);
+            if (jornalero) crud.handleDelete(jornalero);
+        },
         handleViewCuadrilla,
     });
+
+    const inactiveColumns = createInactiveColumns({
+        handleReactivate: (id: number) => {
+            const jornalero = jornalerosInactivos.find((j) => j.id === id);
+            if (jornalero) crud.handleReactivate(jornalero);
+        },
+    });
+
+    // Helper function to get leader name
+    const getLiderName = (liderId: number | null) => {
+        if (!liderId) return "Sin líder";
+        const lider = jornaleros.find((j) => j.id === liderId);
+        return lider ? lider.nombre : `ID: ${liderId}`;
+    };
 
     // Group jornaleros by cuadrilla
     const jornalerosByCuadrilla: Record<string, Jornalero[]> = {};
     jornaleros.forEach((jornalero) => {
-        const key = jornalero.cuadrilla_id
-            ? `${jornalero.cuadrilla_id}`
-            : "sin_cuadrilla";
+        const key = jornalero.cuadrilla_id ? `${jornalero.cuadrilla_id}` : "sin_cuadrilla";
         if (!jornalerosByCuadrilla[key]) {
             jornalerosByCuadrilla[key] = [];
         }
         jornalerosByCuadrilla[key].push(jornalero);
     });
 
-    // Calculate production stats
-    const produccionTotal = jornaleros.reduce(
-        (total, j) => total + (Number(j.produccion_jornalero) || 0),
-        0
-    );
-    const jornalerosActivos = jornaleros.filter(
-        (j) => j.estado === "Activo"
-    ).length;
-    const jornalerosAsignados = jornaleros.filter(
-        (j) => j.cuadrilla_id !== null
-    ).length;
+    // Calculate production stats - removed individual production calculation
+    const jornalerosActivos = jornaleros.filter((j) => j.estado === "Activo").length;
+    const jornalerosAsignados = jornaleros.filter((j) => j.cuadrilla_id !== null).length;
+    const jornalerosInactivosCount = jornalerosInactivos.length;
+
+    const tabs = [
+        {
+            value: "todos",
+            label: "Activos",
+            content: (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <FormSection 
+                        title="Agregar Nuevo Jornalero"
+                        description="Registra un nuevo jornalero en el sistema"
+                        className="lg:col-span-1"
+                    >
+                        <JornaleroForm onSuccess={crud.handleFormSuccess} />
+                    </FormSection>
+
+                    <DataSection 
+                        title="Lista de Jornaleros Activos" 
+                        description={`${jornalerosActivos} jornaleros activos registrados`}
+                        className="lg:col-span-2"
+                    >
+                        <DataTable
+                            columns={columns}
+                            data={jornaleros}
+                            searchKey="nombre"
+                            searchPlaceholder="Buscar por nombre..."
+                            emptyMessage="No hay jornaleros activos registrados"
+                        />
+                    </DataSection>
+                </div>
+            ),
+        },
+        {
+            value: "inactivos",
+            label: "Inactivos",
+            content: (
+                <DataSection 
+                    title="Jornaleros Inactivos" 
+                    description={`${jornalerosInactivosCount} jornaleros inactivos`}
+                >
+                    <DataTable
+                        columns={inactiveColumns}
+                        data={jornalerosInactivos}
+                        searchKey="nombre"
+                        searchPlaceholder="Buscar por nombre..."
+                        emptyMessage="No hay jornaleros inactivos"
+                    />
+                </DataSection>
+            ),
+        },
+        {
+            value: "cuadrillas",
+            label: "Por Cuadrilla",
+            content: (
+                <div className="space-y-6">
+                    {Object.entries(jornalerosByCuadrilla).map(([cuadrillaId, jornaleros]) => {
+                        const cuadrillaName = cuadrillaId === "sin_cuadrilla" 
+                            ? "Sin Cuadrilla Asignada"
+                            : cuadrillas.find(c => c.id === parseInt(cuadrillaId))?.lote || `Cuadrilla ${cuadrillaId}`;
+
+                        const cuadrilla = cuadrillas.find(c => c.id === parseInt(cuadrillaId));
+                        const liderName = cuadrilla ? getLiderName(cuadrilla.lider_cuadrilla_id) : "N/A";
+
+                        return (
+                            <DataSection
+                                key={cuadrillaId}
+                                title={cuadrillaName}
+                                description={`${jornaleros.length} jornaleros | Líder: ${liderName}`}
+                                actions={
+                                    cuadrillaId !== "sin_cuadrilla" && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => handleViewCuadrilla(parseInt(cuadrillaId))}
+                                        >
+                                            Administrar Cuadrilla
+                                        </Button>
+                                    )
+                                }
+                            >
+                                <DataTable
+                                    columns={columns}
+                                    data={jornaleros}
+                                    showSearch={false}
+                                    emptyMessage="No hay jornaleros en esta cuadrilla"
+                                />
+                            </DataSection>
+                        );
+                    })}
+                </div>
+            ),
+        },
+        {
+            value: "stats",
+            label: "Estadísticas",
+            content: (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <DataSection title="Jornaleros Activos" description="Trabajadores disponibles">
+                        <div className="text-3xl font-bold text-blue-600">
+                            {jornalerosActivos}
+                        </div>
+                    </DataSection>
+
+                    <DataSection title="Jornaleros Asignados" description="Con cuadrilla asignada">
+                        <div className="text-3xl font-bold text-purple-600">
+                            {jornalerosAsignados}
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-2">
+                            {jornalerosActivos > 0 
+                                ? `${((jornalerosAsignados / jornalerosActivos) * 100).toFixed(1)}% del total`
+                                : "0% del total"
+                            }
+                        </div>
+                    </DataSection>
+
+                    <DataSection 
+                        title="Jornaleros Inactivos" 
+                        description="Jornaleros que no trabajan actualmente"
+                        className="md:col-span-3"
+                    >
+                        <div className="text-3xl font-bold text-red-600">
+                            {jornalerosInactivosCount}
+                        </div>
+                    </DataSection>
+                </div>
+            ),
+        },
+    ];
 
     return (
-        <div className="container mx-auto py-10">
-            <Tabs defaultValue="todos">
-                <div className="flex justify-between items-center mb-6">
-                    <div>
-                        <h1 className="text-3xl font-bold">
-                            Gestión de Jornaleros
-                        </h1>
-                        <p className="text-muted-foreground mt-1">
-                            Administre jornaleros y asígnelos a cuadrillas
-                        </p>
-                    </div>
-                    <TabsList>
-                        <TabsTrigger value="todos">Todos</TabsTrigger>
-                        <TabsTrigger value="cuadrillas">
-                            Por Cuadrilla
-                        </TabsTrigger>
-                        <TabsTrigger value="stats">Estadísticas</TabsTrigger>
-                    </TabsList>
-                </div>
+        <>
+            <PageLayout
+                title="Gestión de Jornaleros"
+                description="Administre jornaleros y asígnelos a cuadrillas"
+                tabs={tabs}
+                defaultTab="todos"
+            >
+                {/* This children prop is required but content is handled by tabs */}
+                <div />
+            </PageLayout>
 
-                <TabsContent value="todos" className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div className="md:col-span-1">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <UserPlus className="h-5 w-5" />
-                                        Agregar Nuevo Jornalero
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <JornaleroForm
-                                        onSuccess={fetchJornaleros}
-                                    />
-                                </CardContent>
-                            </Card>
-                        </div>
+            {/* Modals */}
+            <DeleteConfirmationModal
+                open={crud.showDeleteDialog}
+                onOpenChange={crud.setShowDeleteDialog}
+                title="Confirmar Eliminación"
+                itemName={crud.entityToDelete?.nombre}
+                description="¿Estás seguro de que deseas desactivar al jornalero?"
+                onConfirm={crud.confirmDelete}
+                loading={crud.isDeleting}
+            />
 
-                        <div className="md:col-span-2">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Lista de Jornaleros</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <DataTableJornalero
-                                        columns={columns}
-                                        data={jornaleros}
-                                    />
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </div>
-                </TabsContent>
+            <FormModal
+                open={crud.showEditDialog}
+                onOpenChange={crud.setShowEditDialog}
+                title="Editar Jornalero"
+                description="Actualice la información del jornalero"
+                maxWidth="max-w-xl"
+            >
+                {crud.selectedEntity && (
+                    <JornaleroForm
+                        jornaleroId={crud.selectedEntity.id}
+                        onSuccess={crud.handleFormSuccess}
+                    />
+                )}
+            </FormModal>
 
-                <TabsContent value="cuadrillas" className="space-y-6">
-                    <div className="grid grid-cols-1 gap-6">
-                        {Object.entries(jornalerosByCuadrilla).map(
-                            ([cuadrillaId, jornaleros]) => {
-                                const cuadrillaName =
-                                    cuadrillaId === "sin_cuadrilla"
-                                        ? "Sin Cuadrilla Asignada"
-                                        : `Cuadrilla ${cuadrillaId}`;
-
-                                const cuadrillaInfo =
-                                    cuadrillaId !== "sin_cuadrilla"
-                                        ? cuadrillas.find(
-                                              (c) =>
-                                                  c.id === parseInt(cuadrillaId)
-                                          )
-                                        : null;
-
-                                return (
-                                    <Card key={cuadrillaId}>
-                                        <CardHeader>
-                                            <CardTitle className="flex justify-between">
-                                                <span>{cuadrillaName}</span>
-                                                {cuadrillaInfo && (
-                                                    <span className="text-sm font-normal text-muted-foreground">
-                                                        Líder:{" "}
-                                                        {
-                                                            cuadrillaInfo.LiderCuadrilla
-                                                        }{" "}
-                                                        | Lote:{" "}
-                                                        {cuadrillaInfo.Lote} |
-                                                        Variedad:{" "}
-                                                        {cuadrillaInfo.Variedad}
-                                                    </span>
-                                                )}
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <DataTableJornalero
-                                                columns={columns}
-                                                data={jornaleros}
-                                            />
-                                            {cuadrillaId !==
-                                                "sin_cuadrilla" && (
-                                                <div className="mt-4 text-right">
-                                                    <Button
-                                                        variant="outline"
-                                                        onClick={() =>
-                                                            handleViewCuadrilla(
-                                                                parseInt(
-                                                                    cuadrillaId
-                                                                )
-                                                            )
-                                                        }
-                                                    >
-                                                        Administrar Cuadrilla
-                                                    </Button>
-                                                </div>
-                                            )}
-                                        </CardContent>
-                                    </Card>
-                                );
-                            }
-                        )}
-                    </div>
-                </TabsContent>
-
-                <TabsContent value="stats" className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-medium text-muted-foreground">
-                                    Total Jornaleros
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-3xl font-bold">
-                                    {jornaleros.length}
-                                </div>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    {jornalerosActivos} activos
-                                </p>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-medium text-muted-foreground">
-                                    Asignados a Cuadrillas
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-3xl font-bold">
-                                    {jornalerosAsignados}
-                                </div>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    {Math.round(
-                                        (jornalerosAsignados /
-                                            jornaleros.length) *
-                                            100
-                                    )}
-                                    % del total
-                                </p>
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-sm font-medium text-muted-foreground">
-                                    Producción Total
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-3xl font-bold">
-                                    {produccionTotal.toFixed(2)}
-                                </div>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                    {(
-                                        produccionTotal /
-                                        (jornalerosActivos || 1)
-                                    ).toFixed(2)}{" "}
-                                    promedio por jornalero
-                                </p>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Producción por Cuadrilla</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <table className="w-full">
-                                <thead>
-                                    <tr className="border-b">
-                                        <th className="text-left py-2">
-                                            Cuadrilla
-                                        </th>
-                                        <th className="text-left py-2">
-                                            Integrantes
-                                        </th>
-                                        <th className="text-left py-2">
-                                            Producción Total
-                                        </th>
-                                        <th className="text-left py-2">
-                                            Promedio por Jornalero
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {cuadrillas.map((cuadrilla) => {
-                                        const jornalerosEnCuadrilla =
-                                            jornaleros.filter(
-                                                (j) =>
-                                                    j.cuadrilla_id ===
-                                                    cuadrilla.id
-                                            );
-                                        const produccionCuadrilla =
-                                            jornalerosEnCuadrilla.reduce(
-                                                (total, j) =>
-                                                    total +
-                                                    (Number(
-                                                        j.produccion_jornalero
-                                                    ) || 0),
-                                                0
-                                            );
-                                        const promedio =
-                                            jornalerosEnCuadrilla.length
-                                                ? (
-                                                      produccionCuadrilla /
-                                                      jornalerosEnCuadrilla.length
-                                                  ).toFixed(2)
-                                                : "N/A";
-
-                                        return (
-                                            <tr
-                                                key={cuadrilla.id}
-                                                className="border-b"
-                                            >
-                                                <td className="py-2">
-                                                    {cuadrilla.LiderCuadrilla}
-                                                </td>
-                                                <td className="py-2">
-                                                    {
-                                                        jornalerosEnCuadrilla.length
-                                                    }
-                                                </td>
-                                                <td className="py-2">
-                                                    {produccionCuadrilla.toFixed(
-                                                        2
-                                                    )}
-                                                </td>
-                                                <td className="py-2">
-                                                    {promedio}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
-
-            {/* Dialog for editing jornalero */}
-            <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-                <DialogContent className="max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>Editar Jornalero</DialogTitle>
-                        <DialogDescription>
-                            Actualice la información del jornalero
-                        </DialogDescription>
-                    </DialogHeader>
-                    {selectedJornalero && (
-                        <JornaleroForm
-                            jornaleroId={selectedJornalero.id}
-                            onSuccess={() => {
-                                fetchJornaleros();
-                                setShowEditDialog(false);
-                            }}
-                        />
-                    )}
-                </DialogContent>
-            </Dialog>
-
-            {/* Dialog for viewing cuadrilla */}
-            <Dialog
+            <CuadrillaViewModal
                 open={showCuadrillaDialog}
                 onOpenChange={setShowCuadrillaDialog}
-            >
-                <DialogContent className="max-w-4xl">
-                    <DialogTitle>Cuadrilla</DialogTitle>
-                    {selectedCuadrillaId && (
-                        <CuadrillaJornaleros
-                            cuadrillaId={selectedCuadrillaId}
-                            onClose={() => setShowCuadrillaDialog(false)}
-                        />
-                    )}
-                </DialogContent>
-            </Dialog>
-        </div>
+                cuadrillaId={selectedCuadrillaId ?? undefined}
+                onClose={() => setShowCuadrillaDialog(false)}
+            />
+
+            <ReactivateConfirmationModal
+                open={crud.showReactivateDialog}
+                onOpenChange={crud.setShowReactivateDialog}
+                title="Confirmar Reactivación"
+                itemName={crud.entityToReactivate?.nombre}
+                description="¿Estás seguro de que deseas reactivar al jornalero?"
+                onConfirm={crud.confirmReactivate}
+                loading={crud.isReactivating}
+            />
+        </>
     );
 }

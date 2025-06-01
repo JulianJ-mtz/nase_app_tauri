@@ -1,5 +1,5 @@
 use crate::m20250526_000230_create_table_temporada::Temporada;
-use crate::m20250526_001923_create_table_jornalero::Jornalero;
+use crate::m20250526_001159_create_table_cuadrilla::Cuadrilla;
 use sea_orm_migration::prelude::*;
 
 #[derive(DeriveMigrationName)]
@@ -10,9 +10,9 @@ pub enum Produccion {
     Table,
     Id,
     Fecha,
-    JornaleroId,
+    CuadrillaId,
     TemporadaId,
-    Lote,
+    // Lote,
     Cantidad,
     CreatedAt,
     UpdatedAt,
@@ -34,14 +34,14 @@ impl MigrationTrait for CreateProduccion {
                             .primary_key(),
                     )
                     .col(ColumnDef::new(Produccion::Fecha).date().not_null())
-                    .col(ColumnDef::new(Produccion::JornaleroId).integer().not_null())
+                    .col(ColumnDef::new(Produccion::CuadrillaId).integer().not_null())
                     .col(ColumnDef::new(Produccion::TemporadaId).integer().not_null())
-                    .col(
-                        ColumnDef::new(Produccion::Lote)
-                            .string()
-                            .string_len(100)
-                            .not_null(),
-                    )
+                    // .col(
+                    //     ColumnDef::new(Produccion::Lote)
+                    //         .string()
+                    //         .string_len(100)
+                    //         .not_null(),
+                    // )
                     .col(
                         ColumnDef::new(Produccion::Cantidad)
                             .decimal_len(15, 3)
@@ -59,9 +59,9 @@ impl MigrationTrait for CreateProduccion {
                     )
                     .foreign_key(
                         ForeignKey::create()
-                            .name("fk_produccion_jornalero")
-                            .from(Produccion::Table, Produccion::JornaleroId)
-                            .to(Jornalero::Table, Jornalero::Id)
+                            .name("fk_produccion_cuadrilla")
+                            .from(Produccion::Table, Produccion::CuadrillaId)
+                            .to(Cuadrilla::Table, Cuadrilla::Id)
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )
@@ -81,9 +81,10 @@ impl MigrationTrait for CreateProduccion {
         manager
             .create_index(
                 Index::create()
-                    .name("idx_produccion_jornalero")
+                    .name("idx_produccion_cuadrilla")
                     .table(Produccion::Table)
-                    .col(Produccion::JornaleroId)
+                    .col(Produccion::CuadrillaId)
+                    .if_not_exists()
                     .to_owned(),
             )
             .await?;
@@ -94,6 +95,7 @@ impl MigrationTrait for CreateProduccion {
                     .name("idx_produccion_temporada")
                     .table(Produccion::Table)
                     .col(Produccion::TemporadaId)
+                    .if_not_exists()
                     .to_owned(),
             )
             .await?;
@@ -104,6 +106,7 @@ impl MigrationTrait for CreateProduccion {
                     .name("idx_produccion_fecha")
                     .table(Produccion::Table)
                     .col(Produccion::Fecha)
+                    .if_not_exists()
                     .to_owned(),
             )
             .await?;
@@ -112,13 +115,37 @@ impl MigrationTrait for CreateProduccion {
         manager
             .create_index(
                 Index::create()
-                    .name("idx_produccion_jornalero_temporada")
+                    .name("idx_produccion_cuadrilla_temporada")
                     .table(Produccion::Table)
-                    .col(Produccion::JornaleroId)
+                    .col(Produccion::CuadrillaId)
                     .col(Produccion::TemporadaId)
+                    .if_not_exists()
                     .to_owned(),
             )
-            .await
+            .await?;
+
+        // COMENTADO: Seeding se hará después de que existan los registros padre
+        /*
+        let insert_producciones = Query::insert()
+            .into_table(Produccion::Table)
+            .columns([
+                Produccion::Id,
+                Produccion::Fecha,
+                Produccion::CuadrillaId,
+                Produccion::TemporadaId,
+                Produccion::Cantidad
+            ])
+            .values_panic([Expr::value(1), Expr::value("2020-06-15"), Expr::value(1), Expr::value(1), Expr::value(100.0)])
+            .values_panic([Expr::value(2), Expr::value("2021-07-20"), Expr::value(2), Expr::value(2), Expr::value(120.5)])
+            .values_panic([Expr::value(3), Expr::value("2022-08-25"), Expr::value(3), Expr::value(3), Expr::value(110.75)])
+            .values_panic([Expr::value(4), Expr::value("2023-09-10"), Expr::value(4), Expr::value(4), Expr::value(130.25)])
+            .values_panic([Expr::value(5), Expr::value("2024-10-05"), Expr::value(5), Expr::value(5), Expr::value(115.0)])
+            .to_owned();
+
+        manager.exec_stmt(insert_producciones).await?;
+        */
+
+        Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {

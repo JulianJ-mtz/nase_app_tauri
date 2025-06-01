@@ -2,26 +2,28 @@ import { invoke } from "@tauri-apps/api/core";
 
 export interface Cuadrilla {
     id: number;
-    LiderCuadrilla: string;
-    ProduccionCuadrilla: number;
-    Lote: string;
-    Variedad: string;
-    Integrantes: string;
-    Empaque: string | null;
-    TemporadaId: number;
-    CreatedAt: string;
-    UpdatedAt: string;
+    lider_cuadrilla_id: number;
+    // ProduccionCuadrilla: number;
+    lote: string;
+    variedad_id: number;
+    // Variedad: string;
+    // Integrantes: string;
+    // Empaque: string | null;
+    temporada_id: number;
+    created_at: string;
+    updated_at: string;
 }
 
 
 export interface CuadrillaData {
     id?: number;
-    lider_cuadrilla?: number | null;
-    produccion_cuadrilla?: number | null;
+    lider_cuadrilla_id?: number | null;
+    // produccion_cuadrilla?: number | null;
     lote: string;
-    variedad: string;
-    integrantes?: number | null;
-    empaque?: string | null;
+    variedad_id: number | null;
+    // variedad: string;
+    // integrantes?: number | null;
+    // empaque?: string | null;
     temporada_id?: number | null;
 }
 
@@ -68,6 +70,33 @@ export async function eliminarCuadrilla(id: number): Promise<string> {
         return await invoke<string>('delete_cuadrilla', { id });
     } catch (error) {
         console.error('Error al eliminar cuadrilla:', error);
+        throw error;
+    }
+}
+
+export async function obtenerWarningEliminacionCuadrilla(id: number): Promise<string> {
+    try {
+        return await invoke<string>('get_cuadrilla_delete_warning', { id });
+    } catch (error) {
+        console.error('Error al obtener warning de eliminación:', error);
+        throw error;
+    }
+}
+
+export async function forceEliminarCuadrilla(id: number): Promise<string> {
+    try {
+        return await invoke<string>('force_delete_cuadrilla', { id });
+    } catch (error) {
+        console.error('Error al eliminar cuadrilla forzadamente:', error);
+        throw error;
+    }
+}
+
+export async function reasignarJornalerosDeCuadrilla(cuadrillaId: number): Promise<string> {
+    try {
+        return await invoke<string>('reassign_jornaleros_from_cuadrilla', { id: cuadrillaId });
+    } catch (error) {
+        console.error('Error al reasignar jornaleros de cuadrilla:', error);
         throw error;
     }
 }

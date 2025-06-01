@@ -12,7 +12,6 @@ pub enum Jornalero {
     Edad,
     Estado,
     FechaContratacion,
-    ProduccionJornalero,
     Errores,
     CuadrillaId,
     CreatedAt,
@@ -53,11 +52,6 @@ impl MigrationTrait for CreateJornalero {
                             .date()
                             .not_null(),
                     )
-                    .col(
-                        ColumnDef::new(Jornalero::ProduccionJornalero)
-                            .decimal_len(15, 3)
-                            .default(0.0),
-                    )
                     .col(ColumnDef::new(Jornalero::Errores).integer().default(0))
                     .col(ColumnDef::new(Jornalero::CuadrillaId).integer().null())
                     .col(
@@ -82,8 +76,8 @@ impl MigrationTrait for CreateJornalero {
             )
             .await?;
 
-        // Crear índices para optimizar consultas
-        manager
+        // Crear índices con manejo de errores
+        let index_result = manager
             .create_index(
                 Index::create()
                     .name("idx_jornalero_cuadrilla")
@@ -91,9 +85,16 @@ impl MigrationTrait for CreateJornalero {
                     .col(Jornalero::CuadrillaId)
                     .to_owned(),
             )
-            .await?;
+            .await;
 
-        manager
+        // Ignora el error si el índice ya existe
+        if let Err(e) = index_result {
+            if !e.to_string().contains("already exists") {
+                return Err(e);
+            }
+        }
+
+        let index_result = manager
             .create_index(
                 Index::create()
                     .name("idx_jornalero_estado")
@@ -101,7 +102,16 @@ impl MigrationTrait for CreateJornalero {
                     .col(Jornalero::Estado)
                     .to_owned(),
             )
-            .await
+            .await;
+
+        // Ignora el error si el índice ya existe
+        if let Err(e) = index_result {
+            if !e.to_string().contains("already exists") {
+                return Err(e);
+            }
+        }
+
+        Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
