@@ -24,6 +24,7 @@ export const createColumns = ({
     {
         accessorKey: "id",
         header: "ID",
+        cell: ({ row }) => <Badge variant="outline">#{row.original.id}</Badge>,
     },
     {
         accessorKey: "nombre",
@@ -46,7 +47,9 @@ export const createColumns = ({
                     {cuadrillaId}
                 </Badge>
             ) : (
-                <span className="text-muted-foreground text-sm">Sin asignar</span>
+                <span className="text-muted-foreground text-sm">
+                    Sin asignar
+                </span>
             );
         },
     },
@@ -59,7 +62,11 @@ export const createColumns = ({
         accessorKey: "estado",
         header: "Estado",
         cell: ({ row }) => (
-            <Badge variant={row.original.estado === "Activo" ? "default" : "secondary"}>
+            <Badge
+                variant={
+                    row.original.estado === "Activo" ? "default" : "secondary"
+                }
+            >
                 {row.original.estado}
             </Badge>
         ),
@@ -69,16 +76,20 @@ export const createColumns = ({
         header: "Acciones",
         cell: ({ row }) => (
             <div className="flex flex-row gap-2">
-                {handleViewCuadrilla && row.original.cuadrilla_id && (
+                {/* {handleViewCuadrilla && row.original.cuadrilla_id && (
                     <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleViewCuadrilla(row.original.cuadrilla_id as number)}
+                        onClick={() =>
+                            handleViewCuadrilla(
+                                row.original.cuadrilla_id as number
+                            )
+                        }
                         title="Ver cuadrilla"
                     >
                         <Users className="h-4 w-4" />
                     </Button>
-                )}
+                )} */}
                 <Button
                     variant="ghost"
                     size="icon"
@@ -111,7 +122,9 @@ export const createInactiveColumns = ({
         accessorKey: "nombre",
         header: "Nombre",
         cell: ({ row }) => (
-            <span className="font-medium text-muted-foreground">{row.original.nombre}</span>
+            <span className="font-medium text-muted-foreground">
+                {row.original.nombre}
+            </span>
         ),
     },
     {

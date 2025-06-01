@@ -24,8 +24,12 @@ export function ProductionStatistics({
                     <div className="flex items-center gap-2">
                         <Package className="h-5 w-5 text-blue-500" />
                         <div>
-                            <p className="text-sm text-muted-foreground">Total Producción</p>
-                            <p className="text-lg font-bold">{formatNumber(estadisticas.totalFiltered)} kg</p>
+                            <p className="text-sm text-muted-foreground">
+                                Total Producción
+                            </p>
+                            <p className="text-lg font-bold">
+                                {estadisticas.totalFiltered} cajas
+                            </p>
                         </div>
                     </div>
                 </CardContent>
@@ -35,8 +39,12 @@ export function ProductionStatistics({
                     <div className="flex items-center gap-2">
                         <FileSpreadsheet className="h-5 w-5 text-green-500" />
                         <div>
-                            <p className="text-sm text-muted-foreground">Registros</p>
-                            <p className="text-lg font-bold">{formatNumber(estadisticas.registrosFiltered)}</p>
+                            <p className="text-sm text-muted-foreground">
+                                Registros
+                            </p>
+                            <p className="text-lg font-bold">
+                                {estadisticas.registrosFiltered}{" "}
+                            </p>
                         </div>
                     </div>
                 </CardContent>
@@ -46,8 +54,12 @@ export function ProductionStatistics({
                     <div className="flex items-center gap-2">
                         <Users className="h-5 w-5 text-orange-500" />
                         <div>
-                            <p className="text-sm text-muted-foreground">Clientes Activos</p>
-                            <p className="text-lg font-bold">{formatNumber(estadisticas.clientesUnicos)}</p>
+                            <p className="text-sm text-muted-foreground">
+                                Clientes Activos
+                            </p>
+                            <p className="text-lg font-bold">
+                                {estadisticas.clientesUnicos}
+                            </p>
                         </div>
                     </div>
                 </CardContent>
@@ -57,12 +69,17 @@ export function ProductionStatistics({
                     <div className="flex items-center gap-2">
                         <TrendingUp className="h-5 w-5 text-purple-500" />
                         <div>
-                            <p className="text-sm text-muted-foreground">Promedio</p>
-                            <p className="text-lg font-bold">{formatNumber(estadisticas.promedioProduccion)} kg</p>
+                            <p className="text-sm text-muted-foreground">
+                                Promedio
+                            </p>
+                            <p className="text-lg font-bold">
+                                {formatNumber(estadisticas.promedioProduccion)}{" "}
+                                kg
+                            </p>
                         </div>
                     </div>
                 </CardContent>
             </Card>
         </div>
     );
-} 
+}

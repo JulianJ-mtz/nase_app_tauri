@@ -21,6 +21,7 @@ interface DeleteConfirmationModalProps {
     onConfirm: () => void;
     loading?: boolean;
     warning?: string;
+    permanentDelete?: boolean;
     error?: string;
 }
 
@@ -33,6 +34,7 @@ export function DeleteConfirmationModal({
     onConfirm,
     loading = false,
     warning,
+    permanentDelete,
     error,
 }: DeleteConfirmationModalProps) {
     return (
@@ -57,9 +59,11 @@ export function DeleteConfirmationModal({
                             </>
                         )}
                         <br />
-                        <span className="text-sm text-gray-600">
-                            Esta acción no se puede deshacer.
-                        </span>
+                        {permanentDelete && (
+                            <span className="text-sm text-gray-600">
+                                Esta acción no se puede deshacer.
+                            </span>
+                        )}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 {warning && (

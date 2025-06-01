@@ -7,6 +7,7 @@ import { Variedad } from "@/api/variedad_api";
 import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
 import { Pencil, Trash, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useCallback } from "react";
 import { formatCreatedAt } from "@/lib/utils";
 
@@ -69,10 +70,8 @@ export const createColumns = ({
     return [
         {
             accessorKey: "id",
-            header: () => <div className="text-center">ID</div>,
-            cell: ({ row }) => (
-                <div className="text-center">{row.original.id}</div>
-            ),
+            header: "ID",
+            cell: ({ row }) => <Badge variant="outline">#{row.original.id}</Badge>,
         },
         {
             accessorKey: "lider_cuadrilla_id",

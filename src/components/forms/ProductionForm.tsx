@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+    Card,
+    CardFooter,
+    CardContent,
+    CardHeader,
+    CardTitle,
+    CardDescription,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +23,7 @@ import {
 import { Plus, Loader2, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { Separator } from "@/components/ui/separator";
 
 // Stores
 import { useTemporadaStore } from "@/lib/storeTemporada";
@@ -66,12 +74,13 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
     const loadCatalogData = useCallback(async () => {
         try {
             setCatalogLoading(true);
-            const [varData, tipoUvaData, tipoEmpData, clienteData] = await Promise.all([
-                obtenerVariedades(),
-                obtenerTiposUva(),
-                obtenerTiposEmpaque(),
-                obtenerClientes(),
-            ]);
+            const [varData, tipoUvaData, tipoEmpData, clienteData] =
+                await Promise.all([
+                    obtenerVariedades(),
+                    obtenerTiposUva(),
+                    obtenerTiposEmpaque(),
+                    obtenerClientes(),
+                ]);
 
             setVariedades(varData);
             setTiposUva(tipoUvaData);
@@ -99,29 +108,47 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
             (t) => !t.fecha_final || new Date(t.fecha_final) >= new Date()
         );
         if (activeTemporada && !formData.temporadaId) {
-            setFormData(prev => ({ ...prev, temporadaId: activeTemporada.id }));
+            setFormData((prev) => ({
+                ...prev,
+                temporadaId: activeTemporada.id,
+            }));
         }
     }, [temporadas, formData.temporadaId]);
 
     // Helper functions
-    const getCuadrillaNombre = useCallback((id: number) => {
-        const cuadrilla = cuadrillas.find((c) => c.id === id);
-        if (!cuadrilla) return "Desconocida";
-        const lider = jornaleros.find((j) => j.id === cuadrilla.lider_cuadrilla_id);
-        return lider ? `${cuadrilla.lote} (${lider.nombre})` : cuadrilla.lote;
-    }, [cuadrillas, jornaleros]);
+    const getCuadrillaNombre = useCallback(
+        (id: number) => {
+            const cuadrilla = cuadrillas.find((c) => c.id === id);
+            if (!cuadrilla) return "Desconocida";
+            const lider = jornaleros.find(
+                (j) => j.id === cuadrilla.lider_cuadrilla_id
+            );
+            return lider
+                ? `${cuadrilla.lote} (${lider.nombre})`
+                : cuadrilla.lote;
+        },
+        [cuadrillas, jornaleros]
+    );
 
-    const getVariedadNombre = useCallback((cuadrillaId: number) => {
-        const cuadrilla = cuadrillas.find((c) => c.id === cuadrillaId);
-        if (!cuadrilla || !cuadrilla.variedad_id) return "No asignada";
-        const variedad = variedades.find((v) => v.id === cuadrilla.variedad_id);
-        return variedad ? variedad.nombre : "Desconocida";
-    }, [cuadrillas, variedades]);
+    const getVariedadNombre = useCallback(
+        (cuadrillaId: number) => {
+            const cuadrilla = cuadrillas.find((c) => c.id === cuadrillaId);
+            if (!cuadrilla || !cuadrilla.variedad_id) return "No asignada";
+            const variedad = variedades.find(
+                (v) => v.id === cuadrilla.variedad_id
+            );
+            return variedad ? variedad.nombre : "Desconocida";
+        },
+        [cuadrillas, variedades]
+    );
 
-    const getTemporadaNombre = useCallback((id: number) => {
-        const temporada = temporadas.find((t) => t.id === id);
-        return temporada ? `Temporada ${temporada.id}` : "Desconocida";
-    }, [temporadas]);
+    const getTemporadaNombre = useCallback(
+        (id: number) => {
+            const temporada = temporadas.find((t) => t.id === id);
+            return temporada ? `Temporada ${temporada.id}` : "Desconocida";
+        },
+        [temporadas]
+    );
 
     const formatDate = useCallback((dateString: string) => {
         const date = new Date(dateString);
@@ -131,13 +158,17 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
     // Validación
     const validateForm = useCallback(() => {
         const errors: Record<string, string> = {};
-        
-        if (!formData.cuadrillaId) errors.cuadrilla = "Selecciona una cuadrilla";
-        if (!formData.temporadaId) errors.temporada = "Selecciona una temporada";
+
+        if (!formData.cuadrillaId)
+            errors.cuadrilla = "Selecciona una cuadrilla";
+        if (!formData.temporadaId)
+            errors.temporada = "Selecciona una temporada";
         if (!formData.tipoUvaId) errors.tipoUva = "Selecciona un tipo de uva";
-        if (!formData.tipoEmpaqueId) errors.tipoEmpaque = "Selecciona un tipo de empaque";
+        if (!formData.tipoEmpaqueId)
+            errors.tipoEmpaque = "Selecciona un tipo de empaque";
         if (!formData.clienteId) errors.cliente = "Selecciona un cliente";
-        if (!formData.cantidad || formData.cantidad <= 0) errors.cantidad = "Ingresa una cantidad válida";
+        if (!formData.cantidad || formData.cantidad <= 0)
+            errors.cantidad = "Ingresa una cantidad válida";
 
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
@@ -151,15 +182,18 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
     }, [formData, formErrors, validateForm]);
 
     // Handlers
-    const handleFieldChange = (field: keyof FormData, value: number | undefined) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
+    const handleFieldChange = (
+        field: keyof FormData,
+        value: number | undefined
+    ) => {
+        setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
     const resetForm = useCallback(() => {
         const activeTemporada = temporadas.find(
             (t) => !t.fecha_final || new Date(t.fecha_final) >= new Date()
         );
-        
+
         setFormData({
             temporadaId: activeTemporada?.id,
             cuadrillaId: undefined,
@@ -194,7 +228,7 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
             await createProduccion(produccionData);
             toast.success("✅ Producción registrada correctamente");
             resetForm();
-            
+
             if (onSuccess) {
                 onSuccess();
             }
@@ -207,16 +241,21 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
     };
 
     // Mostrar cuadrilla con variedad
-    const getCuadrillaDisplay = useCallback((cuadrilla: any) => {
-        const nombreCuadrilla = getCuadrillaNombre(cuadrilla.id);
-        const variedad = getVariedadNombre(cuadrilla.id);
-        return (
-            <div className="flex flex-col">
-                <span>{nombreCuadrilla}</span>
-                <span className="text-xs text-muted-foreground">Variedad: {variedad}</span>
-            </div>
-        );
-    }, [getCuadrillaNombre, getVariedadNombre]);
+    const getCuadrillaDisplay = useCallback(
+        (cuadrilla: any) => {
+            const nombreCuadrilla = getCuadrillaNombre(cuadrilla.id);
+            const variedad = getVariedadNombre(cuadrilla.id);
+            return (
+                <div className="flex flex-col">
+                    <span>{nombreCuadrilla}</span>
+                    <span className="text-xs text-muted-foreground">
+                        Variedad: {variedad}
+                    </span>
+                </div>
+            );
+        },
+        [getCuadrillaNombre, getVariedadNombre]
+    );
 
     if (catalogLoading) {
         return (
@@ -243,183 +282,327 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
     }
 
     return (
-        <Card className="lg:col-span-1 shadow-md">
+        <Card className="w-full max-w-2xl shadow-md">
             <CardHeader className="pb-3 border-b">
                 <div className="flex items-center gap-2">
                     <Package className="h-5 w-5 text-primary" />
                     <CardTitle>Nuevo Registro de Producción</CardTitle>
                 </div>
                 <CardDescription>
-                    Registra la producción de una cuadrilla con todos los detalles
+                    Registra la producción de una cuadrilla con todos los
+                    detalles
                 </CardDescription>
             </CardHeader>
-            
-            <CardContent className="pt-4">
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Cuadrilla */}
-                    <div className="space-y-2">
-                        <Label htmlFor="cuadrilla">Cuadrilla *</Label>
-                        <Select
-                            value={formData.cuadrillaId?.toString()}
-                            onValueChange={(value) => handleFieldChange('cuadrillaId', Number(value))}
-                        >
-                            <SelectTrigger className={formErrors.cuadrilla ? "border-red-500" : ""}>
-                                <SelectValue placeholder="Seleccionar cuadrilla" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {cuadrillas.map((cuadrilla) => (
-                                    <SelectItem
-                                        key={cuadrilla.id}
-                                        value={cuadrilla.id.toString()}
+
+            <form onSubmit={handleSubmit}>
+                <CardContent className="space-y-4">
+                    {/* Información de Asignación */}
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-semibold text-muted-foreground">
+                            Información de Asignación
+                        </h3>
+
+                        {/* Cuadrilla */}
+                        <div className="space-y-1">
+                            <Label
+                                htmlFor="cuadrilla"
+                                className="text-sm font-medium"
+                            >
+                                Cuadrilla *
+                            </Label>
+                            <Select
+                                value={formData.cuadrillaId?.toString()}
+                                onValueChange={(value) =>
+                                    handleFieldChange(
+                                        "cuadrillaId",
+                                        Number(value)
+                                    )
+                                }
+                            >
+                                <SelectTrigger
+                                    className={
+                                        formErrors.cuadrilla
+                                            ? "border-red-500"
+                                            : ""
+                                    }
+                                >
+                                    <SelectValue placeholder="Seleccionar cuadrilla" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {cuadrillas.map((cuadrilla) => (
+                                        <SelectItem
+                                            key={cuadrilla.id}
+                                            value={cuadrilla.id.toString()}
+                                        >
+                                            {getCuadrillaDisplay(cuadrilla)}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {formErrors.cuadrilla && (
+                                <p className="text-sm text-red-500">
+                                    {formErrors.cuadrilla}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Temporada */}
+                        <div className="space-y-1">
+                            <Label
+                                htmlFor="temporada"
+                                className="text-sm font-medium"
+                            >
+                                Temporada *
+                            </Label>
+                            <Select
+                                value={formData.temporadaId?.toString()}
+                                onValueChange={(value) =>
+                                    handleFieldChange(
+                                        "temporadaId",
+                                        Number(value)
+                                    )
+                                }
+                            >
+                                <SelectTrigger
+                                    className={
+                                        formErrors.temporada
+                                            ? "border-red-500"
+                                            : ""
+                                    }
+                                >
+                                    <SelectValue placeholder="Seleccionar temporada" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {temporadas.map((temporada) => (
+                                        <SelectItem
+                                            key={temporada.id}
+                                            value={temporada.id.toString()}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                {getTemporadaNombre(
+                                                    temporada.id
+                                                )}{" "}
+                                                (
+                                                {formatDate(
+                                                    temporada.fecha_inicial
+                                                )}
+                                                )
+                                                {(!temporada.fecha_final ||
+                                                    new Date(
+                                                        temporada.fecha_final
+                                                    ) >= new Date()) && (
+                                                    <Badge
+                                                        variant="secondary"
+                                                        className="text-xs"
+                                                    >
+                                                        Activa
+                                                    </Badge>
+                                                )}
+                                            </div>
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {formErrors.temporada && (
+                                <p className="text-sm text-red-500">
+                                    {formErrors.temporada}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Detalles del Producto */}
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-semibold text-muted-foreground">
+                            Detalles del Producto
+                        </h3>
+
+                        {/* Tipo de Uva */}
+                        <div className="space-y-1">
+                            <Label
+                                htmlFor="tipoUva"
+                                className="text-sm font-medium"
+                            >
+                                Tipo de Uva *
+                            </Label>
+                            <Select
+                                value={formData.tipoUvaId?.toString()}
+                                onValueChange={(value) =>
+                                    handleFieldChange(
+                                        "tipoUvaId",
+                                        Number(value)
+                                    )
+                                }
+                            >
+                                <SelectTrigger
+                                    className={
+                                        formErrors.tipoUva
+                                            ? "border-red-500"
+                                            : ""
+                                    }
+                                >
+                                    <SelectValue placeholder="Seleccionar tipo de uva" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {tiposUva.map((tipoUva) => (
+                                        <SelectItem
+                                            key={tipoUva.id}
+                                            value={tipoUva.id.toString()}
+                                        >
+                                            {tipoUva.nombre}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {formErrors.tipoUva && (
+                                <p className="text-sm text-red-500">
+                                    {formErrors.tipoUva}
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Tipo de Empaque */}
+                        <div className="space-y-1">
+                            <Label
+                                htmlFor="tipoEmpaque"
+                                className="text-sm font-medium"
+                            >
+                                Tipo de Empaque *
+                            </Label>
+                            <Select
+                                value={formData.tipoEmpaqueId?.toString()}
+                                onValueChange={(value) =>
+                                    handleFieldChange(
+                                        "tipoEmpaqueId",
+                                        Number(value)
+                                    )
+                                }
+                            >
+                                <SelectTrigger
+                                    className={
+                                        formErrors.tipoEmpaque
+                                            ? "border-red-500"
+                                            : ""
+                                    }
+                                >
+                                    <SelectValue placeholder="Seleccionar tipo de empaque" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {tiposEmpaque.map((tipoEmpaque) => (
+                                        <SelectItem
+                                            key={tipoEmpaque.id}
+                                            value={tipoEmpaque.id.toString()}
+                                        >
+                                            {tipoEmpaque.nombre}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {formErrors.tipoEmpaque && (
+                                <p className="text-sm text-red-500">
+                                    {formErrors.tipoEmpaque}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Información de Venta */}
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-semibold text-muted-foreground">
+                            Información de Venta
+                        </h3>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Cliente */}
+                            <div className="space-y-1">
+                                <Label
+                                    htmlFor="cliente"
+                                    className="text-sm font-medium"
+                                >
+                                    Cliente *
+                                </Label>
+                                <Select
+                                    value={formData.clienteId?.toString()}
+                                    onValueChange={(value) =>
+                                        handleFieldChange(
+                                            "clienteId",
+                                            Number(value)
+                                        )
+                                    }
+                                >
+                                    <SelectTrigger
+                                        className={
+                                            formErrors.cliente
+                                                ? "border-red-500"
+                                                : ""
+                                        }
                                     >
-                                        {getCuadrillaDisplay(cuadrilla)}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        {formErrors.cuadrilla && (
-                            <p className="text-sm text-red-500">{formErrors.cuadrilla}</p>
-                        )}
-                    </div>
+                                        <SelectValue placeholder="Seleccionar cliente" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {clientes.map((cliente) => (
+                                            <SelectItem
+                                                key={cliente.id}
+                                                value={cliente.id.toString()}
+                                            >
+                                                {cliente.nombre}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {formErrors.cliente && (
+                                    <p className="text-sm text-red-500">
+                                        {formErrors.cliente}
+                                    </p>
+                                )}
+                            </div>
 
-                    {/* Temporada */}
-                    <div className="space-y-2">
-                        <Label htmlFor="temporada">Temporada *</Label>
-                        <Select
-                            value={formData.temporadaId?.toString()}
-                            onValueChange={(value) => handleFieldChange('temporadaId', Number(value))}
-                        >
-                            <SelectTrigger className={formErrors.temporada ? "border-red-500" : ""}>
-                                <SelectValue placeholder="Seleccionar temporada" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {temporadas.map((temporada) => (
-                                    <SelectItem
-                                        key={temporada.id}
-                                        value={temporada.id.toString()}
-                                    >
-                                        <div className="flex items-center gap-2">
-                                            {getTemporadaNombre(temporada.id)} ({formatDate(temporada.fecha_inicial)})
-                                            {(!temporada.fecha_final || new Date(temporada.fecha_final) >= new Date()) && (
-                                                <Badge variant="secondary" className="text-xs">Activa</Badge>
-                                            )}
-                                        </div>
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        {formErrors.temporada && (
-                            <p className="text-sm text-red-500">{formErrors.temporada}</p>
-                        )}
+                            {/* Cantidad */}
+                            <div className="space-y-1">
+                                <Label
+                                    htmlFor="cantidad"
+                                    className="text-sm font-medium"
+                                >
+                                    Cantidad (# de cajas) *
+                                </Label>
+                                <Input
+                                    id="cantidad"
+                                    type="number"
+                                    step="0.01"
+                                    min="0.01"
+                                    value={formData.cantidad ?? ""}
+                                    onChange={(e) =>
+                                        handleFieldChange(
+                                            "cantidad",
+                                            e.target.value
+                                                ? Number(e.target.value)
+                                                : undefined
+                                        )
+                                    }
+                                    className={
+                                        formErrors.cantidad
+                                            ? "border-red-500"
+                                            : ""
+                                    }
+                                    placeholder="Ingresa la cantidad en # de cajas"
+                                    required
+                                />
+                                {formErrors.cantidad && (
+                                    <p className="text-sm text-red-500">
+                                        {formErrors.cantidad}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
                     </div>
+                </CardContent>
 
-                    {/* Tipo de Uva */}
-                    <div className="space-y-2">
-                        <Label htmlFor="tipoUva">Tipo de Uva *</Label>
-                        <Select
-                            value={formData.tipoUvaId?.toString()}
-                            onValueChange={(value) => handleFieldChange('tipoUvaId', Number(value))}
-                        >
-                            <SelectTrigger className={formErrors.tipoUva ? "border-red-500" : ""}>
-                                <SelectValue placeholder="Seleccionar tipo de uva" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {tiposUva.map((tipoUva) => (
-                                    <SelectItem
-                                        key={tipoUva.id}
-                                        value={tipoUva.id.toString()}
-                                    >
-                                        {tipoUva.nombre}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        {formErrors.tipoUva && (
-                            <p className="text-sm text-red-500">{formErrors.tipoUva}</p>
-                        )}
-                    </div>
-
-                    {/* Tipo de Empaque */}
-                    <div className="space-y-2">
-                        <Label htmlFor="tipoEmpaque">Tipo de Empaque *</Label>
-                        <Select
-                            value={formData.tipoEmpaqueId?.toString()}
-                            onValueChange={(value) => handleFieldChange('tipoEmpaqueId', Number(value))}
-                        >
-                            <SelectTrigger className={formErrors.tipoEmpaque ? "border-red-500" : ""}>
-                                <SelectValue placeholder="Seleccionar tipo de empaque" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {tiposEmpaque.map((tipoEmpaque) => (
-                                    <SelectItem
-                                        key={tipoEmpaque.id}
-                                        value={tipoEmpaque.id.toString()}
-                                    >
-                                        {tipoEmpaque.nombre}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        {formErrors.tipoEmpaque && (
-                            <p className="text-sm text-red-500">{formErrors.tipoEmpaque}</p>
-                        )}
-                    </div>
-
-                    {/* Cliente */}
-                    <div className="space-y-2">
-                        <Label htmlFor="cliente">Cliente *</Label>
-                        <Select
-                            value={formData.clienteId?.toString()}
-                            onValueChange={(value) => handleFieldChange('clienteId', Number(value))}
-                        >
-                            <SelectTrigger className={formErrors.cliente ? "border-red-500" : ""}>
-                                <SelectValue placeholder="Seleccionar cliente" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {clientes.map((cliente) => (
-                                    <SelectItem
-                                        key={cliente.id}
-                                        value={cliente.id.toString()}
-                                    >
-                                        {cliente.nombre}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        {formErrors.cliente && (
-                            <p className="text-sm text-red-500">{formErrors.cliente}</p>
-                        )}
-                    </div>
-
-                    {/* Cantidad */}
-                    <div className="space-y-2">
-                        <Label htmlFor="cantidad">Cantidad (# de cajas) *</Label>
-                        <Input
-                            id="cantidad"
-                            type="number"
-                            step="0.01"
-                            min="0.01"
-                            value={formData.cantidad ?? ""}
-                            onChange={(e) =>
-                                handleFieldChange('cantidad', 
-                                    e.target.value ? Number(e.target.value) : undefined
-                                )
-                            }
-                            className={formErrors.cantidad ? "border-red-500" : ""}
-                            placeholder="Ingresa la cantidad en # de cajas"
-                            required
-                        />
-                        {formErrors.cantidad && (
-                            <p className="text-sm text-red-500">{formErrors.cantidad}</p>
-                        )}
-                    </div>
-
-                    {/* Botón Submit */}
-                    <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={loading}
-                    >
+                <CardFooter className="border-t pt-4 mt-4">
+                    <Button type="submit" className="w-full" disabled={loading}>
                         {loading ? (
                             <>
                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -432,8 +615,8 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
                             </>
                         )}
                     </Button>
-                </form>
-            </CardContent>
+                </CardFooter>
+            </form>
         </Card>
     );
-} 
+}

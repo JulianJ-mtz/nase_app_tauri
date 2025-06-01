@@ -64,7 +64,7 @@ export default function CuadrillasPage() {
                 if (warning.includes("producción están asociados")) {
                     setRequiresForceDelete(true);
                     setForceDeleteDialogOpen(true);
-                    throw new Error("Requiere eliminación forzada");
+                    console.log("Requiere eliminación forzada");
                 } else {
                     return await deleteCuadrilla(id);
                 }
@@ -268,6 +268,7 @@ export default function CuadrillasPage() {
                         : undefined
                 }
                 description="¿Estás seguro de que deseas eliminar esta cuadrilla?"
+                permanentDelete
                 warning={deleteWarning}
                 error={deleteError}
                 onConfirm={crud.confirmDelete}

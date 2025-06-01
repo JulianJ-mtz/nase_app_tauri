@@ -182,7 +182,7 @@ export function TemporadaForm({ temporadaId, onSuccess }: TemporadaFormProps) {
                         </p>
                     </div>
                 </CardContent>
-                <CardFooter className="border-t pt-4">
+                <CardFooter className="border-t pt-4 mt-4">
                     <Button 
                         type="submit" 
                         disabled={loading}

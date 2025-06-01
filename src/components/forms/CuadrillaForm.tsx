@@ -437,7 +437,7 @@ export const CuadrillaForm = memo(function CuadrillaForm({ cuadrillaId, onSucces
                         </div>
                     </div>
                 </CardContent>
-                <CardFooter className="border-t pt-4">
+                <CardFooter className="border-t pt-4 mt-4">
                     <Button type="submit" disabled={loading} className="w-full">
                         {loading ? (
                             <>
