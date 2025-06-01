@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useCuadrillaStore } from "@/lib/storeCuadrilla";
 import { Jornalero } from "@/api/jornalero_api";
 import { Cuadrilla } from "@/api/cuadrilla_api";
@@ -16,7 +16,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { useJornaleroStore } from "@/lib/storeJornalero";
 import { Button } from "./ui/button";
-import { UserPlus, UserMinus, RefreshCcw, Crown } from "lucide-react";
+import { UserPlus, UserMinus, RefreshCcw, Crown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 
@@ -42,6 +42,9 @@ export function CuadrillaJornaleros({
     const [jornalerosDisponibles, setJornalerosDisponibles] = useState<
         Jornalero[]
     >([]);
+    
+    // Estados de loading más granulares
+    const [isUpdatingJornalero, setIsUpdatingJornalero] = useState<number | null>(null);
 
     const isLiderDeEstaCuadrilla = (jornaleroId: number) => {
         return cuadrilla?.lider_cuadrilla_id === jornaleroId;
@@ -93,7 +96,7 @@ export function CuadrillaJornaleros({
         cuadrillas,
     ]);
 
-    const handleAddJornalero = async (jornalero: Jornalero) => {
+    const handleAddJornalero = useCallback(async (jornalero: Jornalero) => {
         const liderazgo = getLiderazgoInfo(jornalero.id);
 
         if (liderazgo.esLiderDeOtra) {
@@ -105,23 +108,29 @@ export function CuadrillaJornaleros({
         }
 
         try {
+            setIsUpdatingJornalero(jornalero.id);
+            
+            // Actualizar estado local inmediatamente para UX responsiva
+            setJornalerosDisponibles((prev) =>
+                prev.filter((j) => j.id !== jornalero.id)
+            );
+
             await updateJornalero(jornalero.id, {
                 ...jornalero,
                 cuadrilla_id: cuadrillaId,
             });
 
-            fetchJornalerosByCuadrillaId(cuadrillaId);
-            fetchCuadrillas();
-
-            setJornalerosDisponibles((prev) =>
-                prev.filter((j) => j.id !== jornalero.id)
-            );
+            // Solo actualizar los datos necesarios después de la operación exitosa
+            await fetchJornalerosByCuadrillaId(cuadrillaId);
 
             toast.success(
                 `${jornalero.nombre} agregado a la cuadrilla exitosamente`
             );
         } catch (error: any) {
             console.error("Error al agregar jornalero a la cuadrilla:", error);
+
+            // Revertir cambio local en caso de error
+            setJornalerosDisponibles((prev) => [...prev, jornalero]);
 
             const errorMessage =
                 error?.message || error?.toString?.() || String(error);
@@ -136,10 +145,12 @@ export function CuadrillaJornaleros({
                     `Error al agregar ${jornalero.nombre} a la cuadrilla: ${errorMessage}`
                 );
             }
+        } finally {
+            setIsUpdatingJornalero(null);
         }
-    };
+    }, [cuadrillaId, updateJornalero, fetchJornalerosByCuadrillaId, getLiderazgoInfo]);
 
-    const handleRemoveJornalero = async (jornalero: Jornalero) => {
+    const handleRemoveJornalero = useCallback(async (jornalero: Jornalero) => {
         if (isLiderDeEstaCuadrilla(jornalero.id)) {
             toast.error(
                 `No se puede remover a ${jornalero.nombre} porque es el líder de esta cuadrilla. ` +
@@ -149,25 +160,32 @@ export function CuadrillaJornaleros({
         }
 
         try {
+            setIsUpdatingJornalero(jornalero.id);
+            
+            // Actualizar estado local inmediatamente para UX responsiva
+            setJornalerosDisponibles((prev) => {
+                const exists = prev.find((j) => j.id === jornalero.id);
+                return exists ? prev : [...prev, jornalero];
+            });
+
             await updateJornalero(jornalero.id, {
                 ...jornalero,
                 cuadrilla_id: null,
             });
 
-            fetchJornalerosByCuadrillaId(cuadrillaId);
-            fetchCuadrillas();
-
-            // Mejorar: Solo agregar si no existe ya en la lista
-            setJornalerosDisponibles((prev) => {
-                const exists = prev.find((j) => j.id === jornalero.id);
-                return exists ? prev : [...prev, jornalero];
-            });
+            // Solo actualizar los datos necesarios después de la operación exitosa
+            await fetchJornalerosByCuadrillaId(cuadrillaId);
 
             toast.success(
                 `${jornalero.nombre} removido de la cuadrilla exitosamente`
             );
         } catch (error: any) {
             console.error("Error al remover jornalero de la cuadrilla:", error);
+
+            // Revertir cambio local en caso de error
+            setJornalerosDisponibles((prev) =>
+                prev.filter((j) => j.id !== jornalero.id)
+            );
 
             const errorMessage =
                 error?.message || error?.toString?.() || String(error);
@@ -182,8 +200,10 @@ export function CuadrillaJornaleros({
                     `Error al remover ${jornalero.nombre} de la cuadrilla: ${errorMessage}`
                 );
             }
+        } finally {
+            setIsUpdatingJornalero(null);
         }
-    };
+    }, [cuadrillaId, updateJornalero, fetchJornalerosByCuadrillaId, isLiderDeEstaCuadrilla]);
 
     const jornalerosEnCuadrilla = jornalerosPorCuadrilla[cuadrillaId] || [];
 
@@ -312,14 +332,18 @@ export function CuadrillaJornaleros({
                                                                 jornalero
                                                             )
                                                         }
-                                                        disabled={esLider}
+                                                        disabled={esLider || isUpdatingJornalero === jornalero.id}
                                                         title={
                                                             esLider
                                                                 ? "No se puede remover al líder"
                                                                 : "Remover de la cuadrilla"
                                                         }
                                                     >
-                                                        <UserMinus className="h-4 w-4" />
+                                                        {isUpdatingJornalero === jornalero.id ? (
+                                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                                        ) : (
+                                                            <UserMinus className="h-4 w-4" />
+                                                        )}
                                                     </Button>
                                                 </TableCell>
                                             </TableRow>
@@ -389,9 +413,14 @@ export function CuadrillaJornaleros({
                                                                     jornalero
                                                                 )
                                                             }
+                                                            disabled={isUpdatingJornalero === jornalero.id}
                                                             title="Agregar a esta cuadrilla"
                                                         >
-                                                            <UserPlus className="h-4 w-4" />
+                                                            {isUpdatingJornalero === jornalero.id ? (
+                                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                            ) : (
+                                                                <UserPlus className="h-4 w-4" />
+                                                            )}
                                                         </Button>
                                                     </TableCell>
                                                 </TableRow>

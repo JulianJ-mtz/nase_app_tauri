@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, memo, useRef } from "react";
 import {
     Card,
     CardContent,
@@ -34,12 +34,15 @@ interface CuadrillaFormProps {
     onSuccess?: () => void;
 }
 
-export function CuadrillaForm({ cuadrillaId, onSuccess }: CuadrillaFormProps) {
+export const CuadrillaForm = memo(function CuadrillaForm({ cuadrillaId, onSuccess }: CuadrillaFormProps) {
     const { addCuadrilla, updateCuadrilla, getCuadrillaById } =
         useCuadrillaStore();
     const { jornaleros, fetchJornaleros } = useJornaleroStore();
     const { temporadas, fetchTemporadas } = useTemporadaStore();
     const router = useRouter();
+    
+    // Ref para evitar actualizaciones cuando el componente no está visible
+    const isVisibleRef = useRef(true);
 
     const [variedades, setVariedades] = useState<Variedad[]>([]);
 
@@ -54,11 +57,29 @@ export function CuadrillaForm({ cuadrillaId, onSuccess }: CuadrillaFormProps) {
     const [fetchLoading, setFetchLoading] = useState(false);
 
     useEffect(() => {
-        // Fetch dependencies
-        fetchJornaleros();
-        fetchTemporadas();
-        obtenerVariedades().then(setVariedades);
+        // Fetch dependencies solo una vez
+        const loadInitialData = async () => {
+            try {
+                await Promise.all([
+                    fetchJornaleros(),
+                    fetchTemporadas(),
+                    obtenerVariedades().then(setVariedades)
+                ]);
+            } catch (error) {
+                console.error("Error cargando datos iniciales:", error);
+            }
+        };
+        
+        loadInitialData();
+        
+        // Cleanup: marcar como no visible cuando se desmonta
+        return () => {
+            isVisibleRef.current = false;
+        };
+    }, []); // Solo se ejecuta una vez al montar
 
+    useEffect(() => {
+        // Fetch cuadrilla específica cuando cambia el ID
         if (cuadrillaId) {
             const fetchCuadrilla = async () => {
                 try {
@@ -80,8 +101,16 @@ export function CuadrillaForm({ cuadrillaId, onSuccess }: CuadrillaFormProps) {
                 }
             };
             fetchCuadrilla();
+        } else {
+            // Reset form for new cuadrilla
+            setFormData({
+                lote: "",
+                temporada_id: null,
+                lider_cuadrilla_id: null,
+                variedad_id: null,
+            });
         }
-    }, [cuadrillaId, getCuadrillaById, fetchJornaleros, fetchTemporadas]);
+    }, [cuadrillaId, getCuadrillaById]); // Solo dependencias necesarias
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, type } = e.target;
@@ -428,4 +457,4 @@ export function CuadrillaForm({ cuadrillaId, onSuccess }: CuadrillaFormProps) {
             </form>
         </Card>
     );
-}
+});

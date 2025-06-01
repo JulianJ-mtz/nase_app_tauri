@@ -159,12 +159,12 @@ export default function Home() {
                                 <div className="text-sm text-muted-foreground">Cuadrillas</div>
                             </div>
                             <div className="text-center">
-                                <div className="text-2xl font-bold text-orange-600">{formatNumber(stats.produccionTotal)} kg</div>
+                                <div className="text-2xl font-bold text-orange-600">{formatNumber(stats.produccionTotal)} cajas</div>
                                 <div className="text-sm text-muted-foreground">Producción Total</div>
                             </div>
                             <div className="text-center">
                                 <div className="text-2xl font-bold text-purple-600">
-                                    {stats.cuadrillasActivas > 0 ? formatNumber(stats.produccionTotal / stats.cuadrillasActivas) : 0} kg
+                                    {stats.cuadrillasActivas > 0 ? formatNumber(stats.produccionTotal / stats.cuadrillasActivas) : 0} cajas
                                 </div>
                                 <div className="text-sm text-muted-foreground">Promedio por Cuadrilla</div>
                             </div>

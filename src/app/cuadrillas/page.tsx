@@ -52,6 +52,11 @@ export default function CuadrillasPage() {
             setVariedades(variedades);
         },
         deleteFunction: async (id: number) => {
+            // Limpiar estados de operaciones anteriores
+            setDeleteWarning("");
+            setDeleteError("");
+            setRequiresForceDelete(false);
+            
             try {
                 const warning = await getDeleteWarning(id);
                 setDeleteWarning(warning);
@@ -59,7 +64,7 @@ export default function CuadrillasPage() {
                 if (warning.includes("producción están asociados")) {
                     setRequiresForceDelete(true);
                     setForceDeleteDialogOpen(true);
-                    console.log("Requiere eliminación forzada");
+                    throw new Error("Requiere eliminación forzada");
                 } else {
                     return await deleteCuadrilla(id);
                 }
@@ -77,6 +82,28 @@ export default function CuadrillasPage() {
     const handleViewJornaleros = (cuadrillaId: number) => {
         setSelectedCuadrillaId(cuadrillaId);
         setShowJornalerosDialog(true);
+    };
+
+    // Función personalizada para manejar el cierre del modal de eliminación
+    const handleDeleteModalChange = (open: boolean) => {
+        crud.setShowDeleteDialog(open);
+        if (!open) {
+            // Limpiar estados cuando se cierra el modal
+            setDeleteWarning("");
+            setDeleteError("");
+            setRequiresForceDelete(false);
+        }
+    };
+
+    // Función personalizada para manejar el cierre del modal de eliminación forzada
+    const handleForceDeleteModalChange = (open: boolean) => {
+        setForceDeleteDialogOpen(open);
+        if (!open) {
+            // Limpiar estados cuando se cierra el modal
+            setDeleteWarning("");
+            setDeleteError("");
+            setRequiresForceDelete(false);
+        }
     };
 
     const handleForceDeleteConfirm = async () => {
@@ -233,7 +260,7 @@ export default function CuadrillasPage() {
             {/* Modals */}
             <DeleteConfirmationModal
                 open={crud.showDeleteDialog}
-                onOpenChange={crud.setShowDeleteDialog}
+                onOpenChange={handleDeleteModalChange}
                 title="Confirmar Eliminación"
                 itemName={
                     crud.entityToDelete
@@ -272,7 +299,7 @@ export default function CuadrillasPage() {
             {/* Modal for force deleting cuadrilla */}
             <DeleteConfirmationModal
                 open={forceDeleteDialogOpen}
-                onOpenChange={setForceDeleteDialogOpen}
+                onOpenChange={handleForceDeleteModalChange}
                 title="Eliminación Forzada Requerida"
                 description="Esta cuadrilla tiene dependencias que requieren eliminación forzada. Esto eliminará todas las dependencias asociadas."
                 warning={deleteWarning}

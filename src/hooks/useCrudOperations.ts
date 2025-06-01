@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -125,6 +127,14 @@ export function useCrudOperations<T extends CrudEntity>({
         toast.success(`${entityName} guardado con éxito`);
     };
 
+    const handleDataRefresh = async () => {
+        try {
+            await fetchData();
+        } catch (error) {
+            console.error(`Error al actualizar datos:`, error);
+        }
+    };
+
     return {
         // States
         showEditDialog,
@@ -149,6 +159,7 @@ export function useCrudOperations<T extends CrudEntity>({
         closeEdit,
         closeView,
         handleFormSuccess,
+        handleDataRefresh,
 
         // Setters for manual control if needed
         setShowEditDialog,
