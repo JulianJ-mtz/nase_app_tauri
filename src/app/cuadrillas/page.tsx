@@ -1,21 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Users, Trash, AlertTriangle } from "lucide-react";
 import { CuadrillaForm } from "@/components/forms/CuadrillaForm";
 import { createColumns } from "./columsTableCuadrilla";
-import { DataTableCuadrilla } from "./dataTableCuadrilla";
+import { DataTable } from "@/components/ui/data-table";
 import { useCuadrillaStore } from "@/lib/storeCuadrilla";
 import { useJornaleroStore } from "@/lib/storeJornalero";
 import { CuadrillaJornaleros } from "@/components/CuadrillaJornaleros";
-import { Spinner } from "@/components/ui/spinner";
 import { 
     DeleteConfirmationModal, 
     CuadrillaViewModal,
     FormModal 
 } from "@/components/modals";
+import { PageLayout, FormSection, DataSection } from "@/components/layout";
+import { useCrudOperations } from "@/hooks/useCrudOperations";
 import { Cuadrilla } from "@/api/cuadrilla_api";
 
 export default function CuadrillasPage() {
@@ -29,256 +29,214 @@ export default function CuadrillasPage() {
         error,
     } = useCuadrillaStore();
     const { jornaleros, fetchJornaleros } = useJornaleroStore();
-    const [selectedCuadrillaId, setSelectedCuadrillaId] = useState<
-        number | null
-    >(null);
+    const [selectedCuadrillaId, setSelectedCuadrillaId] = useState<number | null>(null);
     const [showJornalerosDialog, setShowJornalerosDialog] = useState(false);
 
-    // Estados para edición
-    const [selectedCuadrilla, setSelectedCuadrilla] = useState<Cuadrilla | null>(null);
-    const [showEditDialog, setShowEditDialog] = useState(false);
-
     // Estados para los diálogos de eliminación
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [forceDeleteDialogOpen, setForceDeleteDialogOpen] = useState(false);
-    const [cuadrillaToDelete, setCuadrillaToDelete] = useState<number | null>(
-        null
-    );
     const [deleteWarning, setDeleteWarning] = useState<string>("");
     const [deleteError, setDeleteError] = useState<string>("");
     const [successMessage, setSuccessMessage] = useState<string>("");
-    const [requiresForceDelete, setRequiresForceDelete] =
-        useState<boolean>(false);
+    const [requiresForceDelete, setRequiresForceDelete] = useState<boolean>(false);
+
+    const crud = useCrudOperations<Cuadrilla>({
+        fetchData: async () => {
+            await fetchCuadrillas();
+            await fetchJornaleros();
+        },
+        deleteFunction: async (id: number) => {
+            try {
+                const warning = await getDeleteWarning(id);
+                setDeleteWarning(warning);
+
+                if (warning.includes("producción están asociados")) {
+                    setRequiresForceDelete(true);
+                    setForceDeleteDialogOpen(true);
+                    throw new Error("Requiere eliminación forzada");
+                } else {
+                    return await deleteCuadrilla(id);
+                }
+            } catch (error) {
+                throw error;
+            }
+        },
+        entityName: "Cuadrilla",
+    });
 
     useEffect(() => {
-        fetchCuadrillas();
-        fetchJornaleros();
-    }, [fetchCuadrillas, fetchJornaleros]);
-
-    // Debug: Log cuadrillas data
-    useEffect(() => {
-        console.log("Cuadrillas data:", cuadrillas);
-        console.log("Jornaleros data:", jornaleros);
-        console.log("Loading:", loading);
-        console.log("Error:", error);
-    }, [cuadrillas, jornaleros, loading, error]);
+        crud.handleFormSuccess();
+    }, []);
 
     const handleViewJornaleros = (cuadrillaId: number) => {
         setSelectedCuadrillaId(cuadrillaId);
         setShowJornalerosDialog(true);
     };
 
-    const handleEdit = (id: number) => {
-        const cuadrilla = cuadrillas.find((c) => c.id === id);
-        if (cuadrilla) {
-            setSelectedCuadrilla(cuadrilla);
-            setShowEditDialog(true);
-        }
-    };
-
-    const handleDeleteClick = async (id: number) => {
-        setCuadrillaToDelete(id);
-        setDeleteError("");
-        setSuccessMessage("");
-        setDeleteWarning("");
-        setRequiresForceDelete(false);
-
-        try {
-            // Obtener warning preventivo
-            const warning = await getDeleteWarning(id);
-            setDeleteWarning(warning);
-
-            // Verificar si requiere eliminación forzada
-            if (warning.includes("producción están asociados")) {
-                setRequiresForceDelete(true);
-                setForceDeleteDialogOpen(true);
-            } else {
-                setDeleteDialogOpen(true);
-            }
-        } catch (error) {
-            console.error("Error al obtener warning:", error);
-            setDeleteError("Error al verificar dependencias de la cuadrilla");
-        }
-    };
-
-    const handleDeleteConfirm = async () => {
-        if (!cuadrillaToDelete) return;
-
-        try {
-            console.log("Eliminando cuadrilla con ID:", cuadrillaToDelete);
-            const result = await deleteCuadrilla(cuadrillaToDelete);
-            console.log("Resultado de eliminación:", result);
-
-            setDeleteDialogOpen(false);
-            setCuadrillaToDelete(null);
-            setDeleteWarning("");
-            setDeleteError("");
-            await fetchCuadrillas();
-            await fetchJornaleros(); // Actualizar jornaleros también
-
-            setSuccessMessage(result);
-            setTimeout(() => setSuccessMessage(""), 5000);
-        } catch (error) {
-            console.error("Error al eliminar cuadrilla:", error);
-            const errorMessage =
-                error instanceof Error ? error.message : "Error desconocido";
-            setDeleteError(errorMessage);
-        }
-    };
-
     const handleForceDeleteConfirm = async () => {
-        if (!cuadrillaToDelete) return;
+        if (!crud.entityToDelete) return;
 
         try {
-            console.log(
-                "Eliminación forzada de cuadrilla con ID:",
-                cuadrillaToDelete
-            );
-            const result = await forceDeleteCuadrilla(cuadrillaToDelete);
-            console.log("Resultado de eliminación forzada:", result);
-
+            const result = await forceDeleteCuadrilla(crud.entityToDelete.id);
             setForceDeleteDialogOpen(false);
-            setCuadrillaToDelete(null);
+            crud.setEntityToDelete(null);
             setDeleteWarning("");
             setDeleteError("");
             await fetchCuadrillas();
             await fetchJornaleros();
-
             setSuccessMessage(result);
             setTimeout(() => setSuccessMessage(""), 5000);
         } catch (error) {
             console.error("Error en eliminación forzada:", error);
-            const errorMessage =
-                error instanceof Error ? error.message : "Error desconocido";
+            const errorMessage = error instanceof Error ? error.message : "Error desconocido";
             setDeleteError(errorMessage);
         }
     };
 
     const columns = createColumns({
-        handleEdit,
-        handleDelete: handleDeleteClick,
+        handleEdit: (id: number) => {
+            const cuadrilla = cuadrillas.find((c) => c.id === id);
+            if (cuadrilla) crud.handleEdit(cuadrilla);
+        },
+        handleDelete: (id: number) => {
+            const cuadrilla = cuadrillas.find((c) => c.id === id);
+            if (cuadrilla) crud.handleDelete(cuadrilla);
+        },
         handleViewJornaleros,
         jornaleros,
     });
 
-    return (
-        <div className="container mx-auto py-10 flex flex-col gap-4">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold">Cuadrillas</h1>
-                <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Agregar Cuadrilla
-                </Button>
-            </div>
+    // Calculate stats
+    const jornalerosAsignados = jornaleros.filter(j => j.cuadrilla_id !== null).length;
+    const cuadrillasConLider = cuadrillas.filter(c => c.lider_cuadrilla_id !== null).length;
 
-            <div>
-                <CuadrillaForm
-                    onSuccess={() => {
-                        fetchCuadrillas();
-                        fetchJornaleros();
-                    }}
-                />
-            </div>
-
-            {/* Debug info */}
-            {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                    Error: {error}
-                </div>
-            )}
-
-            {/* Mensajes de éxito/error para eliminación */}
-            {successMessage && (
-                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded flex items-center justify-between">
-                    <span>{successMessage}</span>
-                    <button
-                        onClick={() => setSuccessMessage("")}
-                        className="text-green-700 hover:text-green-900"
+    const tabs = [
+        {
+            value: "lista",
+            label: "Lista de Cuadrillas",
+            content: (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <FormSection 
+                        title="Crear Nueva Cuadrilla"
+                        description="Registra una nueva cuadrilla en el sistema"
+                        className="lg:col-span-1"
                     >
-                        ×
-                    </button>
-                </div>
-            )}
+                        <CuadrillaForm onSuccess={crud.handleFormSuccess} />
+                    </FormSection>
 
-            {/* DEBUG: Mostrar estados de modales
-            <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded text-xs">
-                <strong>DEBUG:</strong> deleteDialog:{" "}
-                {deleteDialogOpen.toString()}, forceDialog:{" "}
-                {forceDeleteDialogOpen.toString()}, cuadrilla:{" "}
-                {cuadrillaToDelete}, warning: {deleteWarning}
-            </div> */}
-
-            {deleteError && !deleteDialogOpen && !forceDeleteDialogOpen && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex items-center justify-between">
-                    <span>{deleteError}</span>
-                    <button
-                        onClick={() => setDeleteError("")}
-                        className="text-red-700 hover:text-red-900"
+                    <DataSection 
+                        title="Cuadrillas Registradas" 
+                        description={`${cuadrillas.length} cuadrillas en el sistema`}
+                        className="lg:col-span-2"
                     >
-                        ×
-                    </button>
+                        <DataTable
+                            columns={columns}
+                            data={cuadrillas}
+                            searchKey="lote"
+                            searchPlaceholder="Buscar por lote..."
+                            emptyMessage="No hay cuadrillas registradas"
+                        />
+                    </DataSection>
                 </div>
-            )}
-
-            <Card>
-                <CardContent className="p-4">
-                    {loading ? (
-                        <div className="flex justify-center p-10">
-                            <Spinner />
+            ),
+        },
+        {
+            value: "stats",
+            label: "Estadísticas",
+            content: (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <DataSection title="Total Cuadrillas" description="Cuadrillas registradas">
+                        <div className="text-3xl font-bold text-blue-600">
+                            {cuadrillas.length}
                         </div>
-                    ) : (
-                        <>
-                            {/* Debug: Show cuadrillas count */}
-                            <div className="mb-4 text-sm text-gray-600">
-                                Total cuadrillas: {cuadrillas.length} | Total
-                                jornaleros: {jornaleros.length}
-                            </div>
-                            <DataTableCuadrilla
-                                columns={columns}
-                                data={cuadrillas}
-                            />
-                        </>
-                    )}
-                </CardContent>
-            </Card>
+                    </DataSection>
 
-            {/* Modal for viewing cuadrilla jornaleros */}
+                    <DataSection title="Con Líder Asignado" description="Cuadrillas con liderazgo">
+                        <div className="text-3xl font-bold text-green-600">
+                            {cuadrillasConLider}
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-2">
+                            {cuadrillas.length > 0 
+                                ? `${((cuadrillasConLider / cuadrillas.length) * 100).toFixed(1)}% del total`
+                                : "0% del total"
+                            }
+                        </div>
+                    </DataSection>
+
+                    <DataSection title="Jornaleros Asignados" description="Total en cuadrillas">
+                        <div className="text-3xl font-bold text-purple-600">
+                            {jornalerosAsignados}
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-2">
+                            Jornaleros distribuidos en cuadrillas
+                        </div>
+                    </DataSection>
+
+                    <DataSection 
+                        title="Promedio por Cuadrilla" 
+                        description="Jornaleros por cuadrilla"
+                        className="md:col-span-3"
+                    >
+                        <div className="text-3xl font-bold text-orange-600">
+                            {cuadrillas.length > 0 
+                                ? (jornalerosAsignados / cuadrillas.length).toFixed(1) 
+                                : 0
+                            }
+                        </div>
+                        <div className="text-sm text-muted-foreground mt-2">
+                            Promedio de jornaleros por cuadrilla
+                        </div>
+                    </DataSection>
+                </div>
+            ),
+        },
+    ];
+
+    return (
+        <>
+            <PageLayout
+                title="Gestión de Cuadrillas"
+                description="Administre cuadrillas y asigne jornaleros"
+                tabs={tabs}
+                defaultTab="lista"
+                errors={error ? [error] : []}
+                success={successMessage ? [successMessage] : []}
+            >
+                <div />
+            </PageLayout>
+
+            {/* Modals */}
+            <DeleteConfirmationModal
+                open={crud.showDeleteDialog}
+                onOpenChange={crud.setShowDeleteDialog}
+                title="Confirmar Eliminación"
+                itemName={crud.entityToDelete ? `Cuadrilla ${crud.entityToDelete.id}` : undefined}
+                description="¿Estás seguro de que deseas eliminar esta cuadrilla?"
+                warning={deleteWarning}
+                error={deleteError}
+                onConfirm={crud.confirmDelete}
+                loading={crud.isDeleting}
+            />
+
+            <FormModal
+                open={crud.showEditDialog}
+                onOpenChange={crud.setShowEditDialog}
+                title="Editar Cuadrilla"
+                description="Actualice la información de la cuadrilla"
+                maxWidth="max-w-xl"
+            >
+                {crud.selectedEntity && (
+                    <CuadrillaForm
+                        cuadrillaId={crud.selectedEntity.id}
+                        onSuccess={crud.handleFormSuccess}
+                    />
+                )}
+            </FormModal>
+
             <CuadrillaViewModal
                 open={showJornalerosDialog}
                 onOpenChange={setShowJornalerosDialog}
                 cuadrillaId={selectedCuadrillaId ?? undefined}
                 onClose={() => setShowJornalerosDialog(false)}
-            />
-
-            {/* Modal for editing cuadrilla */}
-            <FormModal
-                open={showEditDialog}
-                onOpenChange={setShowEditDialog}
-                title="Editar Cuadrilla"
-                description="Actualice la información de la cuadrilla"
-                maxWidth="max-w-xl"
-            >
-                {selectedCuadrilla && (
-                    <CuadrillaForm
-                        cuadrillaId={selectedCuadrilla.id}
-                        onSuccess={() => {
-                            fetchCuadrillas();
-                            fetchJornaleros();
-                            setShowEditDialog(false);
-                        }}
-                    />
-                )}
-            </FormModal>
-
-            {/* Modal for deleting cuadrilla */}
-            <DeleteConfirmationModal
-                open={deleteDialogOpen}
-                onOpenChange={setDeleteDialogOpen}
-                title="Confirmar Eliminación"
-                description="¿Estás seguro de que deseas eliminar esta cuadrilla?"
-                warning={deleteWarning}
-                error={deleteError}
-                onConfirm={handleDeleteConfirm}
             />
 
             {/* Modal for force deleting cuadrilla */}
@@ -291,6 +249,6 @@ export default function CuadrillasPage() {
                 error={deleteError}
                 onConfirm={handleForceDeleteConfirm}
             />
-        </div>
+        </>
     );
 }

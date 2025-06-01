@@ -27,6 +27,7 @@ pub struct ProduccionResponse {
     pub temporada_id: i32,
     // pub lote: String,
     pub cantidad: Decimal,
+    pub fecha: String,
     // pub variedad_id: Option<i32>,
     pub tipo_empaque_id: Option<i32>,
     pub tipo_uva_id: Option<i32>,
@@ -43,6 +44,7 @@ impl From<produccion::Model> for ProduccionResponse {
             temporada_id: model.temporada_id,
             // lote: model.lote,
             cantidad: model.cantidad,
+            fecha: model.fecha.to_string(),
             created_at: model.created_at.map(|dt| dt.to_string()),
             updated_at: model.updated_at.map(|dt| dt.to_string()),
             // variedad_id: model.variedad_id,
@@ -58,7 +60,7 @@ impl From<produccion::Model> for ProduccionResponse {
 pub async fn post_produccion(
     app_handle: AppHandle,
     data: ProduccionData,
-) -> Result<String, String> {
+) -> Result<ProduccionResponse, String> {
     {
         let mut state = APP_STATE.lock().unwrap();
         state.operation_count += 1;
@@ -96,12 +98,21 @@ pub async fn post_produccion(
         }
     };
 
+    // Obtener el registro recién insertado
+    let nueva_produccion = match Produccion::find_by_id(res.last_insert_id).one(&connection).await {
+        Ok(Some(produccion)) => produccion,
+        Ok(None) => {
+            return Err("No se pudo encontrar la producción recién insertada".to_string());
+        }
+        Err(e) => {
+            println!("Error al obtener la producción insertada: {}", e);
+            return Err(format!("Error al obtener la producción insertada: {}", e));
+        }
+    };
+
     drop(connection);
 
-    Ok(format!(
-        "Produccion insertada con ID: {}",
-        res.last_insert_id
-    ))
+    Ok(ProduccionResponse::from(nueva_produccion))
 }
 
 #[tauri::command]
@@ -177,7 +188,7 @@ pub async fn put_produccion(
     app_handle: AppHandle,
     id: i32,
     data: ProduccionData,
-) -> Result<String, String> {
+) -> Result<ProduccionResponse, String> {
     // Incrementar contador para debug
     {
         let mut state = APP_STATE.lock().unwrap();
@@ -229,7 +240,7 @@ pub async fn put_produccion(
 
     drop(connection);
 
-    Ok(format!("Produccion ID: {} actualizado con éxito", res.id))
+    Ok(ProduccionResponse::from(res))
 }
 
 #[tauri::command]
@@ -259,8 +270,9 @@ pub async fn delete_produccion(app_handle: AppHandle, id: i32) -> Result<String,
 
     drop(connection);
 
-    Ok(format!(
-        "Produccion ID: {} eliminado con éxito",
-        res.rows_affected
-    ))
+    if res.rows_affected > 0 {
+        Ok(format!("Produccion ID: {} eliminado con éxito", id))
+    } else {
+        Err(format!("No se encontró una producción con ID: {}", id))
+    }
 }

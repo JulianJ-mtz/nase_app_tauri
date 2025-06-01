@@ -51,11 +51,6 @@ export const createColumns = ({
         },
     },
     {
-        accessorKey: "produccion_jornalero",
-        header: "Producción",
-        cell: ({ row }) => row.original.produccion_jornalero ?? "N/A",
-    },
-    {
         accessorKey: "errores",
         header: "Errores",
         cell: ({ row }) => row.original.errores ?? 0,
@@ -130,11 +125,6 @@ export const createInactiveColumns = ({
             const fecha = new Date(row.original.fecha_contratacion);
             return fecha.toLocaleDateString();
         },
-    },
-    {
-        accessorKey: "produccion_jornalero",
-        header: "Última Producción",
-        cell: ({ row }) => row.original.produccion_jornalero ?? "N/A",
     },
     {
         accessorKey: "errores",
