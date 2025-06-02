@@ -11,6 +11,8 @@ import {
     Pie,
     Cell,
 } from "recharts";
+import { ExportButton } from "@/components/ui/export-button";
+import { exportClienteTipoUva } from "@/lib/csvExport";
 
 // Colores para los gráficos
 const COLORS = [
@@ -29,90 +31,101 @@ interface ClientGrapeTypeChartProps {
 }
 
 export const ClientGrapeTypeChart = ({ data }: ClientGrapeTypeChartProps) => {
+    const handleExport = async () => {
+        await exportClienteTipoUva(data);
+    };
+
     return (
-        <div className="space-y-6">
-            {data.map((clienteData, index) => (
-                <Card key={index}>
-                    <CardHeader>
-                        <CardTitle>
-                            {clienteData.cliente} - Total: {clienteData.total.toFixed(2)} cajas
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="h-[300px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart
-                                        data={clienteData.tipos}
-                                        margin={{
-                                            top: 20,
-                                            right: 30,
-                                            left: 20,
-                                            bottom: 50,
-                                        }}
-                                    >
-                                        <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis
-                                            dataKey="tipo"
-                                            angle={-45}
-                                            textAnchor="end"
-                                            height={50}
-                                        />
-                                        <YAxis />
-                                        <Tooltip
-                                            formatter={(value) => [
-                                                `${value} cajas`,
-                                                "Producción",
-                                            ]}
-                                        />
-                                        <Bar
-                                            dataKey="cantidad"
-                                            fill={COLORS[(index + 2) % COLORS.length]}
-                                        />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
-                            <div className="h-[300px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <Pie
+        <div className="space-y-4">
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold">Cliente × Tipo de Uva</h2>
+                <ExportButton onClick={handleExport} disabled={data.length === 0} />
+            </div>
+            <div className="space-y-6">
+                {data.map((clienteData, index) => (
+                    <Card key={index}>
+                        <CardHeader>
+                            <CardTitle>
+                                {clienteData.cliente} - Total: {clienteData.total.toFixed(2)} cajas
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="h-[300px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart
                                             data={clienteData.tipos}
-                                            cx="50%"
-                                            cy="50%"
-                                            labelLine={false}
-                                            label={({ tipo, cantidad }) =>
-                                                `${tipo}: ${cantidad.toFixed(0)} cajas`
-                                            }
-                                            outerRadius={100}
-                                            fill="#8884d8"
-                                            dataKey="cantidad"
+                                            margin={{
+                                                top: 20,
+                                                right: 30,
+                                                left: 20,
+                                                bottom: 50,
+                                            }}
                                         >
-                                            {clienteData.tipos.map(
-                                                (entry: any, tipoIndex: number) => (
-                                                    <Cell
-                                                        key={`cell-${tipoIndex}`}
-                                                        fill={
-                                                            COLORS[
-                                                                tipoIndex % COLORS.length
-                                                            ]
-                                                        }
-                                                    />
-                                                )
-                                            )}
-                                        </Pie>
-                                        <Tooltip
-                                            formatter={(value) => [
-                                                `${value} cajas`,
-                                                "Producción",
-                                            ]}
-                                        />
-                                    </PieChart>
-                                </ResponsiveContainer>
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis
+                                                dataKey="tipo"
+                                                angle={-45}
+                                                textAnchor="end"
+                                                height={50}
+                                            />
+                                            <YAxis />
+                                            <Tooltip
+                                                formatter={(value) => [
+                                                    `${value} cajas`,
+                                                    "Producción",
+                                                ]}
+                                            />
+                                            <Bar
+                                                dataKey="cantidad"
+                                                fill={COLORS[(index + 2) % COLORS.length]}
+                                            />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div className="h-[300px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={clienteData.tipos}
+                                                cx="50%"
+                                                cy="50%"
+                                                labelLine={false}
+                                                label={({ tipo, cantidad }) =>
+                                                    `${tipo}: ${cantidad.toFixed(0)} cajas`
+                                                }
+                                                outerRadius={100}
+                                                fill="#8884d8"
+                                                dataKey="cantidad"
+                                            >
+                                                {clienteData.tipos.map(
+                                                    (entry: any, tipoIndex: number) => (
+                                                        <Cell
+                                                            key={`cell-${tipoIndex}`}
+                                                            fill={
+                                                                COLORS[
+                                                                    tipoIndex %
+                                                                        COLORS.length
+                                                                ]
+                                                            }
+                                                        />
+                                                    )
+                                                )}
+                                            </Pie>
+                                            <Tooltip
+                                                formatter={(value) => [
+                                                    `${value} cajas`,
+                                                    "Producción",
+                                                ]}
+                                            />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
                             </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            ))}
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
         </div>
     );
 }; 

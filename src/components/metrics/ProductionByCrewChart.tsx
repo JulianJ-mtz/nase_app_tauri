@@ -9,16 +9,23 @@ import {
     Legend,
     ResponsiveContainer,
 } from "recharts";
+import { ExportButton } from "@/components/ui/export-button";
+import { exportProduccionPorCuadrilla } from "@/lib/csvExport";
 
 interface ProductionByCrewChartProps {
     data: any[];
 }
 
 export const ProductionByCrewChart = ({ data }: ProductionByCrewChartProps) => {
+    const handleExport = async () => {
+        await exportProduccionPorCuadrilla(data);
+    };
+
     return (
         <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Producción por Cuadrilla</CardTitle>
+                <ExportButton onClick={handleExport} disabled={data.length === 0} />
             </CardHeader>
             <CardContent>
                 <div className="h-[400px]">

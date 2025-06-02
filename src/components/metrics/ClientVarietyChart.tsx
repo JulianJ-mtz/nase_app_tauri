@@ -11,6 +11,8 @@ import {
     Pie,
     Cell,
 } from "recharts";
+import { ExportButton } from "@/components/ui/export-button";
+import { exportClienteVariedad } from "@/lib/csvExport";
 
 // Colores para los gráficos
 const COLORS = [
@@ -29,90 +31,101 @@ interface ClientVarietyChartProps {
 }
 
 export const ClientVarietyChart = ({ data }: ClientVarietyChartProps) => {
+    const handleExport = async () => {
+        await exportClienteVariedad(data);
+    };
+
     return (
-        <div className="space-y-6">
-            {data.map((clienteData, index) => (
-                <Card key={index}>
-                    <CardHeader>
-                        <CardTitle>
-                            {clienteData.cliente} - Total: {clienteData.total.toFixed(2)} cajas
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="h-[300px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart
-                                        data={clienteData.variedades}
-                                        margin={{
-                                            top: 20,
-                                            right: 30,
-                                            left: 20,
-                                            bottom: 50,
-                                        }}
-                                    >
-                                        <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis
-                                            dataKey="variedad"
-                                            angle={-45}
-                                            textAnchor="end"
-                                            height={50}
-                                        />
-                                        <YAxis />
-                                        <Tooltip
-                                            formatter={(value) => [
-                                                `${value} cajas`,
-                                                "Producción",
-                                            ]}
-                                        />
-                                        <Bar
-                                            dataKey="cantidad"
-                                            fill={COLORS[index % COLORS.length]}
-                                        />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
-                            <div className="h-[300px]">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <Pie
+        <div className="space-y-4">
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold">Cliente × Variedad</h2>
+                <ExportButton onClick={handleExport} disabled={data.length === 0} />
+            </div>
+            <div className="space-y-6">
+                {data.map((clienteData, index) => (
+                    <Card key={index}>
+                        <CardHeader>
+                            <CardTitle>
+                                {clienteData.cliente} - Total: {clienteData.total.toFixed(2)} cajas
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="h-[300px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart
                                             data={clienteData.variedades}
-                                            cx="50%"
-                                            cy="50%"
-                                            labelLine={false}
-                                            label={({ variedad, cantidad }) =>
-                                                `${variedad}: ${cantidad.toFixed(0)} cajas`
-                                            }
-                                            outerRadius={100}
-                                            fill="#8884d8"
-                                            dataKey="cantidad"
+                                            margin={{
+                                                top: 20,
+                                                right: 30,
+                                                left: 20,
+                                                bottom: 50,
+                                            }}
                                         >
-                                            {clienteData.variedades.map(
-                                                (entry: any, varIndex: number) => (
-                                                    <Cell
-                                                        key={`cell-${varIndex}`}
-                                                        fill={
-                                                            COLORS[
-                                                                varIndex % COLORS.length
-                                                            ]
-                                                        }
-                                                    />
-                                                )
-                                            )}
-                                        </Pie>
-                                        <Tooltip
-                                            formatter={(value) => [
-                                                `${value} cajas`,
-                                                "Producción",
-                                            ]}
-                                        />
-                                    </PieChart>
-                                </ResponsiveContainer>
+                                            <CartesianGrid strokeDasharray="3 3" />
+                                            <XAxis
+                                                dataKey="variedad"
+                                                angle={-45}
+                                                textAnchor="end"
+                                                height={50}
+                                            />
+                                            <YAxis />
+                                            <Tooltip
+                                                formatter={(value) => [
+                                                    `${value} cajas`,
+                                                    "Producción",
+                                                ]}
+                                            />
+                                            <Bar
+                                                dataKey="cantidad"
+                                                fill={COLORS[index % COLORS.length]}
+                                            />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div className="h-[300px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={clienteData.variedades}
+                                                cx="50%"
+                                                cy="50%"
+                                                labelLine={false}
+                                                label={({ variedad, cantidad }) =>
+                                                    `${variedad}: ${cantidad.toFixed(0)} cajas`
+                                                }
+                                                outerRadius={100}
+                                                fill="#8884d8"
+                                                dataKey="cantidad"
+                                            >
+                                                {clienteData.variedades.map(
+                                                    (entry: any, varIndex: number) => (
+                                                        <Cell
+                                                            key={`cell-${varIndex}`}
+                                                            fill={
+                                                                COLORS[
+                                                                    varIndex %
+                                                                        COLORS.length
+                                                                ]
+                                                            }
+                                                        />
+                                                    )
+                                                )}
+                                            </Pie>
+                                            <Tooltip
+                                                formatter={(value) => [
+                                                    `${value} cajas`,
+                                                    "Producción",
+                                                ]}
+                                            />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
                             </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            ))}
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
         </div>
     );
 }; 

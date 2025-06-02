@@ -19,6 +19,8 @@ import { ProductionFilters } from "./ProductionFilters";
 import { ColumnDef } from "@tanstack/react-table";
 import { formatCreatedAt } from "@/lib/utils";
 import { toast } from "sonner";
+import { ExportButton } from "@/components/ui/export-button";
+import { exportProductionRecords } from "@/lib/csvExport";
 
 // Stores
 import { useTemporadaStore } from "@/lib/storeTemporada";
@@ -29,6 +31,8 @@ import { useJornaleroStore } from "@/lib/storeJornalero";
 // APIs
 import { obtenerVariedades, Variedad } from "@/api/variedad_api";
 import { obtenerClientes, Cliente } from "@/api/cliente_api";
+import { obtenerTiposUva, TipoUva } from "@/api/tipo_uva_api";
+import { obtenerTiposEmpaque, TipoEmpaque } from "@/api/tipo_empaque_api";
 
 interface ProductionTabProps {
     onNewTemporada: () => void;
@@ -57,6 +61,8 @@ export function ProductionContent({
     // Estados para datos de catálogo
     const [variedades, setVariedades] = useState<Variedad[]>([]);
     const [clientes, setClientes] = useState<Cliente[]>([]);
+    const [tiposUva, setTiposUva] = useState<TipoUva[]>([]);
+    const [tiposEmpaque, setTiposEmpaque] = useState<TipoEmpaque[]>([]);
     const [catalogLoading, setCatalogLoading] = useState(true);
 
     // Estados para filtros
@@ -71,13 +77,17 @@ export function ProductionContent({
     const loadCatalogData = useCallback(async () => {
         try {
             setCatalogLoading(true);
-            const [varData, clienteData] = await Promise.all([
+            const [varData, clienteData, tiposUvaData, tiposEmpaqueData] = await Promise.all([
                 obtenerVariedades(),
                 obtenerClientes(),
+                obtenerTiposUva(),
+                obtenerTiposEmpaque(),
             ]);
 
             setVariedades(varData);
             setClientes(clienteData);
+            setTiposUva(tiposUvaData);
+            setTiposEmpaque(tiposEmpaqueData);
         } catch (error) {
             console.error("Error cargando datos de catálogo:", error);
             toast.error("No se pudieron cargar los datos de catálogo");
@@ -134,6 +144,24 @@ export function ProductionContent({
             return cliente ? cliente.nombre : "Desconocido";
         },
         [clientes]
+    );
+
+    const getTipoUvaNombre = useCallback(
+        (id: number | null) => {
+            if (!id) return "No asignado";
+            const tipoUva = tiposUva.find((t) => t.id === id);
+            return tipoUva ? tipoUva.nombre : "Desconocido";
+        },
+        [tiposUva]
+    );
+
+    const getTipoEmpaqueNombre = useCallback(
+        (id: number | null) => {
+            if (!id) return "No asignado";
+            const tipoEmpaque = tiposEmpaque.find((t) => t.id === id);
+            return tipoEmpaque ? tipoEmpaque.nombre : "Desconocido";
+        },
+        [tiposEmpaque]
     );
 
     const getDate = useCallback((dateString: string | null) => {
@@ -271,6 +299,65 @@ export function ProductionContent({
             promedioProduccion: Number(promedioProduccion) || 0,
         };
     }, [filteredProducciones]);
+
+    // Handle export to Excel
+    const handleExportToExcel = useCallback(async () => {
+        if (!filteredProducciones || filteredProducciones.length === 0) {
+            toast.error("No hay datos para exportar");
+            return;
+        }
+
+        // Obtener nombres legibles de los filtros
+        const temporadaNombre = selectedTemporadaFilter === "all" 
+            ? "Todas" 
+            : temporadas.find(t => t.id.toString() === selectedTemporadaFilter)?.id?.toString() || "Desconocida";
+        
+        const clienteNombre = selectedClienteFilter === "all"
+            ? "Todos"
+            : clientes.find(c => c.id.toString() === selectedClienteFilter)?.nombre || "Desconocido";
+        
+        const fechaNombre = dateFilter === "all" 
+            ? "Todos"
+            : dateFilter === "week" 
+                ? "Última semana"
+                : dateFilter === "month" 
+                    ? "Último mes"
+                    : "Personalizado";
+
+        const filtrosAplicados = {
+            searchTerm: searchTerm || undefined,
+            temporada: temporadaNombre,
+            cliente: clienteNombre,
+            fecha: fechaNombre
+        };
+
+        await exportProductionRecords(
+            filteredProducciones,
+            getCuadrillaNombre,
+            getVariedadNombre,
+            getClienteNombre,
+            getTipoUvaNombre,
+            getTipoEmpaqueNombre,
+            estadisticas,
+            filtrosAplicados
+        );
+        
+        toast.success("Exportación iniciada. Revisa tu carpeta de descargas.");
+    }, [
+        filteredProducciones,
+        selectedTemporadaFilter,
+        selectedClienteFilter,
+        dateFilter,
+        searchTerm,
+        temporadas,
+        clientes,
+        getCuadrillaNombre,
+        getVariedadNombre,
+        getClienteNombre,
+        getTipoUvaNombre,
+        getTipoEmpaqueNombre,
+        estadisticas
+    ]);
 
     // Columnas para la tabla de producción (memoizadas)
     const produccionColumns: ColumnDef<any>[] = useMemo(
@@ -422,17 +509,28 @@ export function ProductionContent({
 
                 <Card className="lg:col-span-2">
                     <CardHeader>
-                        <CardTitle className="flex items-center justify-between">
-                            <span>Registros de Producción</span>
-                            <Badge variant="outline">
-                                {estadisticas.registrosFiltered} de{" "}
-                                {producciones.length}
-                            </Badge>
-                        </CardTitle>
-                        <CardDescription>
-                            Total filtrado:{" "}
-                            {formatNumber(estadisticas.totalFiltered)} cajas
-                        </CardDescription>
+                        <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                                <CardTitle className="flex items-center gap-2">
+                                    <span>Registros de Producción</span>
+                                    <Badge variant="outline">
+                                        {estadisticas.registrosFiltered} de{" "}
+                                        {producciones.length}
+                                    </Badge>
+                                </CardTitle>
+                                <CardDescription>
+                                    Total filtrado:{" "}
+                                    {formatNumber(estadisticas.totalFiltered)} cajas
+                                </CardDescription>
+                            </div>
+                            <ExportButton 
+                                onClick={handleExportToExcel}
+                                disabled={!filteredProducciones || filteredProducciones.length === 0}
+                                variant="outline"
+                                size="sm"
+                                children="Exportar Excel"
+                            />
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <ProductionFilters

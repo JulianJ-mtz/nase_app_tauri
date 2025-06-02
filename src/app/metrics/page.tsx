@@ -19,6 +19,8 @@ import {
     ClientGrapeTypeChart,
     TrendsChart,
 } from "@/components/metrics";
+import { ExportButton } from "@/components/ui/export-button";
+import { exportAllMetricsAsExcel } from "@/lib/csvExport";
 
 export default function MetricsPage() {
     const {
@@ -41,6 +43,25 @@ export default function MetricsPage() {
         handleTemporadaChange,
     } = useMetrics();
 
+    const handleExportAll = async () => {
+        await exportAllMetricsAsExcel({
+            produccionPorCuadrilla,
+            produccionPorVariedad,
+            produccionPorTipoUva,
+            produccionPorCliente,
+            produccionClienteVariedad,
+            produccionClienteTipoUva,
+            tendenciaProduccion,
+            tendenciaClientes,
+            tendenciaVariedades,
+            tendenciaTipos,
+            clientes,
+            variedades,
+            tiposUva,
+            temporadaSeleccionada: selectedTemporada,
+        });
+    };
+
     if (loading) {
         return (
             <div className="container mx-auto py-10">
@@ -53,7 +74,16 @@ export default function MetricsPage() {
 
     return (
         <div className="container mx-auto py-10">
-            <h1 className="text-3xl font-bold mb-6">Métricas de Producción</h1>
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-3xl font-bold">Métricas de Producción</h1>
+                <ExportButton 
+                    onClick={handleExportAll}
+                    disabled={loading || !selectedTemporada}
+                    variant="default"
+                    size="default"
+                    children="Exportar Excel Completo"
+                />
+            </div>
 
             <div className="mb-6">
                 <div className="flex items-center gap-4">

@@ -9,6 +9,13 @@ import {
     Legend,
     ResponsiveContainer,
 } from "recharts";
+import { ExportButton } from "@/components/ui/export-button";
+import {
+    exportTendenciaProduccion,
+    exportTendenciaClientes,
+    exportTendenciaVariedades,
+    exportTendenciaTipos,
+} from "@/lib/csvExport";
 
 // Colores para los gráficos
 const COLORS = [
@@ -45,8 +52,12 @@ export const TrendsChart = ({
         <div className="space-y-6">
             {/* Tendencia General de Producción */}
             <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Evolución de la Producción Total</CardTitle>
+                    <ExportButton 
+                        onClick={async () => await exportTendenciaProduccion(tendenciaProduccion)} 
+                        disabled={tendenciaProduccion.length === 0} 
+                    />
                 </CardHeader>
                 <CardContent>
                     <div className="h-[400px]">
@@ -87,8 +98,12 @@ export const TrendsChart = ({
 
             {/* Tendencia por Clientes */}
             <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Evolución por Cliente (Apilado)</CardTitle>
+                    <ExportButton 
+                        onClick={async () => await exportTendenciaClientes(tendenciaClientes, clientes)} 
+                        disabled={tendenciaClientes.length === 0} 
+                    />
                 </CardHeader>
                 <CardContent>
                     <div className="h-[400px]">
@@ -134,8 +149,12 @@ export const TrendsChart = ({
 
             {/* Tendencia por Variedades */}
             <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Evolución por Variedad (Apilado)</CardTitle>
+                    <ExportButton 
+                        onClick={async () => await exportTendenciaVariedades(tendenciaVariedades, variedades)} 
+                        disabled={tendenciaVariedades.length === 0} 
+                    />
                 </CardHeader>
                 <CardContent>
                     <div className="h-[400px]">
@@ -181,8 +200,12 @@ export const TrendsChart = ({
 
             {/* Tendencia por Tipos de Uva */}
             <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Evolución por Tipo de Uva (Apilado)</CardTitle>
+                    <ExportButton 
+                        onClick={async () => await exportTendenciaTipos(tendenciaTipos, tiposUva)} 
+                        disabled={tendenciaTipos.length === 0} 
+                    />
                 </CardHeader>
                 <CardContent>
                     <div className="h-[400px]">
