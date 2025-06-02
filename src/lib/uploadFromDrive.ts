@@ -7,11 +7,11 @@ import * as XLSX from "xlsx";
 import { useState, useEffect } from "react";
 
 // Configuración de Google Drive API
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
-const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
-const REDIRECT_URI = "http://127.0.0.1:8080/oauth/callback"; 
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
+const GOOGLE_CLIENT_SECRET = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET || "";
+const REDIRECT_URI = "http://127.0.0.1:8080/oauth/callback";
 const SCOPES = "https://www.googleapis.com/auth/drive.file";
-const APP_NAME = "NASE CLOUD"; 
+const APP_NAME = "NASE CLOUD";
 
 interface GoogleTokenResponse {
     access_token: string;
@@ -49,7 +49,7 @@ class GoogleDriveUploader {
                     this.accessToken = savedAccessToken;
                     this.refreshToken = savedRefreshToken;
                     this.tokenExpiry = parseInt(savedExpiry);
-                    
+
                     console.log('Tokens cargados desde almacenamiento local');
                 }
             }
@@ -65,7 +65,7 @@ class GoogleDriveUploader {
                 localStorage.setItem('gdrive_access_token', this.accessToken);
                 localStorage.setItem('gdrive_refresh_token', this.refreshToken);
                 localStorage.setItem('gdrive_token_expiry', this.tokenExpiry.toString());
-                
+
                 console.log('Tokens guardados en almacenamiento local');
             }
         } catch (error) {
@@ -80,10 +80,10 @@ class GoogleDriveUploader {
                 localStorage.removeItem('gdrive_access_token');
                 localStorage.removeItem('gdrive_refresh_token');
                 localStorage.removeItem('gdrive_token_expiry');
-                
+
                 console.log('Tokens eliminados del almacenamiento local');
             }
-            
+
             // Also clear in-memory tokens
             this.accessToken = null;
             this.refreshToken = null;
@@ -98,11 +98,11 @@ class GoogleDriveUploader {
         if (!this.accessToken || !this.refreshToken) {
             return false;
         }
-        
+
         // Check if token is expired (with 5 minute buffer)
         const now = Date.now();
         const bufferTime = 5 * 60 * 1000; // 5 minutes
-        
+
         return now < (this.tokenExpiry - bufferTime);
     }
 
@@ -166,7 +166,7 @@ class GoogleDriveUploader {
     // Intercambiar código de autorización por tokens
     private async exchangeCodeForTokens(code: string): Promise<GoogleTokenResponse> {
         console.log("Intercambiando código por tokens...");
-        
+
         const response = await fetch("https://oauth2.googleapis.com/token", {
             method: "POST",
             headers: {
@@ -363,7 +363,7 @@ class GoogleDriveUploader {
         }
 
         const result = await response.json();
-        
+
         if (result.files && result.files.length > 0) {
             console.log(`Carpeta "${folderName}" encontrada:`, result.files[0].id);
             return result.files[0].id;
@@ -377,7 +377,7 @@ class GoogleDriveUploader {
         try {
             // First, try to find existing folder
             const existingFolderId = await this.searchFolders(APP_NAME);
-            
+
             if (existingFolderId) {
                 return existingFolderId;
             }
@@ -386,7 +386,7 @@ class GoogleDriveUploader {
             console.log(`Creando carpeta "${APP_NAME}" en Google Drive...`);
             const newFolderId = await this.createFolder(APP_NAME);
             console.log(`Carpeta "${APP_NAME}" creada exitosamente:`, newFolderId);
-            
+
             return newFolderId;
         } catch (error) {
             console.error("Error gestionando carpeta de la app:", error);
@@ -411,7 +411,7 @@ export const useGoogleDriveUpload = () => {
             try {
                 const authenticated = googleDriveUploader.isAuthenticated();
                 setIsAuthenticated(authenticated);
-                
+
                 if (authenticated) {
                     console.log('Usuario ya autenticado con Google Drive');
                 }
@@ -429,14 +429,14 @@ export const useGoogleDriveUpload = () => {
         try {
             setError(null);
             setIsInitializing(true);
-            
+
             const success = await googleDriveUploader.authenticate();
             setIsAuthenticated(success);
-            
+
             if (!success) {
                 setError("Falló la autenticación con Google Drive");
             }
-            
+
             return success;
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Error desconocido";
@@ -457,7 +457,7 @@ export const useGoogleDriveUpload = () => {
     ) => {
         setIsUploading(true);
         setError(null);
-        
+
         try {
             // Check if we need to re-authenticate
             if (!googleDriveUploader.isAuthenticated()) {
@@ -478,12 +478,12 @@ export const useGoogleDriveUpload = () => {
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Error subiendo archivo";
             setError(errorMessage);
-            
+
             // If authentication failed, update state
             if (errorMessage.includes("autenticar") || errorMessage.includes("token")) {
                 setIsAuthenticated(false);
             }
-            
+
             throw error;
         } finally {
             setIsUploading(false);
@@ -496,7 +496,7 @@ export const useGoogleDriveUpload = () => {
     ) => {
         setIsUploading(true);
         setError(null);
-        
+
         try {
             // Simulate progress for the upload process
             if (onProgress) {
@@ -519,12 +519,12 @@ export const useGoogleDriveUpload = () => {
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Error subiendo archivo";
             setError(errorMessage);
-            
+
             // If authentication failed, update state
             if (errorMessage.includes("autenticar") || errorMessage.includes("token")) {
                 setIsAuthenticated(false);
             }
-            
+
             throw error;
         } finally {
             setIsUploading(false);
@@ -560,7 +560,7 @@ export const exportAndUploadCSV = async (
     // Create CSV content
     const csvContent = [
         headers.join(","),
-        ...data.map(row => 
+        ...data.map(row =>
             headers.map(header => {
                 const value = row[header];
                 // Escape commas and quotes in CSV
@@ -573,7 +573,7 @@ export const exportAndUploadCSV = async (
     ].join("\n");
 
     const finalFileName = fileName.endsWith(".csv") ? fileName : `${fileName}.csv`;
-    
+
     // Save locally - convert string to Uint8Array
     const localPath = `exports/${finalFileName}`;
     const csvBuffer = new TextEncoder().encode(csvContent);
@@ -602,13 +602,13 @@ export const exportAndUploadExcel = async (
     folderId?: string
 ): Promise<{ local: string; cloud: DriveUploadResponse }> => {
     // Convert workbook to buffer
-    const excelBuffer = XLSX.write(workbook, { 
-        bookType: "xlsx", 
-        type: "array" 
+    const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array"
     });
 
     const finalFileName = fileName.endsWith(".xlsx") ? fileName : `${fileName}.xlsx`;
-    
+
     // Save locally
     const localPath = `exports/${finalFileName}`;
     await writeFile(localPath, new Uint8Array(excelBuffer), { baseDir: BaseDirectory.Document });

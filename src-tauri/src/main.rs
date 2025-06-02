@@ -169,151 +169,44 @@ async fn get_oauth_code() -> Result<String, String> {
     Err("Timeout: No se recibió el código de autorización en 2 minutos".to_string())
 }
 
+// Función para cargar template HTML
+fn load_html_template(template_name: &str) -> Result<String, String> {
+    match template_name {
+        "oauth_success.html" => Ok(include_str!("templates/oauth_success.html").to_string()),
+        "oauth_error.html" => Ok(include_str!("templates/oauth_error.html").to_string()),
+        _ => Err(format!("Template no encontrado: {}", template_name))
+    }
+}
+
+// Función para reemplazar placeholders en template
+fn replace_template_vars(template: String, vars: HashMap<&str, &str>) -> String {
+    let mut result = template;
+    for (key, value) in vars {
+        result = result.replace(&format!("{{{{{}}}}}", key), value);
+    }
+    result
+}
+
 fn create_success_page() -> String {
-    r#"
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Autorización Completada</title>
-    <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            text-align: center; 
-            padding: 50px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .container {
-            background: white;
-            border-radius: 15px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            max-width: 500px;
-            width: 100%;
-        }
-        .success-icon {
-            font-size: 4rem;
-            color: #28a745;
-            margin-bottom: 20px;
-        }
-        h2 {
-            color: #333;
-            margin-bottom: 15px;
-        }
-        p {
-            color: #666;
-            font-size: 1.1em;
-            line-height: 1.5;
-        }
-        .countdown {
-            font-weight: bold;
-            color: #007bff;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="success-icon">✓</div>
-        <h2>¡Autorización Completada!</h2>
-        <p>Tu cuenta de Google Drive ha sido vinculada exitosamente.</p>
-        <p>Esta ventana se cerrará automáticamente en <span class="countdown" id="countdown">5</span> segundos.</p>
-        <p><small>También puedes cerrar esta ventana manualmente.</small></p>
-    </div>
-    <script>
-        let seconds = 5;
-        const countdownEl = document.getElementById('countdown');
-        
-        const interval = setInterval(() => {
-            seconds--;
-            countdownEl.textContent = seconds;
-            
-            if (seconds <= 0) {
-                clearInterval(interval);
-                window.close();
-            }
-        }, 1000);
-    </script>
-</body>
-</html>
-    "#.to_string()
+    load_html_template("oauth_success.html")
+        .unwrap_or_else(|e| {
+            eprintln!("Error cargando template: {}", e);
+            "<!DOCTYPE html><html><body><h1>Autorización exitosa</h1><p>Puedes cerrar esta ventana.</p></body></html>".to_string()
+        })
 }
 
 fn create_error_page(error: &str) -> String {
-    format!(
-        r#"
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error de Autorización</title>
-    <style>
-        body {{ 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            text-align: center; 
-            padding: 50px;
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }}
-        .container {{
-            background: white;
-            border-radius: 15px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            max-width: 500px;
-            width: 100%;
-        }}
-        .error-icon {{
-            font-size: 4rem;
-            color: #dc3545;
-            margin-bottom: 20px;
-        }}
-        h2 {{
-            color: #333;
-            margin-bottom: 15px;
-        }}
-        p {{
-            color: #666;
-            font-size: 1.1em;
-            line-height: 1.5;
-        }}
-        .error-code {{
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            font-family: monospace;
-            color: #dc3545;
-            margin: 15px 0;
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="error-icon">✗</div>
-        <h2>Error de Autorización</h2>
-        <p>Hubo un problema durante la autorización con Google Drive.</p>
-        <div class="error-code">Error: {}</div>
-        <p>Por favor, cierra esta ventana e intenta de nuevo desde la aplicación.</p>
-        <p><small>Esta ventana se cerrará automáticamente en 10 segundos.</small></p>
-    </div>
-    <script>
-        setTimeout(() => window.close(), 10000);
-    </script>
-</body>
-</html>
-    "#,
-        error
-    )
+    match load_html_template("oauth_error.html") {
+        Ok(template) => {
+            let mut vars = HashMap::new();
+            vars.insert("ERROR_MESSAGE", error);
+            replace_template_vars(template, vars)
+        }
+        Err(e) => {
+            eprintln!("Error cargando template: {}", e);
+            format!("<!DOCTYPE html><html><body><h1>Error de autorización</h1><p>Error: {}</p></body></html>", error)
+        }
+    }
 }
 
 fn main() {
