@@ -17,6 +17,7 @@ import {
     exportAndUploadMetricsExcel,
     exportAndUploadProductionExcel,
 } from "@/lib/uploadFromDrive";
+import { open } from "@tauri-apps/plugin-shell";
 
 interface GoogleDriveUploaderProps {
     data?: any[];
@@ -35,8 +36,13 @@ export default function GoogleDriveUploader({
     type,
     onUploadComplete,
 }: GoogleDriveUploaderProps) {
-    const { isAuthenticated, isUploading, isInitializing, authenticate, uploadWithProgress } =
-        useGoogleDriveUpload();
+    const {
+        isAuthenticated,
+        isUploading,
+        isInitializing,
+        authenticate,
+        uploadWithProgress,
+    } = useGoogleDriveUpload();
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploadResult, setUploadResult] = useState<any>(null);
 
@@ -64,13 +70,22 @@ export default function GoogleDriveUploader({
                     return await exportAndUploadCSV(data, headers, fileName);
                 } else if (type === "excel" && workbook) {
                     // Detectar el tipo de archivo por el nombre
-                    const isMetricsFile = fileName.includes('metricas_completas');
-                    const isProductionFile = fileName.includes('registros_produccion');
-                    
+                    const isMetricsFile =
+                        fileName.includes("metricas_completas");
+                    const isProductionFile = fileName.includes(
+                        "registros_produccion"
+                    );
+
                     if (isMetricsFile) {
-                        return await exportAndUploadMetricsExcel(workbook, fileName);
+                        return await exportAndUploadMetricsExcel(
+                            workbook,
+                            fileName
+                        );
                     } else if (isProductionFile) {
-                        return await exportAndUploadProductionExcel(workbook, fileName);
+                        return await exportAndUploadProductionExcel(
+                            workbook,
+                            fileName
+                        );
                     } else {
                         // Fallback para otros archivos Excel
                         return await exportAndUploadExcel(workbook, fileName);
@@ -89,6 +104,49 @@ export default function GoogleDriveUploader({
         } catch (error) {
             console.error("Error subiendo archivo:", error);
             console.error("Error al subir archivo a Google Drive");
+        }
+    };
+
+    const handleOpenFile = async () => {
+        if (!uploadResult?.cloud?.webViewLink) {
+            console.error("No hay enlace disponible para abrir");
+            return;
+        }
+
+        try {
+            await open(uploadResult.cloud.webViewLink);
+        } catch (tauriError) {
+            try {
+                if (typeof window !== "undefined") {
+                    const opened = window.open(
+                        uploadResult.cloud.webViewLink,
+                        "_blank",
+                        "noopener,noreferrer"
+                    );
+                    if (!opened) {
+                        throw new Error("window.open fue bloqueado");
+                    }
+                } else {
+                    throw new Error("window no está disponible");
+                }
+            } catch (windowError) {
+                try {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText(
+                            uploadResult.cloud.webViewLink
+                        );
+                        alert(
+                            "El enlace ha sido copiado al portapapeles. Pégalo en tu navegador para abrir el archivo."
+                        );
+                    } else {
+                        throw new Error("Clipboard API no disponible");
+                    }
+                } catch (clipboardError) {
+                    alert(
+                        `No se pudo abrir el archivo automáticamente. Copia este enlace en tu navegador:\n\n${uploadResult.cloud.webViewLink}`
+                    );
+                }
+            }
         }
     };
 
@@ -127,9 +185,9 @@ export default function GoogleDriveUploader({
                         No conectado
                     </Badge>
                 </div>
-                
-                <Button 
-                    onClick={handleAuthenticate} 
+
+                <Button
+                    onClick={handleAuthenticate}
                     className="w-full"
                     variant="outline"
                 >
@@ -148,7 +206,9 @@ export default function GoogleDriveUploader({
                 <div className="flex items-center gap-3">
                     <Cloud className="h-5 w-5 text-green-600" />
                     <div>
-                        <p className="text-sm font-medium text-green-900">Google Drive</p>
+                        <p className="text-sm font-medium text-green-900">
+                            Google Drive
+                        </p>
                         <p className="text-xs text-green-700">
                             Listo para subir archivo
                         </p>
@@ -185,27 +245,25 @@ export default function GoogleDriveUploader({
                             ¡Archivo subido exitosamente!
                         </span>
                     </div>
-                    
+
                     {uploadResult.cloud && (
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-green-700">
-                                {uploadResult.cloud.name}
-                            </span>
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                className="gap-1 h-8"
-                                asChild
-                            >
-                                <a
-                                    href={uploadResult.cloud.webViewLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    <ExternalLink className="h-3 w-3" />
-                                    Abrir
-                                </a>
-                            </Button>
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-green-700">
+                                    {uploadResult.cloud.name}
+                                </span>
+                                <div className="flex gap-2">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="gap-1 h-8"
+                                        onClick={handleOpenFile}
+                                    >
+                                        <ExternalLink className="h-3 w-3" />
+                                        Abrir
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>

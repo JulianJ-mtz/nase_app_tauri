@@ -42,7 +42,8 @@
         }
       ]
     },
-    "shell:default"
+    "shell:default",
+    "shell:allow-open"
   ],
   "protocol": {
     "tauri": {

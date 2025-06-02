@@ -1,70 +1,56 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Autorización Completada</title>
-    <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            text-align: center; 
-            padding: 50px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .container {
-            background: white;
-            border-radius: 15px;
-            padding: 40px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            max-width: 500px;
-            width: 100%;
-        }
-        .success-icon {
-            font-size: 4rem;
-            color: #28a745;
-            margin-bottom: 20px;
-        }
-        h2 {
-            color: #333;
-            margin-bottom: 15px;
-        }
-        p {
-            color: #666;
-            font-size: 1.1em;
-            line-height: 1.5;
-        }
-        .countdown {
-            font-weight: bold;
-            color: #007bff;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="success-icon">✓</div>
-        <h2>¡Autorización Completada!</h2>
-        <p>Tu cuenta de Google Drive ha sido vinculada exitosamente.</p>
-        <p>Esta ventana se cerrará automáticamente en <span class="countdown" id="countdown">5</span> segundos.</p>
-        <p><small>También puedes cerrar esta ventana manualmente.</small></p>
-    </div>
-    <script>
-        let seconds = 5;
-        const countdownEl = document.getElementById('countdown');
-        
-        const interval = setInterval(() => {
-            seconds--;
-            countdownEl.textContent = seconds;
-            
-            if (seconds <= 0) {
-                clearInterval(interval);
-                window.close();
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Autorización Completada</title>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                    Roboto, sans-serif;
+                text-align: center;
+                padding: 50px;
+                background: linear-gradient(135deg, #66eaa8 0%, #4ba26f 100%);
+                margin: 0;
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
-        }, 1000);
-    </script>
-</body>
-</html> 
+            .container {
+                background: white;
+                border-radius: 15px;
+                padding: 40px;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+                max-width: 500px;
+                width: 100%;
+            }
+            .success-icon {
+                font-size: 4rem;
+                color: #28a745;
+                margin-bottom: 20px;
+            }
+            h2 {
+                color: #333;
+                margin-bottom: 15px;
+            }
+            p {
+                color: #666;
+                font-size: 1.1em;
+                line-height: 1.5;
+            }
+            .countdown {
+                font-weight: bold;
+                color: #007bff;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="success-icon">✓</div>
+            <h2>¡Autorización Completada!</h2>
+            <p>Tu cuenta de Google Drive ha sido vinculada exitosamente.</p>
+            <p><small>Puedes cerrar esta ventana</small></p>
+        </div>
+    </body>
+</html>

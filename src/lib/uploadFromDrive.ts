@@ -289,7 +289,7 @@ class GoogleDriveUploader {
         form.append("file", fileBlob);
 
         const response = await fetch(
-            "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+            "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink,webContentLink",
             {
                 method: "POST",
                 headers: {
@@ -305,7 +305,8 @@ class GoogleDriveUploader {
             throw new Error(`Error subiendo archivo: ${response.statusText}`);
         }
 
-        return response.json();
+        const result = await response.json();
+        return result;
     }
 
     async createFolder(folderName: string, parentFolderId?: string): Promise<string> {
