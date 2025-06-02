@@ -572,8 +572,8 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
                                 <Input
                                     id="cantidad"
                                     type="number"
-                                    step="0.01"
-                                    min="0.01"
+                                    step="1"
+                                    min="1"
                                     value={formData.cantidad ?? ""}
                                     onChange={(e) =>
                                         handleFieldChange(
