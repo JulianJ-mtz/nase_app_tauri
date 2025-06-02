@@ -275,82 +275,84 @@ export function CuadrillaJornaleros({
                             )
                         </h3>
                         {jornalerosEnCuadrilla.length > 0 ? (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>ID</TableHead>
-                                        <TableHead>Nombre</TableHead>
-                                        <TableHead>Edad</TableHead>
-                                        <TableHead>Estado</TableHead>
-                                        <TableHead>Rol</TableHead>
-                                        <TableHead>Acciones</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {jornalerosEnCuadrilla.map((jornalero) => {
-                                        const esLider = isLiderDeEstaCuadrilla(
-                                            jornalero.id
-                                        );
-                                        return (
-                                            <TableRow
-                                                key={`assigned-${jornalero.id}`}
-                                            >
-                                                <TableCell>
-                                                    {jornalero.id}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex items-center gap-2">
-                                                        {jornalero.nombre}
-                                                        {esLider && (
-                                                            <Badge
-                                                                variant="secondary"
-                                                                className="flex items-center gap-1"
-                                                            >
-                                                                <Crown className="h-3 w-3" />
-                                                                Líder
-                                                            </Badge>
-                                                        )}
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    {jornalero.edad}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {jornalero.estado}
-                                                </TableCell>
-                                                <TableCell>
-                                                    {esLider
-                                                        ? "Líder"
-                                                        : "Miembro"}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Button
-                                                        size="icon"
-                                                        variant="ghost"
-                                                        onClick={() =>
-                                                            handleRemoveJornalero(
-                                                                jornalero
-                                                            )
-                                                        }
-                                                        disabled={esLider || isUpdatingJornalero === jornalero.id}
-                                                        title={
-                                                            esLider
-                                                                ? "No se puede remover al líder"
-                                                                : "Remover de la cuadrilla"
-                                                        }
-                                                    >
-                                                        {isUpdatingJornalero === jornalero.id ? (
-                                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                                        ) : (
-                                                            <UserMinus className="h-4 w-4" />
-                                                        )}
-                                                    </Button>
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
+                            <div className="max-h-64 overflow-y-auto border rounded-md">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead>ID</TableHead>
+                                            <TableHead>Nombre</TableHead>
+                                            <TableHead>Edad</TableHead>
+                                            <TableHead>Estado</TableHead>
+                                            <TableHead>Rol</TableHead>
+                                            <TableHead>Acciones</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {jornalerosEnCuadrilla.map((jornalero) => {
+                                            const esLider = isLiderDeEstaCuadrilla(
+                                                jornalero.id
+                                            );
+                                            return (
+                                                <TableRow
+                                                    key={`assigned-${jornalero.id}`}
+                                                >
+                                                    <TableCell>
+                                                        {jornalero.id}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-2">
+                                                            {jornalero.nombre}
+                                                            {esLider && (
+                                                                <Badge
+                                                                    variant="secondary"
+                                                                    className="flex items-center gap-1"
+                                                                >
+                                                                    <Crown className="h-3 w-3" />
+                                                                    Líder
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {jornalero.edad}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {jornalero.estado}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {esLider
+                                                            ? "Líder"
+                                                            : "Miembro"}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Button
+                                                            size="icon"
+                                                            variant="ghost"
+                                                            onClick={() =>
+                                                                handleRemoveJornalero(
+                                                                    jornalero
+                                                                )
+                                                            }
+                                                            disabled={esLider || isUpdatingJornalero === jornalero.id}
+                                                            title={
+                                                                esLider
+                                                                    ? "No se puede remover al líder"
+                                                                    : "Remover de la cuadrilla"
+                                                            }
+                                                        >
+                                                            {isUpdatingJornalero === jornalero.id ? (
+                                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                            ) : (
+                                                                <UserMinus className="h-4 w-4" />
+                                                            )}
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            );
+                                        })}
+                                    </TableBody>
+                                </Table>
+                            </div>
                         ) : (
                             <p className="text-muted-foreground my-4">
                                 No hay jornaleros asignados a esta cuadrilla.
@@ -368,66 +370,68 @@ export function CuadrillaJornaleros({
                                     aparecen aquí hasta que se asigne otro líder
                                     a su cuadrilla.
                                 </p>
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>ID</TableHead>
-                                            <TableHead>Nombre</TableHead>
-                                            <TableHead>Edad</TableHead>
-                                            <TableHead>Estado</TableHead>
-                                            <TableHead>
-                                                Cuadrilla Actual
-                                            </TableHead>
-                                            <TableHead>Acciones</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {jornalerosDisponibles.map(
-                                            (jornalero) => (
-                                                <TableRow
-                                                    key={`available-${jornalero.id}`}
-                                                >
-                                                    <TableCell>
-                                                        {jornalero.id}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {jornalero.nombre}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {jornalero.edad}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {jornalero.estado}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {jornalero.cuadrilla_id
-                                                            ? `Cuadrilla ${jornalero.cuadrilla_id}`
-                                                            : "Sin asignar"}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Button
-                                                            size="icon"
-                                                            variant="ghost"
-                                                            onClick={() =>
-                                                                handleAddJornalero(
-                                                                    jornalero
-                                                                )
-                                                            }
-                                                            disabled={isUpdatingJornalero === jornalero.id}
-                                                            title="Agregar a esta cuadrilla"
-                                                        >
-                                                            {isUpdatingJornalero === jornalero.id ? (
-                                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                                            ) : (
-                                                                <UserPlus className="h-4 w-4" />
-                                                            )}
-                                                        </Button>
-                                                    </TableCell>
-                                                </TableRow>
-                                            )
-                                        )}
-                                    </TableBody>
-                                </Table>
+                                <div className="max-h-64 overflow-y-auto border rounded-md">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>ID</TableHead>
+                                                <TableHead>Nombre</TableHead>
+                                                <TableHead>Edad</TableHead>
+                                                <TableHead>Estado</TableHead>
+                                                <TableHead>
+                                                    Cuadrilla Actual
+                                                </TableHead>
+                                                <TableHead>Acciones</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {jornalerosDisponibles.map(
+                                                (jornalero) => (
+                                                    <TableRow
+                                                        key={`available-${jornalero.id}`}
+                                                    >
+                                                        <TableCell>
+                                                            {jornalero.id}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {jornalero.nombre}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {jornalero.edad}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {jornalero.estado}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {jornalero.cuadrilla_id
+                                                                ? `Cuadrilla ${jornalero.cuadrilla_id}`
+                                                                : "Sin asignar"}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Button
+                                                                size="icon"
+                                                                variant="ghost"
+                                                                onClick={() =>
+                                                                    handleAddJornalero(
+                                                                        jornalero
+                                                                    )
+                                                                }
+                                                                disabled={isUpdatingJornalero === jornalero.id}
+                                                                title="Agregar a esta cuadrilla"
+                                                            >
+                                                                {isUpdatingJornalero === jornalero.id ? (
+                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                ) : (
+                                                                    <UserPlus className="h-4 w-4" />
+                                                                )}
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </div>
                             </div>
                         ) : (
                             <p className="text-muted-foreground my-4">

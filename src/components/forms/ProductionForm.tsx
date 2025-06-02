@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
     Card,
     CardFooter,
@@ -24,6 +24,7 @@ import { Plus, Loader2, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Stores
 import { useTemporadaStore } from "@/lib/storeTemporada";
@@ -58,6 +59,10 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
     const { createProduccion } = useProduccionStore();
     const { jornaleros, fetchJornaleros } = useJornaleroStore();
 
+    // Refs to prevent dependency issues
+    const temporadasRef = useRef(temporadas);
+    temporadasRef.current = temporadas;
+
     // Estados para datos de catálogo
     const [variedades, setVariedades] = useState<Variedad[]>([]);
     const [tiposUva, setTiposUva] = useState<TipoUva[]>([]);
@@ -69,6 +74,7 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
     const [formData, setFormData] = useState<FormData>({});
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const [loading, setLoading] = useState(false);
+    const [keepDataAfterSubmit, setKeepDataAfterSubmit] = useState(false);
 
     // Cargar datos del catálogo
     const loadCatalogData = useCallback(async () => {
@@ -102,18 +108,20 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
         loadCatalogData();
     }, [fetchTemporadas, fetchCuadrillas, fetchJornaleros, loadCatalogData]);
 
-    // Seleccionar temporada activa por defecto
+    // Seleccionar temporada activa por defecto - Fixed to prevent infinite loop
     useEffect(() => {
-        const activeTemporada = temporadas.find(
-            (t) => !t.fecha_final || new Date(t.fecha_final) >= new Date()
-        );
-        if (activeTemporada && !formData.temporadaId) {
-            setFormData((prev) => ({
-                ...prev,
-                temporadaId: activeTemporada.id,
-            }));
+        if (temporadas.length > 0 && !formData.temporadaId) {
+            const activeTemporada = temporadas.find(
+                (t) => !t.fecha_final || new Date(t.fecha_final) >= new Date()
+            );
+            if (activeTemporada) {
+                setFormData((prev) => ({
+                    ...prev,
+                    temporadaId: activeTemporada.id,
+                }));
+            }
         }
-    }, [temporadas, formData.temporadaId]);
+    }, [temporadas.length]); // Only depend on length, not the entire array
 
     // Helper functions
     const getCuadrillaNombre = useCallback(
@@ -155,7 +163,7 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
         return date.toLocaleDateString();
     }, []);
 
-    // Validación
+    // Validación - Fixed to prevent infinite loops
     const validateForm = useCallback(() => {
         const errors: Record<string, string> = {};
 
@@ -174,12 +182,19 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
         return Object.keys(errors).length === 0;
     }, [formData]);
 
-    // Validación en tiempo real
+    // Validación en tiempo real - Fixed to prevent infinite loops
+    const [hasErrors, setHasErrors] = useState(false);
+
     useEffect(() => {
-        if (Object.keys(formErrors).length > 0) {
+        if (hasErrors) {
             validateForm();
         }
-    }, [formData, formErrors, validateForm]);
+    }, [formData, hasErrors, validateForm]);
+
+    // Update hasErrors when formErrors change
+    useEffect(() => {
+        setHasErrors(Object.keys(formErrors).length > 0);
+    }, [formErrors]);
 
     // Handlers
     const handleFieldChange = (
@@ -189,21 +204,32 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
         setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
-    const resetForm = useCallback(() => {
-        const activeTemporada = temporadas.find(
-            (t) => !t.fecha_final || new Date(t.fecha_final) >= new Date()
-        );
+    // Fixed resetForm to prevent infinite loops and show placeholders
+    const resetForm = useCallback(
+        (partial: boolean = false) => {
+            if (partial && keepDataAfterSubmit) {
+                // Solo resetear la cantidad y limpiar errores (mantener cuadrilla, temporada, tipos, cliente)
+                setFormData((prev) => ({
+                    ...prev,
+                    cantidad: undefined, // Solo limpiar la cantidad para facilitar registro rápido
+                }));
+            } else {
+                // Reset completo - limpiar todos los campos para mostrar placeholders
+                setFormData({
+                    temporadaId: undefined, // Reseteado para mostrar placeholder "Seleccionar temporada"
+                    cuadrillaId: undefined, // Reseteado para mostrar placeholder "Seleccionar cuadrilla"
+                    tipoUvaId: undefined, // Reseteado para mostrar placeholder "Seleccionar tipo de uva"
+                    tipoEmpaqueId: undefined, // Reseteado para mostrar placeholder "Seleccionar tipo de empaque"
+                    clienteId: undefined, // Reseteado para mostrar placeholder "Seleccionar cliente"
+                    cantidad: undefined, // Reseteado para limpiar el input
+                });
+            }
 
-        setFormData({
-            temporadaId: activeTemporada?.id,
-            cuadrillaId: undefined,
-            tipoUvaId: undefined,
-            tipoEmpaqueId: undefined,
-            clienteId: undefined,
-            cantidad: undefined,
-        });
-        setFormErrors({});
-    }, [temporadas]);
+            setFormErrors({});
+            setHasErrors(false);
+        },
+        [keepDataAfterSubmit]
+    );
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -227,7 +253,9 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
             setLoading(true);
             await createProduccion(produccionData);
             toast.success("✅ Producción registrada correctamente");
-            resetForm();
+
+            // Reset form based on user preference
+            resetForm(keepDataAfterSubmit);
 
             if (onSuccess) {
                 onSuccess();
@@ -247,7 +275,7 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
             const variedad = getVariedadNombre(cuadrilla.id);
             return (
                 <div className="flex flex-col">
-                    <span>{nombreCuadrilla}</span>
+                    <span>Lote: {nombreCuadrilla}</span>
                     <span className="text-xs text-muted-foreground">
                         Variedad: {variedad}
                     </span>
@@ -284,9 +312,16 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
     return (
         <Card className="w-full max-w-2xl shadow-md">
             <CardHeader className="pb-3 border-b">
-                <div className="flex items-center gap-2">
-                    <Package className="h-5 w-5 text-primary" />
-                    <CardTitle>Nuevo Registro de Producción</CardTitle>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Package className="h-5 w-5 text-primary" />
+                        <CardTitle>Nuevo Registro de Producción</CardTitle>
+                    </div>
+                    {keepDataAfterSubmit && (
+                        <Badge variant="secondary" className="text-xs">
+                            Modo rápido activo
+                        </Badge>
+                    )}
                 </div>
                 <CardDescription>
                     Registra la producción de una cuadrilla con todos los
@@ -311,11 +346,11 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
                                 Cuadrilla *
                             </Label>
                             <Select
-                                value={formData.cuadrillaId?.toString()}
+                                value={formData.cuadrillaId?.toString() || ""}
                                 onValueChange={(value) =>
                                     handleFieldChange(
                                         "cuadrillaId",
-                                        Number(value)
+                                        value ? Number(value) : undefined
                                     )
                                 }
                             >
@@ -355,11 +390,11 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
                                 Temporada *
                             </Label>
                             <Select
-                                value={formData.temporadaId?.toString()}
+                                value={formData.temporadaId?.toString() || ""}
                                 onValueChange={(value) =>
                                     handleFieldChange(
                                         "temporadaId",
-                                        Number(value)
+                                        value ? Number(value) : undefined
                                     )
                                 }
                             >
@@ -428,11 +463,11 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
                                 Tipo de Uva *
                             </Label>
                             <Select
-                                value={formData.tipoUvaId?.toString()}
+                                value={formData.tipoUvaId?.toString() || ""}
                                 onValueChange={(value) =>
                                     handleFieldChange(
                                         "tipoUvaId",
-                                        Number(value)
+                                        value ? Number(value) : undefined
                                     )
                                 }
                             >
@@ -472,11 +507,11 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
                                 Tipo de Empaque *
                             </Label>
                             <Select
-                                value={formData.tipoEmpaqueId?.toString()}
+                                value={formData.tipoEmpaqueId?.toString() || ""}
                                 onValueChange={(value) =>
                                     handleFieldChange(
                                         "tipoEmpaqueId",
-                                        Number(value)
+                                        value ? Number(value) : undefined
                                     )
                                 }
                             >
@@ -526,11 +561,11 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
                                     Cliente *
                                 </Label>
                                 <Select
-                                    value={formData.clienteId?.toString()}
+                                    value={formData.clienteId?.toString() || ""}
                                     onValueChange={(value) =>
                                         handleFieldChange(
                                             "clienteId",
-                                            Number(value)
+                                            value ? Number(value) : undefined
                                         )
                                     }
                                 >
@@ -602,19 +637,55 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
                 </CardContent>
 
                 <CardFooter className="border-t pt-4 mt-4">
-                    <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? (
-                            <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Registrando...
-                            </>
-                        ) : (
-                            <>
-                                <Plus className="h-4 w-4 mr-2" />
-                                Registrar Producción
-                            </>
-                        )}
-                    </Button>
+                    <div className="w-full space-y-4">
+                        {/* Checkbox para mantener datos */}
+                        <div className="flex items-center space-x-2">
+                            <Checkbox
+                                id="keepData"
+                                checked={keepDataAfterSubmit}
+                                onCheckedChange={(checked) =>
+                                    setKeepDataAfterSubmit(checked === true)
+                                }
+                            />
+                            <Label
+                                htmlFor="keepData"
+                                className="text-sm text-muted-foreground cursor-pointer"
+                            >
+                                Mantener datos para siguiente registro (solo se
+                                limpiará la cantidad)
+                            </Label>
+                        </div>
+
+                        <div className="flex gap-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => resetForm(false)}
+                                className="flex-1"
+                                disabled={loading}
+                            >
+                                Limpiar Formulario
+                            </Button>
+
+                            <Button
+                                type="submit"
+                                className="flex-1"
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Registrando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Registrar Producción
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    </div>
                 </CardFooter>
             </form>
         </Card>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
     Card,
     CardContent,
@@ -49,6 +49,10 @@ export function ProductionContent({
         deleteProduccion,
     } = useProduccionStore();
     const { jornaleros, fetchJornaleros } = useJornaleroStore();
+
+    // Ref to store fetchProducciones function to avoid dependency issues
+    const fetchProduccionesRef = useRef(fetchProducciones);
+    fetchProduccionesRef.current = fetchProducciones;
 
     // Estados para datos de catálogo
     const [variedades, setVariedades] = useState<Variedad[]>([]);
@@ -163,13 +167,14 @@ export function ProductionContent({
         [deleteProduccion, onSuccess]
     );
 
-    // Handle production success
+    // Handle production success - Fixed to avoid infinite loop
     const handleProductionSuccess = useCallback(() => {
-        fetchProducciones(); // Reload data
+        // Use ref to avoid dependency issues and infinite loops
+        fetchProduccionesRef.current();
         if (onSuccess) {
             onSuccess();
         }
-    }, [fetchProducciones, onSuccess]);
+    }, [onSuccess]); // Only onSuccess as dependency
 
     // Datos filtrados y estadísticas (memoizados)
     const filteredProducciones = useMemo(() => {

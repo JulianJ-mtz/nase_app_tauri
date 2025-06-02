@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { useTemporadaStore } from "@/lib/storeTemporada";
@@ -13,10 +13,14 @@ export default function Record() {
     const { temporadas } = useTemporadaStore();
     const { fetchProducciones } = useProduccionStore();
 
-    // Función para manejar el éxito en producción
+    // Ref to store fetchProducciones function to avoid dependency issues
+    const fetchProduccionesRef = useRef(fetchProducciones);
+    fetchProduccionesRef.current = fetchProducciones;
+
+    // Función para manejar el éxito en producción - Fixed to avoid infinite loop
     const handleProductionSuccess = useCallback(() => {
-        fetchProducciones(); // Recargar datos de producción
-    }, [fetchProducciones]);
+        fetchProduccionesRef.current(); // Use ref to avoid dependency issues
+    }, []); // No dependencies needed
 
     // Get active temporadas
     const activeTemporadas = temporadas.filter(

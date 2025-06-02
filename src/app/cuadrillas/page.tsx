@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { CuadrillaForm } from "@/components/forms/CuadrillaForm";
 import { createColumns } from "./columsTableCuadrilla";
 import { DataTable } from "@/components/ui/data-table";
@@ -16,6 +16,7 @@ import { useCrudOperations } from "@/hooks/useCrudOperations";
 import { Cuadrilla } from "@/api/cuadrilla_api";
 import { useTemporadaStore } from "@/lib/storeTemporada";
 import { obtenerVariedades, Variedad } from "@/api/variedad_api";
+import { CuadrillaFilters } from "./CuadrillaFilters";
 
 export default function CuadrillasPage() {
     const {
@@ -35,6 +36,13 @@ export default function CuadrillasPage() {
         number | null
     >(null);
     const [showJornalerosDialog, setShowJornalerosDialog] = useState(false);
+
+    // Estados para filtros
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedTemporadaFilter, setSelectedTemporadaFilter] =
+        useState<string>("all");
+    const [selectedVariedadFilter, setSelectedVariedadFilter] =
+        useState<string>("all");
 
     // Estados para los diálogos de eliminación
     const [forceDeleteDialogOpen, setForceDeleteDialogOpen] = useState(false);
@@ -56,7 +64,7 @@ export default function CuadrillasPage() {
             setDeleteWarning("");
             setDeleteError("");
             setRequiresForceDelete(false);
-            
+
             try {
                 const warning = await getDeleteWarning(id);
                 setDeleteWarning(warning);
@@ -78,6 +86,76 @@ export default function CuadrillasPage() {
     useEffect(() => {
         crud.handleFormSuccess();
     }, []);
+
+    // Helper functions para filtrado
+    const getLiderName = useCallback(
+        (liderId: number | null) => {
+            if (!liderId) return "";
+            const lider = jornaleros.find((j) => j.id === liderId);
+            return lider ? lider.nombre : "";
+        },
+        [jornaleros]
+    );
+
+    const getVariedadNombre = useCallback(
+        (cuadrilla: Cuadrilla) => {
+            if (!cuadrilla || !cuadrilla.variedad_id) return "";
+            const variedad = variedades.find(
+                (v) => v.id === cuadrilla.variedad_id
+            );
+            return variedad ? variedad.nombre : "";
+        },
+        [variedades]
+    );
+
+    // Datos filtrados con useMemo
+    const filteredCuadrillas = useMemo(() => {
+        if (!cuadrillas || cuadrillas.length === 0) return [];
+
+        return cuadrillas.filter((cuadrilla) => {
+            const liderNombre = getLiderName(
+                cuadrilla.lider_cuadrilla_id
+            ).toLowerCase();
+            const variedadNombre = getVariedadNombre(cuadrilla).toLowerCase();
+            const lote = cuadrilla.lote?.toLowerCase() || "";
+            const cuadrillaId = cuadrilla.id.toString();
+
+            const matchesSearch =
+                searchTerm === "" ||
+                lote.includes(searchTerm.toLowerCase()) ||
+                liderNombre.includes(searchTerm.toLowerCase()) ||
+                variedadNombre.includes(searchTerm.toLowerCase()) ||
+                cuadrillaId.includes(searchTerm);
+
+            const matchesTemporada =
+                selectedTemporadaFilter === "all" ||
+                cuadrilla.temporada_id?.toString() === selectedTemporadaFilter;
+
+            const matchesVariedad =
+                selectedVariedadFilter === "all" ||
+                (selectedVariedadFilter === "sin_variedad" &&
+                    !cuadrilla.variedad_id) ||
+                cuadrilla.variedad_id?.toString() === selectedVariedadFilter;
+
+            const today = new Date();
+
+            let matchesDate = true;
+
+            return (
+                matchesSearch &&
+                matchesTemporada &&
+                matchesVariedad &&
+                matchesDate
+            );
+        });
+    }, [
+        cuadrillas,
+        searchTerm,
+        selectedTemporadaFilter,
+        selectedVariedadFilter,
+        getLiderName,
+        getVariedadNombre,
+    ]);
 
     const handleViewJornaleros = (cuadrillaId: number) => {
         setSelectedCuadrillaId(cuadrillaId);
@@ -146,7 +224,7 @@ export default function CuadrillasPage() {
     const jornalerosAsignados = jornaleros.filter(
         (j) => j.cuadrilla_id !== null
     ).length;
-    const cuadrillasConLider = cuadrillas.filter(
+    const cuadrillasConLider = filteredCuadrillas.filter(
         (c) => c.lider_cuadrilla_id !== null
     ).length;
 
@@ -166,15 +244,25 @@ export default function CuadrillasPage() {
 
                     <DataSection
                         title="Cuadrillas Registradas"
-                        description={`${cuadrillas.length} cuadrillas en el sistema`}
+                        description={`${filteredCuadrillas.length} de ${cuadrillas.length} cuadrillas`}
                         className="lg:col-span-2"
                     >
+                        <CuadrillaFilters
+                            searchTerm={searchTerm}
+                            selectedTemporadaFilter={selectedTemporadaFilter}
+                            selectedVariedadFilter={selectedVariedadFilter}
+                            temporadas={temporadas}
+                            variedades={variedades}
+                            onSearchChange={setSearchTerm}
+                            onTemporadaFilterChange={setSelectedTemporadaFilter}
+                            onVariedadFilterChange={setSelectedVariedadFilter}
+                        />
+
                         <DataTable
                             columns={columns}
-                            data={cuadrillas}
-                            searchKey="lote"
-                            searchPlaceholder="Buscar por lote..."
+                            data={filteredCuadrillas}
                             emptyMessage="No hay cuadrillas registradas"
+                            showSearch={false}
                         />
                     </DataSection>
                 </div>
@@ -202,11 +290,12 @@ export default function CuadrillasPage() {
                             {cuadrillasConLider}
                         </div>
                         <div className="text-sm text-muted-foreground mt-2">
-                            {cuadrillas.length > 0
+                            {filteredCuadrillas.length > 0
                                 ? `${(
-                                      (cuadrillasConLider / cuadrillas.length) *
+                                      (cuadrillasConLider /
+                                          filteredCuadrillas.length) *
                                       100
-                                  ).toFixed(1)}% del total`
+                                  ).toFixed(1)}% del total filtrado`
                                 : "0% del total"}
                         </div>
                     </DataSection>
@@ -229,14 +318,15 @@ export default function CuadrillasPage() {
                         className="md:col-span-3"
                     >
                         <div className="text-3xl font-bold text-orange-600">
-                            {cuadrillas.length > 0
+                            {filteredCuadrillas.length > 0
                                 ? (
-                                      jornalerosAsignados / cuadrillas.length
+                                      jornalerosAsignados /
+                                      filteredCuadrillas.length
                                   ).toFixed(1)
                                 : 0}
                         </div>
                         <div className="text-sm text-muted-foreground mt-2">
-                            Promedio de jornaleros por cuadrilla
+                            Promedio de jornaleros por cuadrilla filtrada
                         </div>
                     </DataSection>
                 </div>
