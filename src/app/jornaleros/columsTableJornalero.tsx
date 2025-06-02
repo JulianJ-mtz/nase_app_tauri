@@ -23,8 +23,8 @@ export const createColumns = ({
 }: ColumnHandlers): ColumnDef<Jornalero>[] => [
     {
         accessorKey: "id",
-        header: "ID",
-        cell: ({ row }) => <Badge variant="outline">#{row.original.id}</Badge>,
+         header: () => <div className="text-center">ID</div>,
+        cell: ({ row }) => <div className="flex items-center justify-center"><Badge variant="outline">#{row.original.id}</Badge></div>,
     },
     {
         accessorKey: "nombre",

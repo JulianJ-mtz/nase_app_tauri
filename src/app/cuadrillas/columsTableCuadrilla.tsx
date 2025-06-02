@@ -10,7 +10,7 @@ import { Pencil, Trash, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useCallback } from "react";
 import { formatCreatedAt } from "@/lib/utils";
-import { ArrowUpDown } from "lucide-react"
+import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface ColumnHandlers {
     handleEdit: (id: number) => void;
@@ -104,13 +104,19 @@ export const createColumns = ({
             header: ({ column }) => {
       return (
         <div className="flex items-center justify-center">
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Temporada
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+            <Button
+                variant="ghost"
+                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                Temporada
+                {column.getIsSorted() === "asc" ? (
+                    <ArrowUp className="ml-2 h-4 w-4" />
+                ) : column.getIsSorted() === "desc" ? (
+                    <ArrowDown className="ml-2 h-4 w-4" />
+                ) : (
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                )}
+            </Button>
         </div>
       )
     },
@@ -122,7 +128,25 @@ export const createColumns = ({
         },
         {
             accessorKey: "created_at",
-            header: () => <div className="text-center">Fecha Creación</div>,
+            header: ({ column }) => {
+      return (
+        <div className="flex items-center justify-center">
+            <Button
+                variant="ghost"
+                onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                >
+                Fecha de Creación
+                {column.getIsSorted() === "asc" ? (
+                    <ArrowUp className="ml-2 h-4 w-4" />
+                ) : column.getIsSorted() === "desc" ? (
+                    <ArrowDown className="ml-2 h-4 w-4" />
+                ) : (
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                )}
+            </Button>
+        </div>
+      )
+    },
             cell: ({ row }) => (
                 <div className="text-sm text-center ">
                     {getDate(row.original.created_at)}

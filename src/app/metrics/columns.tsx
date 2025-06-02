@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { parse } from "path"
+import { Badge } from "@/components/ui/badge"
  
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
@@ -27,7 +28,8 @@ export type Payment = {
 export const columns: ColumnDef<Temporada>[] = [
   {
     accessorKey: "id",
-    header: "Id",
+     header: () => <div className="text-center">ID</div>,
+     cell: ({ row }) => <div className="flex items-center justify-center"><Badge variant="outline">#{row.original.id}</Badge></div>,
   },
   {
     accessorKey: "año",
