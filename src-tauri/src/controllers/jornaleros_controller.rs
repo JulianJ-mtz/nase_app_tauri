@@ -111,7 +111,10 @@ pub async fn get_jornaleros(app_handle: AppHandle) -> Result<Vec<JornaleroRespon
     {
         let mut state = APP_STATE.lock().unwrap();
         state.operation_count += 1;
-        println!("Operación de consulta jornaleros activos #{}", state.operation_count);
+        println!(
+            "Operación de consulta jornaleros activos #{}",
+            state.operation_count
+        );
     }
 
     // Obtener conexión
@@ -154,7 +157,10 @@ pub async fn get_all_jornaleros(app_handle: AppHandle) -> Result<Vec<JornaleroRe
     {
         let mut state = APP_STATE.lock().unwrap();
         state.operation_count += 1;
-        println!("Operación de consulta todos los jornaleros #{}", state.operation_count);
+        println!(
+            "Operación de consulta todos los jornaleros #{}",
+            state.operation_count
+        );
     }
 
     // Obtener conexión
@@ -188,12 +194,17 @@ pub async fn get_all_jornaleros(app_handle: AppHandle) -> Result<Vec<JornaleroRe
 }
 
 #[tauri::command]
-pub async fn get_inactive_jornaleros(app_handle: AppHandle) -> Result<Vec<JornaleroResponse>, String> {
+pub async fn get_inactive_jornaleros(
+    app_handle: AppHandle,
+) -> Result<Vec<JornaleroResponse>, String> {
     // Incrementar contador para debug
     {
         let mut state = APP_STATE.lock().unwrap();
         state.operation_count += 1;
-        println!("Operación de consulta jornaleros inactivos #{}", state.operation_count);
+        println!(
+            "Operación de consulta jornaleros inactivos #{}",
+            state.operation_count
+        );
     }
 
     // Obtener conexión
@@ -364,7 +375,10 @@ pub async fn delete_jornalero(app_handle: AppHandle, id: i32) -> Result<String, 
     {
         let mut state = APP_STATE.lock().unwrap();
         state.operation_count += 1;
-        println!("Operación de desactivación (soft delete) #{}", state.operation_count);
+        println!(
+            "Operación de desactivación (soft delete) #{}",
+            state.operation_count
+        );
     }
 
     let connection = match obt_connection(&app_handle).await {
@@ -410,11 +424,14 @@ pub async fn delete_jornalero(app_handle: AppHandle, id: i32) -> Result<String, 
 
     // Si es líder de una cuadrilla, actualizar la cuadrilla para que quede sin líder
     if let Some(cuadrilla) = cuadrilla_liderada {
-        println!("El jornalero {} es líder de la cuadrilla {}. Removiendo liderazgo...", id, cuadrilla.id);
-        
+        println!(
+            "El jornalero {} es líder de la cuadrilla {}. Removiendo liderazgo...",
+            id, cuadrilla.id
+        );
+
         let mut cuadrilla_actualizada: cuadrilla::ActiveModel = cuadrilla.into();
         cuadrilla_actualizada.lider_cuadrilla_id = ActiveValue::Set(None);
-        
+
         match cuadrilla_actualizada.update(&connection).await {
             Ok(_) => {
                 println!("Cuadrilla actualizada exitosamente - líder removido");
@@ -447,10 +464,7 @@ pub async fn delete_jornalero(app_handle: AppHandle, id: i32) -> Result<String, 
             res.nombre
         ))
     } else {
-        Ok(format!(
-            "Jornalero '{}' desactivado con éxito.",
-            res.nombre
-        ))
+        Ok(format!("Jornalero '{}' desactivado con éxito.", res.nombre))
     }
 }
 

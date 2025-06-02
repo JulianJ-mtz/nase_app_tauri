@@ -37,7 +37,10 @@ impl From<tipo_empaque::Model> for TipoEmpaqueResponse {
 }
 
 #[tauri::command]
-pub async fn post_tipo_empaque(app_handle: AppHandle, data: TipoEmpaqueData) -> Result<String, String> {
+pub async fn post_tipo_empaque(
+    app_handle: AppHandle,
+    data: TipoEmpaqueData,
+) -> Result<String, String> {
     {
         let mut state = APP_STATE.lock().unwrap();
         state.operation_count += 1;
@@ -68,7 +71,10 @@ pub async fn post_tipo_empaque(app_handle: AppHandle, data: TipoEmpaqueData) -> 
 
     drop(connection);
 
-    Ok(format!("Tipo de empaque creado correctamente con ID: {}", res.last_insert_id))
+    Ok(format!(
+        "Tipo de empaque creado correctamente con ID: {}",
+        res.last_insert_id
+    ))
 }
 
 #[tauri::command]
@@ -95,7 +101,10 @@ pub async fn get_tipo_empaque(app_handle: AppHandle) -> Result<Vec<TipoEmpaqueRe
         }
     };
 
-    let res = tipos_empaque.into_iter().map(TipoEmpaqueResponse::from).collect();
+    let res = tipos_empaque
+        .into_iter()
+        .map(TipoEmpaqueResponse::from)
+        .collect();
 
     drop(connection);
 
@@ -103,7 +112,10 @@ pub async fn get_tipo_empaque(app_handle: AppHandle) -> Result<Vec<TipoEmpaqueRe
 }
 
 #[tauri::command]
-pub async fn get_tipo_empaque_by_id(app_handle: AppHandle, id: i32) -> Result<Option<TipoEmpaqueResponse>, String> {
+pub async fn get_tipo_empaque_by_id(
+    app_handle: AppHandle,
+    id: i32,
+) -> Result<Option<TipoEmpaqueResponse>, String> {
     {
         let mut state = APP_STATE.lock().unwrap();
         state.operation_count += 1;
@@ -179,7 +191,10 @@ pub async fn put_tipo_empaque(
 
     drop(connection);
 
-    Ok(format!("Tipo de empaque actualizado correctamente con ID: {}", res.id))
+    Ok(format!(
+        "Tipo de empaque actualizado correctamente con ID: {}",
+        res.id
+    ))
 }
 
 #[tauri::command]
@@ -212,4 +227,4 @@ pub async fn delete_tipo_empaque(app_handle: AppHandle, id: i32) -> Result<Strin
         "Tipo de empaque eliminado correctamente. Filas afectadas: {}",
         res.rows_affected
     ))
-} 
+}

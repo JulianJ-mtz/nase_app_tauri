@@ -69,7 +69,10 @@ pub async fn post_tipo_uva(app_handle: AppHandle, data: TipoUvaData) -> Result<S
 
     drop(connection);
 
-    Ok(format!("Tipo de uva creado correctamente con ID: {}", res.last_insert_id))
+    Ok(format!(
+        "Tipo de uva creado correctamente con ID: {}",
+        res.last_insert_id
+    ))
 }
 
 #[tauri::command]
@@ -104,7 +107,10 @@ pub async fn get_tipo_uva(app_handle: AppHandle) -> Result<Vec<TipoUvaResponse>,
 }
 
 #[tauri::command]
-pub async fn get_tipo_uva_by_id(app_handle: AppHandle, id: i32) -> Result<Option<TipoUvaResponse>, String> {
+pub async fn get_tipo_uva_by_id(
+    app_handle: AppHandle,
+    id: i32,
+) -> Result<Option<TipoUvaResponse>, String> {
     {
         let mut state = APP_STATE.lock().unwrap();
         state.operation_count += 1;
@@ -180,7 +186,10 @@ pub async fn put_tipo_uva(
 
     drop(connection);
 
-    Ok(format!("Tipo de uva actualizado correctamente con ID: {}", res.id))
+    Ok(format!(
+        "Tipo de uva actualizado correctamente con ID: {}",
+        res.id
+    ))
 }
 
 #[tauri::command]

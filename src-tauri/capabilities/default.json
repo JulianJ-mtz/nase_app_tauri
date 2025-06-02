@@ -16,15 +16,39 @@
     {
       "identifier": "fs:scope",
       "allow": [
-        { "path": "$DOWNLOAD" },
-        { "path": "$DOWNLOAD/**" },
-        { "path": "$DOCUMENT" },
-        { "path": "$DOCUMENT/**" },
-        { "path": "$DESKTOP" },
-        { "path": "$DESKTOP/**" },
-        { "path": "$HOME" },
-        { "path": "$HOME/**" }
+        {
+          "path": "$DOWNLOAD"
+        },
+        {
+          "path": "$DOWNLOAD/**"
+        },
+        {
+          "path": "$DOCUMENT"
+        },
+        {
+          "path": "$DOCUMENT/**"
+        },
+        {
+          "path": "$DESKTOP"
+        },
+        {
+          "path": "$DESKTOP/**"
+        },
+        {
+          "path": "$HOME"
+        },
+        {
+          "path": "$HOME/**"
+        }
+      ]
+    },
+    "shell:default"
+  ],
+  "protocol": {
+    "tauri": {
+      "scope": [
+        "oauth-callback"
       ]
     }
-  ]
+  }
 }
