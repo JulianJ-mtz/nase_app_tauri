@@ -2,6 +2,9 @@
 
 use once_cell::sync::Lazy;
 use std::sync::Mutex;
+use std::fs::File;
+use std::io::Write;
+use base64::{Engine as _, engine::general_purpose};
 
 mod controllers;
 mod entities;
@@ -17,12 +20,35 @@ pub struct AppState {
 // Estado global de la aplicación
 pub static APP_STATE: Lazy<Mutex<AppState>> = Lazy::new(|| Mutex::new(AppState::default()));
 
+// Función para escribir archivos Excel
+#[tauri::command]
+async fn write_excel_file(path: String, data: String) -> Result<(), String> {
+    // Decodificar base64 a bytes
+    let bytes = general_purpose::STANDARD
+        .decode(data)
+        .map_err(|e| format!("Error decodificando base64: {}", e))?;
+    
+    // Escribir archivo
+    let mut file = File::create(&path)
+        .map_err(|e| format!("Error creando archivo: {}", e))?;
+    
+    file.write_all(&bytes)
+        .map_err(|e| format!("Error escribiendo archivo: {}", e))?;
+    
+    Ok(())
+}
+
 fn main() {
     // Configurar la aplicación Tauri
     tauri::Builder::default()
         // Establecer el manejador de invocación
         .plugin(tauri_plugin_sql::Builder::default().build())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
+            
+            // === Archivos ===
+            write_excel_file,
             
             // === Jornaleros ===
             post_jornalero,
