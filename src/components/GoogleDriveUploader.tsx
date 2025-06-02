@@ -10,11 +10,12 @@ import {
     ExternalLink,
     Loader2,
 } from "lucide-react";
-import { toast } from "sonner";
 import {
     useGoogleDriveUpload,
     exportAndUploadCSV,
     exportAndUploadExcel,
+    exportAndUploadMetricsExcel,
+    exportAndUploadProductionExcel,
 } from "@/lib/uploadFromDrive";
 
 interface GoogleDriveUploaderProps {
@@ -43,13 +44,13 @@ export default function GoogleDriveUploader({
         try {
             const success = await authenticate();
             if (success) {
-                toast.success("Conectado a Google Drive exitosamente");
+                console.log("Conectado a Google Drive exitosamente");
             } else {
-                toast.error("Error al conectar con Google Drive");
+                console.error("Error al conectar con Google Drive");
             }
         } catch (error) {
             console.error("Error:", error);
-            toast.error("Error al conectar con Google Drive");
+            console.error("Error al conectar con Google Drive");
         }
     };
 
@@ -62,21 +63,32 @@ export default function GoogleDriveUploader({
                 if (type === "csv" && data && headers) {
                     return await exportAndUploadCSV(data, headers, fileName);
                 } else if (type === "excel" && workbook) {
-                    return await exportAndUploadExcel(workbook, fileName);
+                    // Detectar el tipo de archivo por el nombre
+                    const isMetricsFile = fileName.includes('metricas_completas');
+                    const isProductionFile = fileName.includes('registros_produccion');
+                    
+                    if (isMetricsFile) {
+                        return await exportAndUploadMetricsExcel(workbook, fileName);
+                    } else if (isProductionFile) {
+                        return await exportAndUploadProductionExcel(workbook, fileName);
+                    } else {
+                        // Fallback para otros archivos Excel
+                        return await exportAndUploadExcel(workbook, fileName);
+                    }
                 } else {
                     throw new Error("Datos insuficientes para la subida");
                 }
             }, setUploadProgress);
 
             setUploadResult(result);
-            toast.success("Archivo subido exitosamente a Google Drive");
+            console.log("Archivo subido exitosamente a Google Drive");
 
             if (onUploadComplete) {
                 onUploadComplete(result);
             }
         } catch (error) {
             console.error("Error subiendo archivo:", error);
-            toast.error("Error al subir archivo a Google Drive");
+            console.error("Error al subir archivo a Google Drive");
         }
     };
 

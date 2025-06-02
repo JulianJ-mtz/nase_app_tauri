@@ -393,6 +393,111 @@ class GoogleDriveUploader {
             throw error;
         }
     }
+
+    // Search for folders by name within a parent folder
+    async searchFoldersInParent(folderName: string, parentFolderId: string): Promise<string | null> {
+        if (!(await this.ensureValidToken())) {
+            throw new Error("No se pudo obtener token de acceso válido");
+        }
+
+        const query = `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and '${parentFolderId}' in parents and trashed=false`;
+        const response = await fetch(
+            `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${this.accessToken}`,
+                },
+            }
+        );
+
+        if (!response.ok) {
+            console.error("Error searching folders in parent:", response.statusText);
+            return null;
+        }
+
+        const result = await response.json();
+
+        if (result.files && result.files.length > 0) {
+            console.log(`Carpeta "${folderName}" encontrada en padre ${parentFolderId}:`, result.files[0].id);
+            return result.files[0].id;
+        }
+
+        return null;
+    }
+
+    // Get or create metrics folder structure: NASE CLOUD/metricas/produccion
+    async getOrCreateMetricsFolders(): Promise<{ metricas: string; produccion: string }> {
+        try {
+            // First, get or create the main app folder (NASE CLOUD)
+            const appFolderId = await this.getOrCreateAppFolder();
+
+            // Get or create "metricas" folder
+            let metricasFolderId = await this.searchFoldersInParent("metricas", appFolderId);
+            if (!metricasFolderId) {
+                console.log('Creando carpeta "metricas" en NASE CLOUD...');
+                metricasFolderId = await this.createFolder("metricas", appFolderId);
+                console.log('Carpeta "metricas" creada exitosamente:', metricasFolderId);
+            }
+
+            // Get or create "produccion" folder inside "metricas"
+            let produccionFolderId = await this.searchFoldersInParent("produccion", metricasFolderId);
+            if (!produccionFolderId) {
+                console.log('Creando carpeta "produccion" en metricas...');
+                produccionFolderId = await this.createFolder("produccion", metricasFolderId);
+                console.log('Carpeta "produccion" creada exitosamente:', produccionFolderId);
+            }
+
+            return {
+                metricas: metricasFolderId,
+                produccion: produccionFolderId,
+            };
+        } catch (error) {
+            console.error("Error gestionando carpetas de métricas:", error);
+            throw error;
+        }
+    }
+
+    // Get or create only the metrics folder: NASE CLOUD/Metricas
+    async getOrCreateMetricsFolder(): Promise<string> {
+        try {
+            // First, get or create the main app folder (NASE CLOUD)
+            const appFolderId = await this.getOrCreateAppFolder();
+
+            // Get or create "Metricas" folder (con M mayúscula)
+            let metricasFolderId = await this.searchFoldersInParent("Metricas", appFolderId);
+            if (!metricasFolderId) {
+                console.log('Creando carpeta "Metricas" en NASE CLOUD...');
+                metricasFolderId = await this.createFolder("Metricas", appFolderId);
+                console.log('Carpeta "Metricas" creada exitosamente:', metricasFolderId);
+            }
+
+            return metricasFolderId;
+        } catch (error) {
+            console.error("Error gestionando carpeta de Metricas:", error);
+            throw error;
+        }
+    }
+
+    // Get or create production folder: NASE CLOUD/Produccion
+    async getOrCreateProductionFolder(): Promise<string> {
+        try {
+            // First, get or create the main app folder (NASE CLOUD)
+            const appFolderId = await this.getOrCreateAppFolder();
+
+            // Get or create "Produccion" folder (con P mayúscula)
+            let produccionFolderId = await this.searchFoldersInParent("Produccion", appFolderId);
+            if (!produccionFolderId) {
+                console.log('Creando carpeta "Produccion" en NASE CLOUD...');
+                produccionFolderId = await this.createFolder("Produccion", appFolderId);
+                console.log('Carpeta "Produccion" creada exitosamente:', produccionFolderId);
+            }
+
+            return produccionFolderId;
+        } catch (error) {
+            console.error("Error gestionando carpeta de Produccion:", error);
+            throw error;
+        }
+    }
 }
 
 // Instancia singleton del uploader
@@ -627,5 +732,75 @@ export const exportAndUploadExcel = async (
     return {
         local: localPath,
         cloud: cloudResult
+    };
+};
+
+// Nueva función específica para métricas - subir a carpeta de métricas
+export const exportAndUploadMetricsExcel = async (
+    workbook: XLSX.WorkBook,
+    fileName: string
+): Promise<{ local: string; cloud: DriveUploadResponse; folder: string }> => {
+    // Convert workbook to buffer
+    const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array"
+    });
+
+    const finalFileName = fileName.endsWith(".xlsx") ? fileName : `${fileName}.xlsx`;
+
+    // Save locally
+    const localPath = `exports/${finalFileName}`;
+    await writeFile(localPath, new Uint8Array(excelBuffer), { baseDir: BaseDirectory.Document });
+
+    // Get or create metrics folder: NASE CLOUD/Metricas
+    const metricasFolderId = await googleDriveUploader.getOrCreateMetricsFolder();
+
+    // Upload to Google Drive in the Metricas folder
+    const cloudResult = await googleDriveUploader.uploadFile(
+        new Uint8Array(excelBuffer),
+        finalFileName,
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        metricasFolderId
+    );
+
+    return {
+        local: localPath,
+        cloud: cloudResult,
+        folder: metricasFolderId
+    };
+};
+
+// Nueva función específica para registros de producción - subir a carpeta de producción
+export const exportAndUploadProductionExcel = async (
+    workbook: XLSX.WorkBook,
+    fileName: string
+): Promise<{ local: string; cloud: DriveUploadResponse; folder: string }> => {
+    // Convert workbook to buffer
+    const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array"
+    });
+
+    const finalFileName = fileName.endsWith(".xlsx") ? fileName : `${fileName}.xlsx`;
+
+    // Save locally
+    const localPath = `exports/${finalFileName}`;
+    await writeFile(localPath, new Uint8Array(excelBuffer), { baseDir: BaseDirectory.Document });
+
+    // Get or create production folder: NASE CLOUD/Produccion
+    const produccionFolderId = await googleDriveUploader.getOrCreateProductionFolder();
+
+    // Upload to Google Drive in the Produccion folder
+    const cloudResult = await googleDriveUploader.uploadFile(
+        new Uint8Array(excelBuffer),
+        finalFileName,
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        produccionFolderId
+    );
+
+    return {
+        local: localPath,
+        cloud: cloudResult,
+        folder: produccionFolderId
     };
 };

@@ -57,7 +57,7 @@ export function GoogleDriveUploadModal({
                         Subir a Google Drive
                     </DialogTitle>
                     <DialogDescription>
-                        Conecta con Google Drive y sube tu archivo de registros de producción a la nube.
+                        Conecta con Google Drive y sube tu archivo a la nube.
                     </DialogDescription>
                 </DialogHeader>
                 

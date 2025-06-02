@@ -4,6 +4,7 @@ import { writeTextFile, writeFile, BaseDirectory } from '@tauri-apps/plugin-fs';
 import { save } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
 import * as XLSX from 'xlsx';
+import { exportAndUploadMetricsExcel } from './uploadFromDrive';
 
 export const convertToCSV = (data: any[], headers: string[]): string => {
     if (!data || data.length === 0) {
@@ -238,8 +239,8 @@ export const exportTendenciaTipos = async (data: any[], tiposUva: any[]) => {
     await downloadCSV(csvContent, 'tendencia_por_tipos_uva');
 };
 
-// Nueva función para exportar todas las métricas en un archivo Excel con múltiples hojas
-export const exportAllMetricsAsExcel = async (metricsData: {
+// Nueva función para exportar todas las métricas y subirlas a Google Drive
+export const exportAllMetricsAsExcelWithDrive = async (metricsData: {
     produccionPorCuadrilla: any[];
     produccionPorVariedad: any[];
     produccionPorTipoUva: any[];
@@ -254,7 +255,7 @@ export const exportAllMetricsAsExcel = async (metricsData: {
     variedades: any[];
     tiposUva: any[];
     temporadaSeleccionada: string;
-}) => {
+}, uploadToDrive: boolean = false) => {
     try {
         console.log('Iniciando exportación de todas las métricas a Excel...');
         
@@ -347,13 +348,43 @@ export const exportAllMetricsAsExcel = async (metricsData: {
         const timestamp = new Date().toISOString().split('T')[0];
         const filename = `metricas_completas_temporada_${metricsData.temporadaSeleccionada}_${timestamp}`;
         
-        // Descargar el archivo Excel
-        await downloadExcel(workbook, filename);
-        
-        console.log('Exportación Excel completada exitosamente');
+        if (uploadToDrive) {
+            // Subir al Drive en la estructura NASE CLOUD/metricas/produccion
+            console.log('Subiendo métricas a Google Drive...');
+            const result = await exportAndUploadMetricsExcel(workbook, filename);
+            console.log('Métricas subidas exitosamente a Google Drive:', result.cloud.webViewLink);
+            console.log('Estructura de carpetas creada:', result.folder);
+            return result;
+        } else {
+            // Solo descarga local
+            await downloadExcel(workbook, filename);
+            console.log('Exportación Excel completada exitosamente');
+            return null;
+        }
     } catch (error) {
         console.error('Error durante la exportación Excel:', error);
+        throw error;
     }
+};
+
+// Función original para mantener compatibilidad - solo descarga local
+export const exportAllMetricsAsExcel = async (metricsData: {
+    produccionPorCuadrilla: any[];
+    produccionPorVariedad: any[];
+    produccionPorTipoUva: any[];
+    produccionPorCliente: any[];
+    produccionClienteVariedad: any[];
+    produccionClienteTipoUva: any[];
+    tendenciaProduccion: any[];
+    tendenciaClientes: any[];
+    tendenciaVariedades: any[];
+    tendenciaTipos: any[];
+    clientes: any[];
+    variedades: any[];
+    tiposUva: any[];
+    temporadaSeleccionada: string;
+}) => {
+    return await exportAllMetricsAsExcelWithDrive(metricsData, false);
 };
 
 // Función para exportar todos los datos en múltiples archivos CSV (mantener compatibilidad)
