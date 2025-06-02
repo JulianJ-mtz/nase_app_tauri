@@ -10,6 +10,7 @@ import { Pencil, Trash, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useCallback } from "react";
 import { formatCreatedAt } from "@/lib/utils";
+import { ArrowUpDown } from "lucide-react"
 
 interface ColumnHandlers {
     handleEdit: (id: number) => void;
@@ -70,8 +71,8 @@ export const createColumns = ({
     return [
         {
             accessorKey: "id",
-            header: "ID",
-            cell: ({ row }) => <Badge variant="outline">#{row.original.id}</Badge>,
+            header: () => <div className="text-center">ID</div>,
+            cell: ({ row }) => <div className="flex items-center justify-center"><Badge variant="outline">#{row.original.id}</Badge></div>,
         },
         {
             accessorKey: "lider_cuadrilla_id",
@@ -100,7 +101,19 @@ export const createColumns = ({
         },
         {
             accessorKey: "temporada_id",
-            header: () => <div className="text-center">Temporada</div>,
+            header: ({ column }) => {
+      return (
+        <div className="flex items-center justify-center">
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Temporada
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+        </div>
+      )
+    },
             cell: ({ row }) => (
                 <div className="text-center">
                     {getTemporadaName(row.original.temporada_id)}
