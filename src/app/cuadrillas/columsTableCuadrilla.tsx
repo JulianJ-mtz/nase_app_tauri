@@ -87,7 +87,7 @@ export const createColumns = ({
             accessorKey: "lote",
             header: () => <div className="text-center">Lote</div>,
             cell: ({ row }) => (
-                <div className="text-center">{row.original.lote}</div>
+                <div className="text-center"> {row.original.lote}</div>
             ),
         },
         {

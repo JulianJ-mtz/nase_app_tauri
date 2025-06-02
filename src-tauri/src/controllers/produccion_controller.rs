@@ -99,7 +99,10 @@ pub async fn post_produccion(
     };
 
     // Obtener el registro recién insertado
-    let nueva_produccion = match Produccion::find_by_id(res.last_insert_id).one(&connection).await {
+    let nueva_produccion = match Produccion::find_by_id(res.last_insert_id)
+        .one(&connection)
+        .await
+    {
         Ok(Some(produccion)) => produccion,
         Ok(None) => {
             return Err("No se pudo encontrar la producción recién insertada".to_string());

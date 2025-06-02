@@ -67,7 +67,10 @@ pub async fn post_variedad(app_handle: AppHandle, data: VariedadData) -> Result<
 
     drop(connection);
 
-    Ok(format!("Variedad creada correctamente con ID: {}", res.last_insert_id))
+    Ok(format!(
+        "Variedad creada correctamente con ID: {}",
+        res.last_insert_id
+    ))
 }
 
 #[tauri::command]
@@ -102,7 +105,10 @@ pub async fn get_variedad(app_handle: AppHandle) -> Result<Vec<VariedadResponse>
 }
 
 #[tauri::command]
-pub async fn get_variedad_by_id(app_handle: AppHandle, id: i32) -> Result<Option<VariedadResponse>, String> {
+pub async fn get_variedad_by_id(
+    app_handle: AppHandle,
+    id: i32,
+) -> Result<Option<VariedadResponse>, String> {
     {
         let mut state = APP_STATE.lock().unwrap();
         state.operation_count += 1;
@@ -178,7 +184,10 @@ pub async fn put_variedad(
 
     drop(connection);
 
-    Ok(format!("Variedad actualizada correctamente con ID: {}", res.id))
+    Ok(format!(
+        "Variedad actualizada correctamente con ID: {}",
+        res.id
+    ))
 }
 
 #[tauri::command]
@@ -211,4 +220,4 @@ pub async fn delete_variedad(app_handle: AppHandle, id: i32) -> Result<String, S
         "Variedad eliminada correctamente. Filas afectadas: {}",
         res.rows_affected
     ))
-} 
+}

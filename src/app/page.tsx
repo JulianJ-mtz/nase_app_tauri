@@ -2,8 +2,26 @@
 
 import { OnlineStatusIndicator } from "@/components/OnlineStatusIndicator";
 import { Button } from "@/components/ui/button";
-import { UserRound, Users, Calendar, LineChart, Layers, Package, Grape, Building, ArrowRight, TrendingUp } from "lucide-react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    UserRound,
+    Users,
+    Calendar,
+    LineChart,
+    Layers,
+    Package,
+    Grape,
+    Building,
+    ArrowRight,
+    TrendingUp,
+} from "lucide-react";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
@@ -12,12 +30,14 @@ import { useJornaleroStore } from "@/lib/storeJornalero";
 import { useCuadrillaStore } from "@/lib/storeCuadrilla";
 import { useTemporadaStore } from "@/lib/storeTemporada";
 import { useProduccionStore } from "@/lib/storeProduccion";
+import GoogleDriveUploader from "@/components/GoogleDriveUploader";
 
 export default function Home() {
     const { jornaleros, fetchJornaleros } = useJornaleroStore();
     const { cuadrillas, fetchCuadrillas } = useCuadrillaStore();
     const { temporadas, fetchTemporadas } = useTemporadaStore();
-    const { producciones, fetchProducciones, getTotalProduccion } = useProduccionStore();
+    const { producciones, fetchProducciones, getTotalProduccion } =
+        useProduccionStore();
     const [stats, setStats] = useState({
         jornalerosActivos: 0,
         cuadrillasActivas: 0,
@@ -44,11 +64,13 @@ export default function Home() {
     }, [fetchJornaleros, fetchCuadrillas, fetchTemporadas, fetchProducciones]);
 
     useEffect(() => {
-        const jornalerosActivos = jornaleros.filter(j => j.estado === "Activo").length;
+        const jornalerosActivos = jornaleros.filter(
+            (j) => j.estado === "Activo"
+        ).length;
         const cuadrillasActivas = cuadrillas.length;
         // Find active season: one without fecha_final or with fecha_final in the future
-        const temporadaActual = temporadas.find(t => 
-            !t.fecha_final || new Date(t.fecha_final) >= new Date()
+        const temporadaActual = temporadas.find(
+            (t) => !t.fecha_final || new Date(t.fecha_final) >= new Date()
         );
         // Get total production from cuadrillas, not individual jornaleros
         const produccionTotalRaw = getTotalProduccion();
@@ -134,7 +156,8 @@ export default function Home() {
                     Bienvenido a NASE
                 </h1>
                 <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                    Sistema integral para la gestión de producción agrícola, jornaleros y cuadrillas de trabajo
+                    Sistema integral para la gestión de producción agrícola,
+                    jornaleros y cuadrillas de trabajo
                 </p>
                 <OnlineStatusIndicator />
             </div>
@@ -151,22 +174,42 @@ export default function Home() {
                     <CardContent>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="text-center">
-                                <div className="text-2xl font-bold text-blue-600">{stats.jornalerosActivos}</div>
-                                <div className="text-sm text-muted-foreground">Jornaleros Activos</div>
+                                <div className="text-2xl font-bold text-blue-600">
+                                    {stats.jornalerosActivos}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                    Jornaleros Activos
+                                </div>
                             </div>
                             <div className="text-center">
-                                <div className="text-2xl font-bold text-green-600">{stats.cuadrillasActivas}</div>
-                                <div className="text-sm text-muted-foreground">Cuadrillas</div>
+                                <div className="text-2xl font-bold text-green-600">
+                                    {stats.cuadrillasActivas}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                    Cuadrillas
+                                </div>
                             </div>
                             <div className="text-center">
-                                <div className="text-2xl font-bold text-orange-600">{formatNumber(stats.produccionTotal)} cajas</div>
-                                <div className="text-sm text-muted-foreground">Producción Total</div>
+                                <div className="text-2xl font-bold text-orange-600">
+                                    {formatNumber(stats.produccionTotal)} cajas
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                    Producción Total
+                                </div>
                             </div>
                             <div className="text-center">
                                 <div className="text-2xl font-bold text-purple-600">
-                                    {stats.cuadrillasActivas > 0 ? formatNumber(stats.produccionTotal / stats.cuadrillasActivas) : 0} cajas
+                                    {stats.cuadrillasActivas > 0
+                                        ? formatNumber(
+                                              stats.produccionTotal /
+                                                  stats.cuadrillasActivas
+                                          )
+                                        : 0}{" "}
+                                    cajas
                                 </div>
-                                <div className="text-sm text-muted-foreground">Promedio por Cuadrilla</div>
+                                <div className="text-sm text-muted-foreground">
+                                    Promedio por Cuadrilla
+                                </div>
                             </div>
                         </div>
                     </CardContent>
@@ -204,15 +247,23 @@ export default function Home() {
                 <h2 className="text-2xl font-semibold">Módulos del Sistema</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {quickAccessModules.map((module) => (
-                        <Card key={module.title} className="hover:shadow-lg transition-shadow cursor-pointer group">
+                        <Card
+                            key={module.title}
+                            className="hover:shadow-lg transition-shadow cursor-pointer group"
+                        >
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-lg ${module.color} text-white group-hover:scale-110 transition-transform`}>
+                                    <div
+                                        className={`p-2 rounded-lg ${module.color} text-white group-hover:scale-110 transition-transform`}
+                                    >
                                         <module.icon className="h-6 w-6" />
                                     </div>
                                     <div>
                                         <div>{module.title}</div>
-                                        <Badge variant="secondary" className="text-xs mt-1">
+                                        <Badge
+                                            variant="secondary"
+                                            className="text-xs mt-1"
+                                        >
                                             {module.stats}
                                         </Badge>
                                     </div>
@@ -235,7 +286,7 @@ export default function Home() {
             </div>
 
             {/* Quick Actions */}
-            <Card>
+            {/* <Card>
                 <CardHeader>
                     <CardTitle>Acciones Rápidas</CardTitle>
                     <CardDescription>
@@ -278,7 +329,11 @@ export default function Home() {
                         </Button>
                     </div>
                 </CardContent>
-            </Card>
+            </Card> */}
+
+            {/* <Link href="/test_drive">
+                <Button>Test Drive</Button>
+            </Link> */}
         </div>
     );
 }

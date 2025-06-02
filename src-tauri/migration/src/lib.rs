@@ -8,6 +8,7 @@ mod m20250528_080238_create_table_tipo_empaque;
 mod m20250528_080408_create_table_variedad;
 mod m20250528_080500_update_table_produccion;
 mod m20250530_203152_recreate_cuadrilla_fk;
+mod m20250601_000000_seed_complete_data;
 
 pub use sea_orm_migration::prelude::*;
 
@@ -32,6 +33,9 @@ impl MigratorTrait for Migrator {
             // Modificaciones y actualizaciones AL FINAL
             Box::new(m20250530_203152_recreate_cuadrilla_fk::RecreateCuadrillaFk),
             Box::new(m20250528_080500_update_table_produccion::UpdateProduccion),
+            
+            // Seeding completo al final de todo
+            Box::new(m20250601_000000_seed_complete_data::SeedCompleteData),
         ]
     }
 }

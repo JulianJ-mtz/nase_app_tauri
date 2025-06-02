@@ -1,347 +1,302 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { obtenerProducciones } from "@/api/produccion_api";
-import { obtenerJornaleros } from "@/api/jornalero_api";
-import { obtenerCuadrillas } from "@/api/cuadrilla_api";
-import { obtenerTemporadas } from "@/api/temporada_api";
-
-// Colores para los gráficos
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1'];
+import { useMetrics } from "@/hooks/useMetrics";
+import {
+    ProductionByCrewChart,
+    ProductionByVarietyChart,
+    ProductionByGrapeTypeChart,
+    ProductionByClientChart,
+    ClientVarietyChart,
+    ClientGrapeTypeChart,
+    TrendsChart,
+} from "@/components/metrics";
+import { ExportButton } from "@/components/ui/export-button";
+import { exportAllMetricsAsExcel } from "@/lib/csvExport";
+import { Button } from "@/components/ui/button";
+import { Cloud, Download } from "lucide-react";
+import { useState } from "react";
+import { GoogleDriveUploadModal } from "@/components/modals";
+import * as XLSX from "xlsx";
+import { useOnlineStatus } from "@/context/OnlineStatusContext";
 
 export default function MetricsPage() {
-  const [loading, setLoading] = useState(true);
-  const [selectedTemporada, setSelectedTemporada] = useState<string>("");
-  const [temporadas, setTemporadas] = useState<any[]>([]);
-  const [producciones, setProducciones] = useState<any[]>([]);
-  const [jornaleros, setJornaleros] = useState<any[]>([]);
-  const [cuadrillas, setCuadrillas] = useState<any[]>([]);
-  
-  // Datos procesados para los gráficos
-  const [produccionPorJornalero, setProduccionPorJornalero] = useState<any[]>([]);
-  const [produccionPorCuadrilla, setProduccionPorCuadrilla] = useState<any[]>([]);
-  const [produccionPorVariedad, setProduccionPorVariedad] = useState<any[]>([]);
-  const [produccionPorTipoUva, setProduccionPorTipoUva] = useState<any[]>([]);
+    const {
+        loading,
+        selectedTemporada,
+        temporadas,
+        variedades,
+        tiposUva,
+        clientes,
+        produccionPorCuadrilla,
+        produccionPorVariedad,
+        produccionPorTipoUva,
+        produccionPorCliente,
+        produccionClienteVariedad,
+        produccionClienteTipoUva,
+        tendenciaProduccion,
+        tendenciaClientes,
+        tendenciaVariedades,
+        tendenciaTipos,
+        handleTemporadaChange,
+    } = useMetrics();
+    const isOnline = useOnlineStatus(); 
+    const [isGoogleDriveModalOpen, setIsGoogleDriveModalOpen] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        
-        // Cargar datos
-        const tempData = await obtenerTemporadas();
-        const prodData = await obtenerProducciones();
-        const jornData = await obtenerJornaleros();
-        const cuadData = await obtenerCuadrillas();
-        
-        setTemporadas(tempData);
-        setProducciones(prodData);
-        setJornaleros(jornData);
-        setCuadrillas(cuadData);
-        
-        // Seleccionar la temporada más reciente por defecto
-        if (tempData.length > 0) {
-          const latestTemporada = tempData.reduce((latest, current) => {
-            return new Date(current.fecha_inicial) > new Date(latest.fecha_inicial) ? current : latest;
-          }, tempData[0]);
-          
-          setSelectedTemporada(latestTemporada.id.toString());
-          processData(latestTemporada.id.toString(), prodData, jornData, cuadData);
-        }
-      } catch (error) {
-        console.error("Error cargando datos para métricas:", error);
-      } finally {
-        setLoading(false);
-      }
+    const handleExportAll = async () => {
+        await exportAllMetricsAsExcel({
+            produccionPorCuadrilla,
+            produccionPorVariedad,
+            produccionPorTipoUva,
+            produccionPorCliente,
+            produccionClienteVariedad,
+            produccionClienteTipoUva,
+            tendenciaProduccion,
+            tendenciaClientes,
+            tendenciaVariedades,
+            tendenciaTipos,
+            clientes,
+            variedades,
+            tiposUva,
+            temporadaSeleccionada: selectedTemporada,
+        });
     };
-    
-    fetchData();
-  }, []);
 
-  const processData = (temporadaId: string, prodData: any[], jornData: any[], cuadData: any[]) => {
-    const temporadaIdNum = parseInt(temporadaId);
-    
-    // Filtrar producciones por temporada seleccionada
-    const produccionesFiltradas = prodData.filter(p => p.temporada_id === temporadaIdNum);
-    
-    // Procesar datos para producción por jornalero
-    const produccionJornalero = jornData.map(jornalero => {
-      const produccionesJornalero = produccionesFiltradas.filter(p => p.jornalero_id === jornalero.id);
-      const totalProduccion = produccionesJornalero.reduce((sum, p) => sum + p.cantidad, 0);
-      
-      return {
-        name: jornalero.nombre,
-        produccion: totalProduccion
-      };
-    }).filter(item => item.produccion > 0).sort((a, b) => b.produccion - a.produccion).slice(0, 10);
-    
-    setProduccionPorJornalero(produccionJornalero);
-    
-    // Procesar datos para producción por cuadrilla
-    const produccionCuadrilla = cuadData.map(cuadrilla => {
-      const jornaleroCuadrilla = jornData.filter(j => j.cuadrilla_id === cuadrilla.id).map(j => j.id);
-      const produccionesCuadrilla = produccionesFiltradas.filter(p => jornaleroCuadrilla.includes(p.jornalero_id));
-      const totalProduccion = produccionesCuadrilla.reduce((sum, p) => sum + p.cantidad, 0);
-      
-      return {
-        name: `Cuadrilla ${cuadrilla.id}`,
-        produccion: totalProduccion
-      };
-    }).filter(item => item.produccion > 0).sort((a, b) => b.produccion - a.produccion);
-    
-    setProduccionPorCuadrilla(produccionCuadrilla);
-    
-    // Procesar datos para producción por variedad
-    const produccionVariedad = produccionesFiltradas.reduce((acc: any[], prod) => {
-      const existingVariedad = acc.find(item => item.name === prod.variedad);
-      
-      if (existingVariedad) {
-        existingVariedad.produccion += prod.cantidad;
-      } else {
-        acc.push({
-          name: prod.variedad,
-          produccion: prod.cantidad
+    // Función para crear el workbook de métricas
+    const createMetricsWorkbook = () => {
+        if (!selectedTemporada) return null;
+
+        console.log('Creando workbook de métricas...');
+        
+        // Crear un nuevo workbook
+        const workbook = XLSX.utils.book_new();
+        
+        // 1. Hoja: Producción por Cuadrilla
+        const cuadrillaData = produccionPorCuadrilla.map(item => ({
+            'Cuadrilla': item.name,
+            'Produccion_Cajas': item.produccion
+        }));
+        const cuadrillaWS = XLSX.utils.json_to_sheet(cuadrillaData);
+        XLSX.utils.book_append_sheet(workbook, cuadrillaWS, 'Producción por Cuadrilla');
+        
+        // 2. Hoja: Producción por Variedad
+        const variedadData = produccionPorVariedad.map(item => ({
+            'Variedad': item.name,
+            'Produccion_Cajas': item.produccion
+        }));
+        const variedadWS = XLSX.utils.json_to_sheet(variedadData);
+        XLSX.utils.book_append_sheet(workbook, variedadWS, 'Producción por Variedad');
+        
+        // 3. Hoja: Producción por Tipo de Uva
+        const tipoUvaData = produccionPorTipoUva.map(item => ({
+            'Tipo_Uva': item.name,
+            'Produccion_Cajas': item.produccion
+        }));
+        const tipoUvaWS = XLSX.utils.json_to_sheet(tipoUvaData);
+        XLSX.utils.book_append_sheet(workbook, tipoUvaWS, 'Producción por Tipo Uva');
+        
+        // 4. Hoja: Producción por Cliente
+        const clienteData = produccionPorCliente.map(item => ({
+            'Cliente': item.name,
+            'Produccion_Cajas': item.produccion
+        }));
+        const clienteWS = XLSX.utils.json_to_sheet(clienteData);
+        XLSX.utils.book_append_sheet(workbook, clienteWS, 'Producción por Cliente');
+        
+        // 5. Hoja: Cliente × Variedad
+        const clienteVariedadData: any[] = [];
+        produccionClienteVariedad.forEach(clienteData => {
+            clienteData.variedades.forEach((variedad: any) => {
+                clienteVariedadData.push({
+                    'Cliente': clienteData.cliente,
+                    'Variedad': variedad.variedad,
+                    'Produccion_Cajas': variedad.cantidad,
+                    'Total_Cliente_Cajas': clienteData.total
+                });
+            });
         });
-      }
-      
-      return acc;
-    }, []).sort((a: any, b: any) => b.produccion - a.produccion);
-    
-    setProduccionPorVariedad(produccionVariedad);
-    
-    // Procesar datos para producción por tipo de uva
-    const produccionTipoUva = produccionesFiltradas.reduce((acc: any[], prod) => {
-      const existingTipo = acc.find(item => item.name === prod.tipo);
-      
-      if (existingTipo) {
-        existingTipo.produccion += prod.cantidad;
-      } else {
-        acc.push({
-          name: prod.tipo,
-          produccion: prod.cantidad
+        const clienteVariedadWS = XLSX.utils.json_to_sheet(clienteVariedadData);
+        XLSX.utils.book_append_sheet(workbook, clienteVariedadWS, 'Cliente × Variedad');
+        
+        // 6. Hoja: Cliente × Tipo de Uva
+        const clienteTipoData: any[] = [];
+        produccionClienteTipoUva.forEach(clienteData => {
+            clienteData.tipos.forEach((tipo: any) => {
+                clienteTipoData.push({
+                    'Cliente': clienteData.cliente,
+                    'Tipo_Uva': tipo.tipo,
+                    'Produccion_Cajas': tipo.cantidad,
+                    'Total_Cliente_Cajas': clienteData.total
+                });
+            });
         });
-      }
-      
-      return acc;
-    }, []).sort((a: any, b: any) => b.produccion - a.produccion);
-    
-    setProduccionPorTipoUva(produccionTipoUva);
-  };
+        const clienteTipoWS = XLSX.utils.json_to_sheet(clienteTipoData);
+        XLSX.utils.book_append_sheet(workbook, clienteTipoWS, 'Cliente × Tipo Uva');
+        
+        // 7. Hoja: Tendencia Producción Total
+        const tendenciaData = tendenciaProduccion.map(item => ({
+            'Fecha': item.fecha,
+            'Produccion_Cajas': item.produccion
+        }));
+        const tendenciaWS = XLSX.utils.json_to_sheet(tendenciaData);
+        XLSX.utils.book_append_sheet(workbook, tendenciaWS, 'Tendencia Producción');
+        
+        // 8. Hoja: Tendencia por Clientes
+        const tendenciaClientesWS = XLSX.utils.json_to_sheet(tendenciaClientes);
+        XLSX.utils.book_append_sheet(workbook, tendenciaClientesWS, 'Tendencia Clientes');
+        
+        // 9. Hoja: Tendencia por Variedades
+        const tendenciaVariedadesWS = XLSX.utils.json_to_sheet(tendenciaVariedades);
+        XLSX.utils.book_append_sheet(workbook, tendenciaVariedadesWS, 'Tendencia Variedades');
+        
+        // 10. Hoja: Tendencia por Tipos
+        const tendenciaTiposWS = XLSX.utils.json_to_sheet(tendenciaTipos);
+        XLSX.utils.book_append_sheet(workbook, tendenciaTiposWS, 'Tendencia Tipos');
 
-  const handleTemporadaChange = (value: string) => {
-    setSelectedTemporada(value);
-    processData(value, producciones, jornaleros, cuadrillas);
-  };
+        return workbook;
+    };
 
-  if (loading) {
+    if (loading) {
+        return (
+            <div className="container mx-auto py-10">
+                <div className="flex justify-center items-center h-64">
+                    <p>Cargando métricas...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
-      <div className="container mx-auto py-10">
-        <div className="flex justify-center items-center h-64">
-          <p>Cargando métricas...</p>
-        </div>
-      </div>
-    );
-  }
+        <div className="container mx-auto py-10">
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-3xl font-bold">Métricas de Producción</h1>
+                <div className="flex gap-3">
+                    <ExportButton 
+                        onClick={handleExportAll}
+                        disabled={loading || !selectedTemporada}
+                        variant="outline"
+                        size="default"
+                    >
+                        Exportar Local
+                    </ExportButton>
+                    <Button
+                        onClick={() => setIsGoogleDriveModalOpen(true)}
+                        disabled={loading || !selectedTemporada || !isOnline}
+                        variant="default"
+                        size="default"
+                    >
+                        <Cloud className="h-4 w-4 mr-2" />
+                        Subir a Drive
+                    </Button>
+                </div>
+            </div>
 
-  return (
-    <div className="container mx-auto py-10">
-      <h1 className="text-3xl font-bold mb-6">Métricas de Producción</h1>
-      
-      <div className="mb-6">
-        <div className="flex items-center gap-4">
-          <Label htmlFor="temporada">Temporada:</Label>
-          <Select value={selectedTemporada} onValueChange={handleTemporadaChange}>
-            <SelectTrigger className="w-[280px]">
-              <SelectValue placeholder="Selecciona una temporada" />
-            </SelectTrigger>
-            <SelectContent>
-              {temporadas.map((temporada) => (
-                <SelectItem key={temporada.id} value={temporada.id.toString()}>
-                  {`Temporada ${temporada.id} (${new Date(temporada.fecha_inicial).toLocaleDateString()} - ${
-                    temporada.fecha_final ? new Date(temporada.fecha_final).toLocaleDateString() : 'Actual'
-                  })`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <div className="mb-6">
+                <div className="flex items-center gap-4">
+                    <Label htmlFor="temporada">Temporada:</Label>
+                    <Select
+                        value={selectedTemporada}
+                        onValueChange={handleTemporadaChange}
+                    >
+                        <SelectTrigger className="w-[280px]">
+                            <SelectValue placeholder="Selecciona una temporada" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {temporadas.map((temporada) => (
+                                <SelectItem
+                                    key={temporada.id}
+                                    value={temporada.id.toString()}
+                                >
+                                    {`Temporada ${temporada.id} (${new Date(
+                                        temporada.fecha_inicial
+                                    ).toLocaleDateString()} - ${
+                                        temporada.fecha_final
+                                            ? new Date(
+                                                  temporada.fecha_final
+                                              ).toLocaleDateString()
+                                            : "Actual"
+                                    })`}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+
+            <Tabs defaultValue="cuadrillas">
+                <TabsList className="mb-6">
+                    <TabsTrigger value="cuadrillas">Por Cuadrilla</TabsTrigger>
+                    <TabsTrigger value="variedades">Por Variedad</TabsTrigger>
+                    <TabsTrigger value="tipos">Por Tipo de Uva</TabsTrigger>
+                    <TabsTrigger value="clientes">Por Cliente</TabsTrigger>
+                    <TabsTrigger value="cliente-variedad">
+                        Cliente × Variedad
+                    </TabsTrigger>
+                    <TabsTrigger value="cliente-tipo">
+                        Cliente × Tipo
+                    </TabsTrigger>
+                    <TabsTrigger value="tendencias">
+                        Tendencias Temporales
+                    </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="cuadrillas">
+                    <ProductionByCrewChart data={produccionPorCuadrilla} />
+                </TabsContent>
+
+                <TabsContent value="variedades">
+                    <ProductionByVarietyChart data={produccionPorVariedad} />
+                </TabsContent>
+
+                <TabsContent value="tipos">
+                    <ProductionByGrapeTypeChart data={produccionPorTipoUva} />
+                </TabsContent>
+
+                <TabsContent value="clientes">
+                    <ProductionByClientChart data={produccionPorCliente} />
+                </TabsContent>
+
+                <TabsContent value="cliente-variedad">
+                    <ClientVarietyChart data={produccionClienteVariedad} />
+                </TabsContent>
+
+                <TabsContent value="cliente-tipo">
+                    <ClientGrapeTypeChart data={produccionClienteTipoUva} />
+                </TabsContent>
+
+                <TabsContent value="tendencias">
+                    <TrendsChart
+                        tendenciaProduccion={tendenciaProduccion}
+                        tendenciaClientes={tendenciaClientes}
+                        tendenciaVariedades={tendenciaVariedades}
+                        tendenciaTipos={tendenciaTipos}
+                        clientes={clientes}
+                        variedades={variedades}
+                        tiposUva={tiposUva}
+                    />
+                </TabsContent>
+            </Tabs>
+
+            {/* Google Drive Upload Modal */}
+            <GoogleDriveUploadModal
+                open={isGoogleDriveModalOpen}
+                onOpenChange={setIsGoogleDriveModalOpen}
+                workbook={createMetricsWorkbook()}
+                fileName={`metricas_completas_temporada_${selectedTemporada}_${
+                    new Date().toISOString().split("T")[0]
+                }`}
+                onUploadComplete={(result) => {
+                    console.log("Métricas subidas a Google Drive:", result);
+                }}
+            />
         </div>
-      </div>
-      
-      <Tabs defaultValue="jornaleros">
-        <TabsList className="mb-6">
-          <TabsTrigger value="jornaleros">Por Jornalero</TabsTrigger>
-          <TabsTrigger value="cuadrillas">Por Cuadrilla</TabsTrigger>
-          <TabsTrigger value="variedades">Por Variedad</TabsTrigger>
-          <TabsTrigger value="tipos">Por Tipo de Uva</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="jornaleros">
-          <Card>
-            <CardHeader>
-              <CardTitle>Producción por Jornalero</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={produccionPorJornalero}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={70} />
-                    <YAxis />
-                    <Tooltip formatter={(value) => [`${value} kg`, 'Producción']} />
-                    <Legend />
-                    <Bar dataKey="produccion" name="Producción (kg)" fill="#8884d8" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="cuadrillas">
-          <Card>
-            <CardHeader>
-              <CardTitle>Producción por Cuadrilla</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[400px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={produccionPorCuadrilla}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => [`${value} kg`, 'Producción']} />
-                    <Legend />
-                    <Bar dataKey="produccion" name="Producción (kg)" fill="#82ca9d" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="variedades">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Producción por Variedad</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[400px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={produccionPorVariedad}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={70} />
-                      <YAxis />
-                      <Tooltip formatter={(value) => [`${value} kg`, 'Producción']} />
-                      <Legend />
-                      <Bar dataKey="produccion" name="Producción (kg)" fill="#ffc658" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Distribución por Variedad</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[400px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={produccionPorVariedad}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={150}
-                        fill="#8884d8"
-                        dataKey="produccion"
-                      >
-                        {produccionPorVariedad.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value) => [`${value} kg`, 'Producción']} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="tipos">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Producción por Tipo de Uva</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[400px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={produccionPorTipoUva}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => [`${value} kg`, 'Producción']} />
-                      <Legend />
-                      <Bar dataKey="produccion" name="Producción (kg)" fill="#8dd1e1" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Distribución por Tipo de Uva</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[400px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={produccionPorTipoUva}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={150}
-                        fill="#8884d8"
-                        dataKey="produccion"
-                      >
-                        {produccionPorTipoUva.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value) => [`${value} kg`, 'Producción']} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
+    );
 }

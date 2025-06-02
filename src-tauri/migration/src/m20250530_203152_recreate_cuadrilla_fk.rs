@@ -105,133 +105,133 @@ impl MigrationTrait for RecreateCuadrillaFk {
             )
             .await?;
 
-        // Restaurar datos si existían
-        if has_existing_data {
-            manager
-                .get_connection()
-                .execute_unprepared(
-                    "INSERT INTO cuadrilla (id, lider_cuadrilla_id, lote, temporada_id, variedad_id, created_at, updated_at)
-                     SELECT id, lider_cuadrilla_id, lote, temporada_id, variedad_id, created_at, updated_at
-                     FROM cuadrilla_backup"
-                )
-                .await
-                .ok();
-        } else {
-            // Solo hacer seeding si no había datos previos
-            // Seeding de 5 cuadrillas
-            let insert_cuadrillas = Query::insert()
-                .into_table(Cuadrilla::Table)
-                .columns([
-                    Cuadrilla::Id,
-                    Cuadrilla::Lote,
-                    Cuadrilla::TemporadaId,
-                    Cuadrilla::VariedadId,
-                ])
-                .values_panic([
-                    Expr::value(1),
-                    Expr::value("Lote A"),
-                    Expr::value(1),
-                    Expr::value(1),
-                ])
-                .values_panic([
-                    Expr::value(2),
-                    Expr::value("Lote B"),
-                    Expr::value(2),
-                    Expr::value(2),
-                ])
-                .values_panic([
-                    Expr::value(3),
-                    Expr::value("Lote C"),
-                    Expr::value(3),
-                    Expr::value(3),
-                ])
-                .values_panic([
-                    Expr::value(4),
-                    Expr::value("Lote D"),
-                    Expr::value(4),
-                    Expr::value(4),
-                ])
-                .values_panic([
-                    Expr::value(5),
-                    Expr::value("Lote E"),
-                    Expr::value(5),
-                    Expr::value(5),
-                ])
-                .to_owned();
+        // // Restaurar datos si existían
+        // if has_existing_data {
+        //     manager
+        //         .get_connection()
+        //         .execute_unprepared(
+        //             "INSERT INTO cuadrilla (id, lider_cuadrilla_id, lote, temporada_id, variedad_id, created_at, updated_at)
+        //              SELECT id, lider_cuadrilla_id, lote, temporada_id, variedad_id, created_at, updated_at
+        //              FROM cuadrilla_backup"
+        //         )
+        //         .await
+        //         .ok();
+        // } else {
+        //     // Solo hacer seeding si no había datos previos
+        //     // Seeding de 5 cuadrillas
+        //     let insert_cuadrillas = Query::insert()
+        //         .into_table(Cuadrilla::Table)
+        //         .columns([
+        //             Cuadrilla::Id,
+        //             Cuadrilla::Lote,
+        //             Cuadrilla::TemporadaId,
+        //             Cuadrilla::VariedadId,
+        //         ])
+        //         .values_panic([
+        //             Expr::value(1),
+        //             Expr::value("Lote A"),
+        //             Expr::value(1),
+        //             Expr::value(1),
+        //         ])
+        //         .values_panic([
+        //             Expr::value(2),
+        //             Expr::value("Lote B"),
+        //             Expr::value(2),
+        //             Expr::value(2),
+        //         ])
+        //         .values_panic([
+        //             Expr::value(3),
+        //             Expr::value("Lote C"),
+        //             Expr::value(3),
+        //             Expr::value(3),
+        //         ])
+        //         .values_panic([
+        //             Expr::value(4),
+        //             Expr::value("Lote D"),
+        //             Expr::value(4),
+        //             Expr::value(4),
+        //         ])
+        //         .values_panic([
+        //             Expr::value(5),
+        //             Expr::value("Lote E"),
+        //             Expr::value(5),
+        //             Expr::value(5),
+        //         ])
+        //         .to_owned();
 
-            manager.exec_stmt(insert_cuadrillas).await?;
+        //     manager.exec_stmt(insert_cuadrillas).await?;
 
-            // Seeding de 5 jornaleros
-            let insert_jornaleros = Query::insert()
-                .into_table(Jornalero::Table)
-                .columns([
-                    Jornalero::Id,
-                    Jornalero::Nombre,
-                    Jornalero::Edad,
-                    Jornalero::Estado,
-                    Jornalero::FechaContratacion,
-                    Jornalero::Errores,
-                    Jornalero::CuadrillaId,
-                ])
-                .values_panic([
-                    Expr::value(1),
-                    Expr::value("Juan Perez"),
-                    Expr::value(30),
-                    Expr::value("ACTIVO"),
-                    Expr::value("2020-01-10"),
-                    Expr::value(0),
-                    Expr::value(1),
-                ])
-                .values_panic([
-                    Expr::value(2),
-                    Expr::value("Maria Lopez"),
-                    Expr::value(28),
-                    Expr::value("ACTIVO"),
-                    Expr::value("2021-02-15"),
-                    Expr::value(0),
-                    Expr::value(2),
-                ])
-                .values_panic([
-                    Expr::value(3),
-                    Expr::value("Carlos Ruiz"),
-                    Expr::value(35),
-                    Expr::value("ACTIVO"),
-                    Expr::value("2022-03-20"),
-                    Expr::value(0),
-                    Expr::value(3),
-                ])
-                .values_panic([
-                    Expr::value(4),
-                    Expr::value("Ana Torres"),
-                    Expr::value(32),
-                    Expr::value("ACTIVO"),
-                    Expr::value("2023-04-25"),
-                    Expr::value(0),
-                    Expr::value(4),
-                ])
-                .values_panic([
-                    Expr::value(5),
-                    Expr::value("Luis Gomez"),
-                    Expr::value(29),
-                    Expr::value("ACTIVO"),
-                    Expr::value("2024-05-30"),
-                    Expr::value(0),
-                    Expr::value(5),
-                ])
-                .to_owned();
+        //     // Seeding de 5 jornaleros
+        //     let insert_jornaleros = Query::insert()
+        //         .into_table(Jornalero::Table)
+        //         .columns([
+        //             Jornalero::Id,
+        //             Jornalero::Nombre,
+        //             Jornalero::Edad,
+        //             Jornalero::Estado,
+        //             Jornalero::FechaContratacion,
+        //             Jornalero::Errores,
+        //             Jornalero::CuadrillaId,
+        //         ])
+        //         .values_panic([
+        //             Expr::value(1),
+        //             Expr::value("Juan Perez"),
+        //             Expr::value(30),
+        //             Expr::value("ACTIVO"),
+        //             Expr::value("2020-01-10"),
+        //             Expr::value(0),
+        //             Expr::value(1),
+        //         ])
+        //         .values_panic([
+        //             Expr::value(2),
+        //             Expr::value("Maria Lopez"),
+        //             Expr::value(28),
+        //             Expr::value("ACTIVO"),
+        //             Expr::value("2021-02-15"),
+        //             Expr::value(0),
+        //             Expr::value(2),
+        //         ])
+        //         .values_panic([
+        //             Expr::value(3),
+        //             Expr::value("Carlos Ruiz"),
+        //             Expr::value(35),
+        //             Expr::value("ACTIVO"),
+        //             Expr::value("2022-03-20"),
+        //             Expr::value(0),
+        //             Expr::value(3),
+        //         ])
+        //         .values_panic([
+        //             Expr::value(4),
+        //             Expr::value("Ana Torres"),
+        //             Expr::value(32),
+        //             Expr::value("ACTIVO"),
+        //             Expr::value("2023-04-25"),
+        //             Expr::value(0),
+        //             Expr::value(4),
+        //         ])
+        //         .values_panic([
+        //             Expr::value(5),
+        //             Expr::value("Luis Gomez"),
+        //             Expr::value(29),
+        //             Expr::value("ACTIVO"),
+        //             Expr::value("2024-05-30"),
+        //             Expr::value(0),
+        //             Expr::value(5),
+        //         ])
+        //         .to_owned();
 
-            manager.exec_stmt(insert_jornaleros).await?;
+        //     manager.exec_stmt(insert_jornaleros).await?;
 
-            // Ahora actualizar los líderes de cuadrilla
-            for i in 1..=5 {
-                let update_lideres = Query::update()
-                    .table(Cuadrilla::Table)
-                    .values([(Cuadrilla::LiderCuadrillaId, Expr::value(i))])
-                    .and_where(Expr::col(Cuadrilla::Id).eq(i))
-                    .to_owned();
-                manager.exec_stmt(update_lideres).await?;
-            }
-        }
+        //     // Ahora actualizar los líderes de cuadrilla
+        //     for i in 1..=5 {
+        //         let update_lideres = Query::update()
+        //             .table(Cuadrilla::Table)
+        //             .values([(Cuadrilla::LiderCuadrillaId, Expr::value(i))])
+        //             .and_where(Expr::col(Cuadrilla::Id).eq(i))
+        //             .to_owned();
+        //         manager.exec_stmt(update_lideres).await?;
+        //     }
+        // }
 
         Ok(())
     }

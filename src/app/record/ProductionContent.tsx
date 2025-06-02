@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
     Card,
     CardContent,
@@ -11,7 +11,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Calendar, Package, Trash } from "lucide-react";
+import { AlertCircle, Calendar, Package, Trash, Cloud } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { ProductionStatistics } from "./ProductionStatistics";
 import { ProductionForm } from "../../components/forms/ProductionForm";
@@ -19,6 +19,10 @@ import { ProductionFilters } from "./ProductionFilters";
 import { ColumnDef } from "@tanstack/react-table";
 import { formatCreatedAt } from "@/lib/utils";
 import { toast } from "sonner";
+import { ExportButton } from "@/components/ui/export-button";
+import { exportProductionRecords } from "@/lib/csvExport";
+import { GoogleDriveUploadModal } from "@/components/modals";
+import * as XLSX from "xlsx";
 
 // Stores
 import { useTemporadaStore } from "@/lib/storeTemporada";
@@ -29,6 +33,14 @@ import { useJornaleroStore } from "@/lib/storeJornalero";
 // APIs
 import { obtenerVariedades, Variedad } from "@/api/variedad_api";
 import { obtenerClientes, Cliente } from "@/api/cliente_api";
+import { obtenerTiposUva, TipoUva } from "@/api/tipo_uva_api";
+import { obtenerTiposEmpaque, TipoEmpaque } from "@/api/tipo_empaque_api";
+
+// Hooks
+import { useDriveUpload } from "@/hooks/useDriveUpload";
+
+// Context
+import { useOnlineStatus } from "@/context/OnlineStatusContext";
 
 interface ProductionTabProps {
     onNewTemporada: () => void;
@@ -39,7 +51,7 @@ export function ProductionContent({
     onNewTemporada,
     onSuccess,
 }: ProductionTabProps) {
-    // Stores
+    const isOnline = useOnlineStatus(); // Stores
     const { temporadas, fetchTemporadas } = useTemporadaStore();
     const { cuadrillas, fetchCuadrillas } = useCuadrillaStore();
     const {
@@ -50,9 +62,15 @@ export function ProductionContent({
     } = useProduccionStore();
     const { jornaleros, fetchJornaleros } = useJornaleroStore();
 
+    // Ref to store fetchProducciones function to avoid dependency issues
+    const fetchProduccionesRef = useRef(fetchProducciones);
+    fetchProduccionesRef.current = fetchProducciones;
+
     // Estados para datos de catálogo
     const [variedades, setVariedades] = useState<Variedad[]>([]);
     const [clientes, setClientes] = useState<Cliente[]>([]);
+    const [tiposUva, setTiposUva] = useState<TipoUva[]>([]);
+    const [tiposEmpaque, setTiposEmpaque] = useState<TipoEmpaque[]>([]);
     const [catalogLoading, setCatalogLoading] = useState(true);
 
     // Estados para filtros
@@ -62,18 +80,24 @@ export function ProductionContent({
     const [selectedClienteFilter, setSelectedClienteFilter] =
         useState<string>("all");
     const [dateFilter, setDateFilter] = useState<string>("all");
+    const [isGoogleDriveModalOpen, setIsGoogleDriveModalOpen] = useState(false);
 
     // Cargar datos de catálogo
     const loadCatalogData = useCallback(async () => {
         try {
             setCatalogLoading(true);
-            const [varData, clienteData] = await Promise.all([
-                obtenerVariedades(),
-                obtenerClientes(),
-            ]);
+            const [varData, clienteData, tiposUvaData, tiposEmpaqueData] =
+                await Promise.all([
+                    obtenerVariedades(),
+                    obtenerClientes(),
+                    obtenerTiposUva(),
+                    obtenerTiposEmpaque(),
+                ]);
 
             setVariedades(varData);
             setClientes(clienteData);
+            setTiposUva(tiposUvaData);
+            setTiposEmpaque(tiposEmpaqueData);
         } catch (error) {
             console.error("Error cargando datos de catálogo:", error);
             toast.error("No se pudieron cargar los datos de catálogo");
@@ -132,6 +156,24 @@ export function ProductionContent({
         [clientes]
     );
 
+    const getTipoUvaNombre = useCallback(
+        (id: number | null) => {
+            if (!id) return "No asignado";
+            const tipoUva = tiposUva.find((t) => t.id === id);
+            return tipoUva ? tipoUva.nombre : "Desconocido";
+        },
+        [tiposUva]
+    );
+
+    const getTipoEmpaqueNombre = useCallback(
+        (id: number | null) => {
+            if (!id) return "No asignado";
+            const tipoEmpaque = tiposEmpaque.find((t) => t.id === id);
+            return tipoEmpaque ? tipoEmpaque.nombre : "Desconocido";
+        },
+        [tiposEmpaque]
+    );
+
     const getDate = useCallback((dateString: string | null) => {
         return formatCreatedAt(dateString);
     }, []);
@@ -163,13 +205,14 @@ export function ProductionContent({
         [deleteProduccion, onSuccess]
     );
 
-    // Handle production success
+    // Handle production success - Fixed to avoid infinite loop
     const handleProductionSuccess = useCallback(() => {
-        fetchProducciones(); // Reload data
+        // Use ref to avoid dependency issues and infinite loops
+        fetchProduccionesRef.current();
         if (onSuccess) {
             onSuccess();
         }
-    }, [fetchProducciones, onSuccess]);
+    }, [onSuccess]); // Only onSuccess as dependency
 
     // Datos filtrados y estadísticas (memoizados)
     const filteredProducciones = useMemo(() => {
@@ -266,6 +309,89 @@ export function ProductionContent({
             promedioProduccion: Number(promedioProduccion) || 0,
         };
     }, [filteredProducciones]);
+
+    // Use the hook to get the createProductionWorkbook function
+    const { createProductionWorkbook } = useDriveUpload({
+        filteredProducciones,
+        selectedTemporadaFilter,
+        selectedClienteFilter,
+        dateFilter,
+        searchTerm,
+        temporadas,
+        clientes,
+        cuadrillas,
+        jornaleros,
+        variedades,
+        tiposUva,
+        tiposEmpaque,
+        estadisticas,
+    });
+
+    // Handle export to Excel
+    const handleExportToExcel = useCallback(async () => {
+        if (!filteredProducciones || filteredProducciones.length === 0) {
+            toast.error("No hay datos para exportar");
+            return;
+        }
+
+        // Obtener nombres legibles de los filtros
+        const temporadaNombre =
+            selectedTemporadaFilter === "all"
+                ? "Todas"
+                : temporadas
+                      .find((t) => t.id.toString() === selectedTemporadaFilter)
+                      ?.id?.toString() || "Desconocida";
+
+        const clienteNombre =
+            selectedClienteFilter === "all"
+                ? "Todos"
+                : clientes.find(
+                      (c) => c.id.toString() === selectedClienteFilter
+                  )?.nombre || "Desconocido";
+
+        const fechaNombre =
+            dateFilter === "all"
+                ? "Todos"
+                : dateFilter === "week"
+                ? "Última semana"
+                : dateFilter === "month"
+                ? "Último mes"
+                : "Personalizado";
+
+        const filtrosAplicados = {
+            searchTerm: searchTerm || undefined,
+            temporada: temporadaNombre,
+            cliente: clienteNombre,
+            fecha: fechaNombre,
+        };
+
+        await exportProductionRecords(
+            filteredProducciones,
+            getCuadrillaNombre,
+            getVariedadNombre,
+            getClienteNombre,
+            getTipoUvaNombre,
+            getTipoEmpaqueNombre,
+            estadisticas,
+            filtrosAplicados
+        );
+
+        toast.success("Exportación iniciada. Revisa tu carpeta de descargas.");
+    }, [
+        filteredProducciones,
+        selectedTemporadaFilter,
+        selectedClienteFilter,
+        dateFilter,
+        searchTerm,
+        temporadas,
+        clientes,
+        getCuadrillaNombre,
+        getVariedadNombre,
+        getClienteNombre,
+        getTipoUvaNombre,
+        getTipoEmpaqueNombre,
+        estadisticas,
+    ]);
 
     // Columnas para la tabla de producción (memoizadas)
     const produccionColumns: ColumnDef<any>[] = useMemo(
@@ -415,17 +541,51 @@ export function ProductionContent({
 
                 <Card className="lg:col-span-2">
                     <CardHeader>
-                        <CardTitle className="flex items-center justify-between">
-                            <span>Registros de Producción</span>
-                            <Badge variant="outline">
-                                {estadisticas.registrosFiltered} de{" "}
-                                {producciones.length}
-                            </Badge>
-                        </CardTitle>
-                        <CardDescription>
-                            Total filtrado:{" "}
-                            {formatNumber(estadisticas.totalFiltered)} cajas
-                        </CardDescription>
+                        <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                                <CardTitle className="flex items-center gap-2">
+                                    <span>Registros de Producción</span>
+                                    <Badge variant="outline">
+                                        {estadisticas.registrosFiltered} de{" "}
+                                        {producciones.length}
+                                    </Badge>
+                                </CardTitle>
+                                <CardDescription>
+                                    Total filtrado:{" "}
+                                    {formatNumber(estadisticas.totalFiltered)}{" "}
+                                    cajas
+                                </CardDescription>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <ExportButton
+                                    onClick={handleExportToExcel}
+                                    disabled={
+                                        !filteredProducciones ||
+                                        filteredProducciones.length === 0
+                                    }
+                                    variant="outline"
+                                    size="sm"
+                                    children="Exportar Local"
+                                />
+
+                                <Button
+                                    onClick={() =>
+                                        setIsGoogleDriveModalOpen(true)
+                                    }
+                                    disabled={
+                                        !filteredProducciones ||
+                                        filteredProducciones.length === 0 ||
+                                        !isOnline
+                                    }
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-2"
+                                >
+                                    <Cloud className="h-4 w-4" />
+                                    Subir a Drive
+                                </Button>
+                            </div>
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <ProductionFilters
@@ -458,6 +618,20 @@ export function ProductionContent({
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Google Drive Upload Modal */}
+            <GoogleDriveUploadModal
+                open={isGoogleDriveModalOpen}
+                onOpenChange={setIsGoogleDriveModalOpen}
+                workbook={createProductionWorkbook()}
+                fileName={`registros_produccion_${
+                    new Date().toISOString().split("T")[0]
+                }`}
+                onUploadComplete={(result) => {
+                    console.log("Archivo subido a Google Drive:", result);
+                    toast.success("Archivo subido exitosamente a Google Drive");
+                }}
+            />
         </div>
     );
 }

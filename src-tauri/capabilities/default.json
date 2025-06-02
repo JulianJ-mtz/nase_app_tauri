@@ -1,13 +1,55 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
-  "identifier": "default",
-  "description": "enables the default permissions",
+  "identifier": "main-capability",
+  "description": "Capability for the main window with filesystem and dialog access",
   "windows": [
     "main"
   ],
   "permissions": [
     "core:default",
     "sql:default",
-    "sql:allow-execute"
-  ]
+    "sql:allow-execute",
+    "dialog:default",
+    "fs:allow-write-text-file",
+    "fs:allow-write-file",
+    "fs:allow-create",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        {
+          "path": "$DOWNLOAD"
+        },
+        {
+          "path": "$DOWNLOAD/**"
+        },
+        {
+          "path": "$DOCUMENT"
+        },
+        {
+          "path": "$DOCUMENT/**"
+        },
+        {
+          "path": "$DESKTOP"
+        },
+        {
+          "path": "$DESKTOP/**"
+        },
+        {
+          "path": "$HOME"
+        },
+        {
+          "path": "$HOME/**"
+        }
+      ]
+    },
+    "shell:default",
+    "shell:allow-open"
+  ],
+  "protocol": {
+    "tauri": {
+      "scope": [
+        "oauth-callback"
+      ]
+    }
+  }
 }
