@@ -11,7 +11,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Calendar, Package, Trash } from "lucide-react";
+import { AlertCircle, Calendar, Package, Trash, Cloud } from "lucide-react";
 import { DataTable } from "@/components/ui/data-table";
 import { ProductionStatistics } from "./ProductionStatistics";
 import { ProductionForm } from "../../components/forms/ProductionForm";
@@ -21,6 +21,8 @@ import { formatCreatedAt } from "@/lib/utils";
 import { toast } from "sonner";
 import { ExportButton } from "@/components/ui/export-button";
 import { exportProductionRecords } from "@/lib/csvExport";
+import { GoogleDriveUploadModal } from "@/components/modals";
+import * as XLSX from "xlsx";
 
 // Stores
 import { useTemporadaStore } from "@/lib/storeTemporada";
@@ -34,6 +36,12 @@ import { obtenerClientes, Cliente } from "@/api/cliente_api";
 import { obtenerTiposUva, TipoUva } from "@/api/tipo_uva_api";
 import { obtenerTiposEmpaque, TipoEmpaque } from "@/api/tipo_empaque_api";
 
+// Hooks
+import { useDriveUpload } from "@/hooks/useDriveUpload";
+
+// Context
+import { useOnlineStatus } from "@/context/OnlineStatusContext";
+
 interface ProductionTabProps {
     onNewTemporada: () => void;
     onSuccess?: () => void;
@@ -43,7 +51,7 @@ export function ProductionContent({
     onNewTemporada,
     onSuccess,
 }: ProductionTabProps) {
-    // Stores
+    const isOnline = useOnlineStatus(); // Stores
     const { temporadas, fetchTemporadas } = useTemporadaStore();
     const { cuadrillas, fetchCuadrillas } = useCuadrillaStore();
     const {
@@ -72,17 +80,19 @@ export function ProductionContent({
     const [selectedClienteFilter, setSelectedClienteFilter] =
         useState<string>("all");
     const [dateFilter, setDateFilter] = useState<string>("all");
+    const [isGoogleDriveModalOpen, setIsGoogleDriveModalOpen] = useState(false);
 
     // Cargar datos de catálogo
     const loadCatalogData = useCallback(async () => {
         try {
             setCatalogLoading(true);
-            const [varData, clienteData, tiposUvaData, tiposEmpaqueData] = await Promise.all([
-                obtenerVariedades(),
-                obtenerClientes(),
-                obtenerTiposUva(),
-                obtenerTiposEmpaque(),
-            ]);
+            const [varData, clienteData, tiposUvaData, tiposEmpaqueData] =
+                await Promise.all([
+                    obtenerVariedades(),
+                    obtenerClientes(),
+                    obtenerTiposUva(),
+                    obtenerTiposEmpaque(),
+                ]);
 
             setVariedades(varData);
             setClientes(clienteData);
@@ -300,6 +310,23 @@ export function ProductionContent({
         };
     }, [filteredProducciones]);
 
+    // Use the hook to get the createProductionWorkbook function
+    const { createProductionWorkbook } = useDriveUpload({
+        filteredProducciones,
+        selectedTemporadaFilter,
+        selectedClienteFilter,
+        dateFilter,
+        searchTerm,
+        temporadas,
+        clientes,
+        cuadrillas,
+        jornaleros,
+        variedades,
+        tiposUva,
+        tiposEmpaque,
+        estadisticas,
+    });
+
     // Handle export to Excel
     const handleExportToExcel = useCallback(async () => {
         if (!filteredProducciones || filteredProducciones.length === 0) {
@@ -308,27 +335,34 @@ export function ProductionContent({
         }
 
         // Obtener nombres legibles de los filtros
-        const temporadaNombre = selectedTemporadaFilter === "all" 
-            ? "Todas" 
-            : temporadas.find(t => t.id.toString() === selectedTemporadaFilter)?.id?.toString() || "Desconocida";
-        
-        const clienteNombre = selectedClienteFilter === "all"
-            ? "Todos"
-            : clientes.find(c => c.id.toString() === selectedClienteFilter)?.nombre || "Desconocido";
-        
-        const fechaNombre = dateFilter === "all" 
-            ? "Todos"
-            : dateFilter === "week" 
+        const temporadaNombre =
+            selectedTemporadaFilter === "all"
+                ? "Todas"
+                : temporadas
+                      .find((t) => t.id.toString() === selectedTemporadaFilter)
+                      ?.id?.toString() || "Desconocida";
+
+        const clienteNombre =
+            selectedClienteFilter === "all"
+                ? "Todos"
+                : clientes.find(
+                      (c) => c.id.toString() === selectedClienteFilter
+                  )?.nombre || "Desconocido";
+
+        const fechaNombre =
+            dateFilter === "all"
+                ? "Todos"
+                : dateFilter === "week"
                 ? "Última semana"
-                : dateFilter === "month" 
-                    ? "Último mes"
-                    : "Personalizado";
+                : dateFilter === "month"
+                ? "Último mes"
+                : "Personalizado";
 
         const filtrosAplicados = {
             searchTerm: searchTerm || undefined,
             temporada: temporadaNombre,
             cliente: clienteNombre,
-            fecha: fechaNombre
+            fecha: fechaNombre,
         };
 
         await exportProductionRecords(
@@ -341,7 +375,7 @@ export function ProductionContent({
             estadisticas,
             filtrosAplicados
         );
-        
+
         toast.success("Exportación iniciada. Revisa tu carpeta de descargas.");
     }, [
         filteredProducciones,
@@ -356,7 +390,7 @@ export function ProductionContent({
         getClienteNombre,
         getTipoUvaNombre,
         getTipoEmpaqueNombre,
-        estadisticas
+        estadisticas,
     ]);
 
     // Columnas para la tabla de producción (memoizadas)
@@ -520,16 +554,39 @@ export function ProductionContent({
                                 </CardTitle>
                                 <CardDescription>
                                     Total filtrado:{" "}
-                                    {formatNumber(estadisticas.totalFiltered)} cajas
+                                    {formatNumber(estadisticas.totalFiltered)}{" "}
+                                    cajas
                                 </CardDescription>
                             </div>
-                            <ExportButton 
-                                onClick={handleExportToExcel}
-                                disabled={!filteredProducciones || filteredProducciones.length === 0}
-                                variant="outline"
-                                size="sm"
-                                children="Exportar Excel"
-                            />
+                            <div className="flex items-center gap-2">
+                                <ExportButton
+                                    onClick={handleExportToExcel}
+                                    disabled={
+                                        !filteredProducciones ||
+                                        filteredProducciones.length === 0
+                                    }
+                                    variant="outline"
+                                    size="sm"
+                                    children="Exportar Local"
+                                />
+
+                                <Button
+                                    onClick={() =>
+                                        setIsGoogleDriveModalOpen(true)
+                                    }
+                                    disabled={
+                                        !filteredProducciones ||
+                                        filteredProducciones.length === 0 ||
+                                        !isOnline
+                                    }
+                                    variant="outline"
+                                    size="sm"
+                                    className="gap-2"
+                                >
+                                    <Cloud className="h-4 w-4" />
+                                    Subir a Drive
+                                </Button>
+                            </div>
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -563,6 +620,20 @@ export function ProductionContent({
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Google Drive Upload Modal */}
+            <GoogleDriveUploadModal
+                open={isGoogleDriveModalOpen}
+                onOpenChange={setIsGoogleDriveModalOpen}
+                workbook={createProductionWorkbook()}
+                fileName={`registros_produccion_${
+                    new Date().toISOString().split("T")[0]
+                }`}
+                onUploadComplete={(result) => {
+                    console.log("Archivo subido a Google Drive:", result);
+                    toast.success("Archivo subido exitosamente a Google Drive");
+                }}
+            />
         </div>
     );
 }
