@@ -13,6 +13,7 @@ pub enum Produccion {
     CuadrillaId,
     TemporadaId,
     // Lote,
+    CajasNoAceptadas,
     Cantidad,
     CreatedAt,
     UpdatedAt,
@@ -46,6 +47,11 @@ impl MigrationTrait for CreateProduccion {
                         ColumnDef::new(Produccion::Cantidad)
                             .decimal_len(15, 3)
                             .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(Produccion::CajasNoAceptadas)
+                            .integer()
+                            .default(0),
                     )
                     .col(
                         ColumnDef::new(Produccion::CreatedAt)

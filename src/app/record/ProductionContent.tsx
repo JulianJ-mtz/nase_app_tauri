@@ -435,6 +435,18 @@ export function ProductionContent({
                 ),
             },
             {
+                accessorKey: "cajas_no_aceptadas",
+                header: "NA",
+                cell: ({ row }) => (
+                    <div className="flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3 text-muted-foreground" />
+                        <span className="font-medium">
+                            {row.original.cajas_no_aceptadas} cajas
+                        </span>
+                    </div>
+                ),
+            },
+            {
                 accessorKey: "fecha",
                 header: "Fecha",
                 cell: ({ row }) => getDate(row.original.fecha),

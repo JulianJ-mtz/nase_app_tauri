@@ -142,6 +142,7 @@ impl MigrationTrait for SeedCompleteData {
                 let tipo_empaque_id = ((i % 6) + 1) as i32; // Rotar entre tipos 1-6
                 let tipo_uva_id = if cuadrilla_id % 2 == 1 { 1 } else { 2 }; // Alternar: Convencional/Orgánico
                 let cliente_id = ((cuadrilla_id + i) % 6 + 1) as i32; // Rotar entre clientes 1-6
+                let cajas_no_aceptadas = ((i % 15) + 1) as i32; // Errores aleatorios entre 0-15
                 
                 let insert_produccion = Query::insert()
                     .into_table(Alias::new("produccion"))
@@ -153,6 +154,7 @@ impl MigrationTrait for SeedCompleteData {
                         Alias::new("tipo_empaque_id"),
                         Alias::new("tipo_uva_id"),
                         Alias::new("cliente_id"),
+                        Alias::new("cajas_no_aceptadas"),
                     ])
                     .values_panic([
                         Expr::value(fechas_2025[i]),
@@ -162,6 +164,7 @@ impl MigrationTrait for SeedCompleteData {
                         Expr::value(tipo_empaque_id),
                         Expr::value(tipo_uva_id),
                         Expr::value(cliente_id),
+                        Expr::value(cajas_no_aceptadas),
                     ])
                     .to_owned();
 

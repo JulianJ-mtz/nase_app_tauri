@@ -50,6 +50,7 @@ interface FormData {
     tipoEmpaqueId?: number;
     clienteId?: number;
     cantidad?: number;
+    cajasNoAceptadas?: number;
 }
 
 export function ProductionForm({ onSuccess }: ProductionFormProps) {
@@ -245,6 +246,7 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
             tipo_uva_id: formData.tipoUvaId!,
             tipo_empaque_id: formData.tipoEmpaqueId!,
             cliente_id: formData.clienteId!,
+            cajas_no_aceptadas: formData.cajasNoAceptadas!,
             cantidad: formData.cantidad!,
             fecha: new Date().toISOString().split("T")[0],
         };
@@ -607,8 +609,8 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
                                 <Input
                                     id="cantidad"
                                     type="number"
-                                    step="0.01"
-                                    min="0.01"
+                                    step="1"
+                                    min="1"
                                     value={formData.cantidad ?? ""}
                                     onChange={(e) =>
                                         handleFieldChange(
@@ -632,6 +634,41 @@ export function ProductionForm({ onSuccess }: ProductionFormProps) {
                                     </p>
                                 )}
                             </div>
+                        </div>
+                        {/* Cajas no aceptadas */}
+                        <div className="space-y-1">
+                            <Label
+                                htmlFor="cajasNoAceptadas"
+                                className="text-sm font-medium"
+                            >
+                                Cajas no aceptadas
+                            </Label>
+                            <Input
+                                id="cajasNoAceptadas"
+                                type="number"
+                                step="1"
+                                min="0"
+                                value={formData.cajasNoAceptadas ?? ""}
+                                onChange={(e) =>
+                                    handleFieldChange(
+                                        "cajasNoAceptadas",
+                                        e.target.value
+                                            ? Number(e.target.value)
+                                            : undefined
+                                    )
+                                }
+                                className={
+                                    formErrors.cajasNoAceptadas
+                                        ? "border-red-500"
+                                        : ""
+                                }
+                                placeholder="Ingresa el número de cajas no aceptadas"
+                            />
+                            {formErrors.cajasNoAceptadas && (
+                                <p className="text-sm text-red-500">
+                                    {formErrors.cajasNoAceptadas}
+                                </p>
+                            )}
                         </div>
                     </div>
                 </CardContent>

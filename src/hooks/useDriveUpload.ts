@@ -159,9 +159,10 @@ export function useDriveUpload({
             'Cliente': getClienteNombre(produccion.cliente_id),
             'Cantidad_Cajas': parseFloat(produccion.cantidad.toString()),
             'Fecha': new Date(produccion.fecha).toLocaleDateString('es-ES'),
-            'Temporada_ID': produccion.temporada_id.toString(),
             'Tipo_Uva': getTipoUvaNombre(produccion.tipo_uva_id),
-            'Tipo_Empaque': getTipoEmpaqueNombre(produccion.tipo_empaque_id)
+            'Tipo_Empaque': getTipoEmpaqueNombre(produccion.tipo_empaque_id),
+            'Temporada_ID': produccion.temporada_id.toString(),
+            'Cajas_No_Aceptadas': produccion.cajas_no_aceptadas,
         }));
         const produccionWS = XLSX.utils.json_to_sheet(produccionData);
         XLSX.utils.book_append_sheet(workbook, produccionWS, 'Registros de Producción');

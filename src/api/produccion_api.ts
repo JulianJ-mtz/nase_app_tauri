@@ -10,6 +10,7 @@ export interface Produccion {
     cliente_id: number;
     // lote: string;
     cantidad: number;
+    cajas_no_aceptadas: number;
     fecha: string; // Added field to match the backend
     created_at?: string; // Optional field
     updated_at?: string; // Optional field
@@ -24,6 +25,7 @@ export interface ProduccionData {
     cliente_id: number;
     // lote: string;
     cantidad: number; // Adjust type if using Decimal in Rust
+    cajas_no_aceptadas: number;
     fecha: string; // Add this required field - use ISO date format (YYYY-MM-DD)
 }
 

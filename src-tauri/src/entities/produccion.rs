@@ -12,6 +12,7 @@ pub struct Model {
     pub temporada_id: i32,
     #[sea_orm(column_type = "Decimal(Some((15, 3)))")]
     pub cantidad: Decimal,
+    pub cajas_no_aceptadas: Option<i32>,
     pub created_at: Option<DateTimeUtc>,
     pub updated_at: Option<DateTimeUtc>,
     pub tipo_empaque_id: Option<i32>,

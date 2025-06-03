@@ -18,6 +18,7 @@ pub struct ProduccionData {
     pub tipo_empaque_id: Option<i32>,
     pub tipo_uva_id: Option<i32>,
     pub cliente_id: Option<i32>,
+    pub cajas_no_aceptadas: Option<i32>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -25,15 +26,14 @@ pub struct ProduccionResponse {
     pub id: i32,
     pub cuadrilla_id: i32,
     pub temporada_id: i32,
-    // pub lote: String,
     pub cantidad: Decimal,
     pub fecha: String,
-    // pub variedad_id: Option<i32>,
     pub tipo_empaque_id: Option<i32>,
     pub tipo_uva_id: Option<i32>,
     pub cliente_id: Option<i32>,
     pub created_at: Option<String>,
     pub updated_at: Option<String>,
+    pub cajas_no_aceptadas: Option<i32>,
 }
 
 impl From<produccion::Model> for ProduccionResponse {
@@ -42,15 +42,14 @@ impl From<produccion::Model> for ProduccionResponse {
             id: model.id,
             cuadrilla_id: model.cuadrilla_id,
             temporada_id: model.temporada_id,
-            // lote: model.lote,
             cantidad: model.cantidad,
             fecha: model.fecha.to_string(),
             created_at: model.created_at.map(|dt| dt.to_string()),
             updated_at: model.updated_at.map(|dt| dt.to_string()),
-            // variedad_id: model.variedad_id,
             tipo_empaque_id: model.tipo_empaque_id,
             tipo_uva_id: model.tipo_uva_id,
             cliente_id: model.cliente_id,
+            cajas_no_aceptadas: model.cajas_no_aceptadas,
         }
     }
 }
@@ -88,6 +87,7 @@ pub async fn post_produccion(
         tipo_empaque_id: ActiveValue::Set(data.tipo_empaque_id),
         tipo_uva_id: ActiveValue::Set(data.tipo_uva_id),
         cliente_id: ActiveValue::Set(data.cliente_id),
+        cajas_no_aceptadas: ActiveValue::Set(data.cajas_no_aceptadas),
     };
 
     let res = match Produccion::insert(produccion).exec(&connection).await {
@@ -232,6 +232,7 @@ pub async fn put_produccion(
     produccion_actualizada.tipo_empaque_id = ActiveValue::Set(data.tipo_empaque_id);
     produccion_actualizada.tipo_uva_id = ActiveValue::Set(data.tipo_uva_id);
     produccion_actualizada.cliente_id = ActiveValue::Set(data.cliente_id);
+    produccion_actualizada.cajas_no_aceptadas = ActiveValue::Set(data.cajas_no_aceptadas);
 
     let res = match produccion_actualizada.update(&connection).await {
         Ok(result) => result,

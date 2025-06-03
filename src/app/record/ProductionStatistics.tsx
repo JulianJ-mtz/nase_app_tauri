@@ -58,7 +58,7 @@ export function ProductionStatistics({
                         <TrendingUp className="h-5 w-5 text-purple-500" />
                         <div>
                             <p className="text-sm text-muted-foreground">Promedio</p>
-                            <p className="text-lg font-bold">{formatNumber(estadisticas.promedioProduccion)} kg</p>
+                            <p className="text-lg font-bold">{formatNumber(estadisticas.promedioProduccion)} cajas</p>
                         </div>
                     </div>
                 </CardContent>
