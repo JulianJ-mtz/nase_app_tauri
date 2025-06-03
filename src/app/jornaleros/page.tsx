@@ -16,6 +16,7 @@ import {
     ReactivateConfirmationModal, 
     CuadrillaViewModal 
 } from "@/components/modals";
+import { JornaleroPerfilModal } from "@/components/modals/JornaleroPerfilModal";
 import { PageLayout, FormSection, DataSection } from "@/components/layout";
 import { useCrudOperations } from "@/hooks/useCrudOperations";
 
@@ -32,6 +33,10 @@ export default function JornalerosPage() {
     const { fetchCuadrillas, cuadrillas } = useCuadrillaStore();
     const [selectedCuadrillaId, setSelectedCuadrillaId] = useState<number | null>(null);
     const [showCuadrillaDialog, setShowCuadrillaDialog] = useState(false);
+    
+    // Estado para el modal del perfil del jornalero
+    const [selectedJornalero, setSelectedJornalero] = useState<Jornalero | null>(null);
+    const [showPerfilDialog, setShowPerfilDialog] = useState(false);
 
     const crud = useCrudOperations<Jornalero>({
         fetchData: async () => {
@@ -53,6 +58,12 @@ export default function JornalerosPage() {
         setShowCuadrillaDialog(true);
     };
 
+    // Handler para abrir el modal del perfil
+    const handleViewProfile = (jornalero: Jornalero) => {
+        setSelectedJornalero(jornalero);
+        setShowPerfilDialog(true);
+    };
+
     const columns = createColumns({
         handleEdit: (id: number) => {
             const jornalero = jornaleros.find((j) => j.id === id);
@@ -63,6 +74,7 @@ export default function JornalerosPage() {
             if (jornalero) crud.handleDelete(jornalero);
         },
         handleViewCuadrilla,
+        handleViewProfile,
     });
 
     const inactiveColumns = createInactiveColumns({
@@ -70,6 +82,7 @@ export default function JornalerosPage() {
             const jornalero = jornalerosInactivos.find((j) => j.id === id);
             if (jornalero) crud.handleReactivate(jornalero);
         },
+        handleViewProfile,
     });
 
     // Helper function to get leader name
@@ -274,6 +287,13 @@ export default function JornalerosPage() {
                 description="¿Estás seguro de que deseas reactivar al jornalero?"
                 onConfirm={crud.confirmReactivate}
                 loading={crud.isReactivating}
+            />
+
+            {/* Modal del perfil del jornalero */}
+            <JornaleroPerfilModal
+                open={showPerfilDialog}
+                onOpenChange={setShowPerfilDialog}
+                jornalero={selectedJornalero}
             />
         </>
     );

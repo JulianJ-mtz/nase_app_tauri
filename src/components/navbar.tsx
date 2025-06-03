@@ -14,6 +14,7 @@ import {
     Layers,
     Building,
     Settings,
+    Book,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -65,11 +66,11 @@ export function Navbar() {
         // Configuration
         {
             href: "/catalogos",
-            label: "Configuración",
-            icon: <Settings className="mr-2 h-5 w-5" />,
+            label: "Catálogos",
+            icon: <Book className="mr-2 h-5 w-5" />,
             active:
                 pathname === "/catalogos" || pathname.startsWith("/catalogos/"),
-            description: "Catálogos y configuración del sistema",
+            description: "Catálogos para cada uno de los procesos del sistema",
         },
     ];
 

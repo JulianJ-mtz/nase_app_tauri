@@ -334,6 +334,92 @@ export default function Home() {
             {/* <Link href="/test_drive">
                 <Button>Test Drive</Button>
             </Link> */}
+
+            <Card className="border-dashed">
+                <CardHeader>
+                    <CardTitle className="text-lg">
+                        Flujo de Trabajo Recomendado
+                    </CardTitle>
+                    <CardDescription>
+                        Para un funcionamiento óptimo del sistema, sigue este
+                        orden:
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
+                            <div className="flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-full text-sm font-medium">
+                                1
+                            </div>
+                            <div>
+                                <p className="font-medium">
+                                    Configurar Catálogos
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                    Primero configura clientes, variedades y
+                                    tipos de empaque
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
+                            <div className="flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-full text-sm font-medium">
+                                2
+                            </div>
+                            <div>
+                                <p className="font-medium">Crear Temporadas</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Define las temporadas de trabajo con fechas
+                                    específicas
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
+                            <div className="flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-full text-sm font-medium">
+                                3
+                            </div>
+                            <div>
+                                <p className="font-medium">
+                                    Organizar Cuadrillas
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                    Crea cuadrillas asignadas a temporadas y
+                                    variedades
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
+                            <div className="flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-full text-sm font-medium">
+                                4
+                            </div>
+                            <div>
+                                <p className="font-medium">
+                                    Registrar Jornaleros
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                    Añade trabajadores y asígnalos a cuadrillas
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
+                            <div className="flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-full text-sm font-medium">
+                                5
+                            </div>
+                            <div>
+                                <p className="font-medium">
+                                    Registrar Producción
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                    Comienza a registrar la producción diaria
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     );
 }

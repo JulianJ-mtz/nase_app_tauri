@@ -218,7 +218,10 @@ pub async fn get_inactive_jornaleros(
 
     // Ejecutar consulta solo para jornaleros inactivos
     let jornaleros = match Jornalero::find()
-        .filter(jornalero::Column::Estado.eq("Inactivo"))
+        .filter(
+            jornalero::Column::Estado.eq("Inactivo")
+            .or(jornalero::Column::Estado.eq("Suspendido"))
+        )
         .all(&connection)
         .await
     {

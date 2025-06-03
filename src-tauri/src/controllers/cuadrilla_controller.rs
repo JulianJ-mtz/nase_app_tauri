@@ -392,10 +392,82 @@ pub async fn force_delete_cuadrilla(app_handle: AppHandle, id: i32) -> Result<St
 
     let mut messages = Vec::new();
 
+    // Verificar si la cuadrilla existe
+    let cuadrilla_existe = match Cuadrilla::find_by_id(id).one(&connection).await {
+        Ok(Some(_)) => true,
+        Ok(None) => {
+            drop(connection);
+            return Err(format!("No existe una cuadrilla con ID: {}", id));
+        }
+        Err(e) => {
+            println!("Error al verificar cuadrilla: {}", e);
+            drop(connection);
+            return Err(format!("Error al verificar cuadrilla: {}", e));
+        }
+    };
+
+    // Contar y eliminar registros de producción asociados
+    let produccion_count = match crate::entities::produccion::Entity::find()
+        .filter(crate::entities::produccion::Column::CuadrillaId.eq(id))
+        .count(&connection)
+        .await
+    {
+        Ok(count) => count,
+        Err(e) => {
+            println!("Error al verificar producción: {}", e);
+            drop(connection);
+            return Err(format!("Error al verificar dependencias: {}", e));
+        }
+    };
+
+    if produccion_count > 0 {
+        // Eliminar registros de producción
+        let produccion_deleted = match crate::entities::produccion::Entity::delete_many()
+            .filter(crate::entities::produccion::Column::CuadrillaId.eq(id))
+            .exec(&connection)
+            .await
+        {
+            Ok(result) => result.rows_affected,
+            Err(e) => {
+                println!("Error al eliminar registros de producción: {}", e);
+                drop(connection);
+                return Err(format!("Error al eliminar registros de producción: {}", e));
+            }
+        };
+
+        messages.push(format!(
+            "{} registro(s) de producción eliminados",
+            produccion_deleted
+        ));
+    }
+
+    // Contar jornaleros que serán desasignados
+    let jornaleros_count = match crate::entities::jornalero::Entity::find()
+        .filter(crate::entities::jornalero::Column::CuadrillaId.eq(id))
+        .count(&connection)
+        .await
+    {
+        Ok(count) => count,
+        Err(e) => {
+            println!("Error al verificar jornaleros: {}", e);
+            drop(connection);
+            return Err(format!("Error al verificar jornaleros: {}", e));
+        }
+    };
+
+    if jornaleros_count > 0 {
+        messages.push(format!(
+            "{} jornalero(s) desasignados de la cuadrilla",
+            jornaleros_count
+        ));
+    }
+
+    // Finalmente, eliminar la cuadrilla
     let res = match Cuadrilla::delete_by_id(id).exec(&connection).await {
         Ok(result) => result,
         Err(e) => {
             println!("Error al eliminar cuadrilla: {}", e);
+            drop(connection);
             return Err(format!("Error de eliminación: {}", e));
         }
     };

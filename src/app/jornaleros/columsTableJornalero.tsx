@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Trash, Users, UserPlus } from "lucide-react";
+import { Pencil, Trash, UserPlus, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ColumnDef } from "@tanstack/react-table";
 import { Jornalero } from "@/api/jornalero_api";
@@ -10,16 +10,19 @@ interface ColumnHandlers {
     handleEdit: (id: number) => void;
     handleDelete: (id: number) => void;
     handleViewCuadrilla?: (id: number) => void;
+    handleViewProfile?: (jornalero: Jornalero) => void;
 }
 
 interface InactiveColumnHandlers {
     handleReactivate: (id: number) => void;
+    handleViewProfile?: (jornalero: Jornalero) => void;
 }
 
 export const createColumns = ({
     handleEdit,
     handleDelete,
     handleViewCuadrilla,
+    handleViewProfile,
 }: ColumnHandlers): ColumnDef<Jornalero>[] => [
     {
         accessorKey: "id",
@@ -30,7 +33,14 @@ export const createColumns = ({
         accessorKey: "nombre",
         header: "Nombre",
         cell: ({ row }) => (
-            <span className="font-medium">{row.original.nombre}</span>
+            <Badge
+                variant="outline"
+                className="bg-primary/10 hover:text-primary cursor-pointer hover:scale-102 transition-all duration-300"
+                title="Ver perfil del jornalero"
+                onClick={() => handleViewProfile?.(row.original)}
+            >
+                <span>{row.original.nombre}</span>
+            </Badge>
         ),
     },
     {
@@ -113,6 +123,7 @@ export const createColumns = ({
 
 export const createInactiveColumns = ({
     handleReactivate,
+    handleViewProfile,
 }: InactiveColumnHandlers): ColumnDef<Jornalero>[] => [
     {
         accessorKey: "id",
@@ -122,9 +133,14 @@ export const createInactiveColumns = ({
         accessorKey: "nombre",
         header: "Nombre",
         cell: ({ row }) => (
-            <span className="font-medium text-muted-foreground">
-                {row.original.nombre}
-            </span>
+            <Badge
+                variant="outline"
+                className="bg-primary/10 hover:text-primary cursor-pointer hover:scale-102 transition-all duration-300"
+                title="Ver perfil del jornalero"
+                onClick={() => handleViewProfile?.(row.original)}
+            >
+                <span>{row.original.nombre}</span>
+            </Badge>
         ),
     },
     {
